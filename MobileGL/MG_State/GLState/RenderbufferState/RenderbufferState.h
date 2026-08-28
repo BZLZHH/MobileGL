@@ -12,9 +12,14 @@
 #include "RenderbufferObject.h"
 
 namespace MobileGL::MG_State::GLState {
+    class SharedRenderbufferObjectTable;
+
     class RenderbufferState {
     public:
         RenderbufferState();
+
+        void SetSharedObjectTable(const SharedPtr<SharedRenderbufferObjectTable>& table) { m_sharedObjectTable = table; }
+        const SharedPtr<SharedRenderbufferObjectTable>& GetSharedObjectTable() const { return m_sharedObjectTable; }
 
         const SharedPtr<RenderbufferObject>& GetRenderbufferObject(Uint index);
         void GenerateNames(Uint number, Vector<Uint>& renderbuffers);
@@ -25,6 +30,7 @@ namespace MobileGL::MG_State::GLState {
         Bool ValidateRenderbufferObject(Uint index) const;
 
     private:
+        SharedPtr<SharedRenderbufferObjectTable> m_sharedObjectTable;
         UnorderedMap<Uint, SharedPtr<RenderbufferObject>> m_renderbufferObjects;
         IndexGenerator<Uint> m_indexGenerator;
         Array<BindingSlot<RenderbufferObject>, static_cast<SizeT>(RenderbufferTarget::RenderbufferTargetCount)>

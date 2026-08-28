@@ -73,6 +73,13 @@ namespace MobileGL::MG_State::GLState {
         const auto& seenSampler = second->GetContext().GetSamplerObject(44);
         ASSERT_TRUE(seenSampler);
         EXPECT_EQ(createdSampler, seenSampler);
+
+        // Renderbuffer object tables are shared too.
+        const auto& createdRenderbuffer = first->GetContext().CreateRenderbufferObject(45);
+        ASSERT_TRUE(createdRenderbuffer);
+        const auto& seenRenderbuffer = second->GetContext().GetRenderbufferObject(45);
+        ASSERT_TRUE(seenRenderbuffer);
+        EXPECT_EQ(createdRenderbuffer, seenRenderbuffer);
     }
 
     TEST(ContextRegistryTest, TracksCurrentSessionPerThread) {
