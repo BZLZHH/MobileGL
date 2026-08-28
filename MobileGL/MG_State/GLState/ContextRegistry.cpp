@@ -38,6 +38,9 @@ namespace MobileGL::MG_State::GLState {
           m_context(MakeUnique<GLContext>()) {
         m_context->SetSharedGroupId(groupId);
         m_context->SetSessionId(eglContextHandle);
+        if (m_sharedTables != nullptr) {
+            m_context->SetSharedBufferObjectTable(m_sharedTables->GetSharedBufferObjects());
+        }
     }
 
     GLSharedGroup::GLSharedGroup(DisplayId displayId)

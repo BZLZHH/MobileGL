@@ -7,6 +7,7 @@
 // End of Source File Header
 
 #include "BufferState.h"
+#include "MG_State/GLState/SharedObjectTables.h"
 
 namespace MobileGL::MG_State::GLState {
     BufferState::BufferState() : m_indexGenerator(1024, 1) {
@@ -19,6 +20,9 @@ namespace MobileGL::MG_State::GLState {
     }
 
     const SharedPtr<BufferObject>& BufferState::GetBufferObject(Uint index) {
+        if (m_sharedObjectTable) {
+            return m_sharedObjectTable->GetObject(index);
+        }
         auto it = m_bufferObjects.find(index);
         if (it != m_bufferObjects.end()) {
             return it->second;
@@ -28,11 +32,18 @@ namespace MobileGL::MG_State::GLState {
     }
 
     void BufferState::GenerateNames(Uint number, Vector<Uint>& buffers) {
+        if (m_sharedObjectTable) {
+            m_sharedObjectTable->GenerateNames(number, buffers);
+            return;
+        }
         buffers.resize(number);
         m_indexGenerator.Generate(number, buffers.data());
     }
 
     const SharedPtr<BufferObject>& BufferState::CreateBufferObject(Uint index) {
+        if (m_sharedObjectTable) {
+            return m_sharedObjectTable->CreateObject(index);
+        }
         auto& bufferObj = m_bufferObjects[index];
         if (!bufferObj) {
             bufferObj = MakeShared<BufferObject>(index);
@@ -51,6 +62,27 @@ namespace MobileGL::MG_State::GLState {
     }
 
     void BufferState::MarkBufferObjectForDeletion(Uint index) {
+        if (m_sharedObjectTable) {
+            const SharedPtr<BufferObject>& object = m_sharedObjectTable->GetObject(index);
+            if (object) {
+                for (auto& bindingSlot : m_bindingSlots) {
+                    if (bindingSlot.GetBoundObject() == object) {
+                        bindingSlot.Bind(nullptr);
+                    }
+                }
+                for (auto& bindingPointArray : m_bufferBindPointTargets) {
+                    for (auto& bindingPoint : bindingPointArray) {
+                        if (bindingPoint.GetBoundObject() == object) {
+                            bindingPoint.Bind(nullptr);
+                            bindingPoint.ClearRange();
+                        }
+                    }
+                }
+            }
+            m_sharedObjectTable->MarkObjectForDeletion(index);
+            return;
+        }
+
         if (m_indexGenerator.IsValid(index)) {
             auto it = m_bufferObjects.find(index);
             if (it != m_bufferObjects.end()) {
@@ -80,10 +112,16 @@ namespace MobileGL::MG_State::GLState {
     }
 
     Bool BufferState::ValidateName(Uint index) const {
+        if (m_sharedObjectTable) {
+            return m_sharedObjectTable->ValidateName(index);
+        }
         return m_indexGenerator.IsValid(index);
     }
 
     Bool BufferState::ValidateBufferObject(Uint index) const {
+        if (m_sharedObjectTable) {
+            return m_sharedObjectTable->ValidateObject(index);
+        }
         return m_bufferObjects.find(index) != m_bufferObjects.end();
     }
 

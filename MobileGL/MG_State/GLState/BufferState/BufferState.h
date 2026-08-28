@@ -28,9 +28,17 @@ namespace MobileGL::MG_State::GLState {
     // costs the unused tail of three arrays.
     constexpr SizeT BufferBindingPointCount = 84;
 
+    class SharedBufferObjectTable;
+
     class BufferState {
     public:
         BufferState();
+
+        // Bind this state to the SharedGroup-owned buffer object table. When
+        // set, object lifetimes/names live in the shared table; binding slots
+        // remain per-context (GL shareCtx semantics).
+        void SetSharedObjectTable(const SharedPtr<SharedBufferObjectTable>& table) { m_sharedObjectTable = table; }
+        const SharedPtr<SharedBufferObjectTable>& GetSharedObjectTable() const { return m_sharedObjectTable; }
 
         const SharedPtr<BufferObject>& GetBufferObject(Uint index);
         void GenerateNames(Uint number, Vector<Uint>& buffers);
@@ -65,6 +73,7 @@ namespace MobileGL::MG_State::GLState {
         Bool ValidateBufferObject(Uint index) const;
 
     private:
+        SharedPtr<SharedBufferObjectTable> m_sharedObjectTable;
         UnorderedMap<Uint, SharedPtr<BufferObject>> m_bufferObjects;
         IndexGenerator<Uint> m_indexGenerator;
         Array<BindingSlot<BufferObject>, GlobalBufferTargets.size()> m_bindingSlots;

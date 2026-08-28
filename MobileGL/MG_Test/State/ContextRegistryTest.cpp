@@ -50,6 +50,14 @@ namespace MobileGL::MG_State::GLState {
         ASSERT_NE(second, nullptr);
         ASSERT_NE(first->GetSharedTables(), nullptr);
         EXPECT_EQ(first->GetSharedTables(), second->GetSharedTables());
+
+        // Buffer object tables are shared: an object created through one
+        // session is visible through the other.
+        const auto& created = first->GetContext().CreateBufferObject(42);
+        ASSERT_TRUE(created);
+        const auto& seen = second->GetContext().GetBufferObject(42);
+        ASSERT_TRUE(seen);
+        EXPECT_EQ(created, seen);
     }
 
     TEST(ContextRegistryTest, TracksCurrentSessionPerThread) {

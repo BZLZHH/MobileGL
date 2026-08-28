@@ -8,6 +8,7 @@
 
 #include "Core.h"
 #include "MG_State/GLState/HandleRegistry.h"
+#include "MG_State/GLState/SharedObjectTables.h"
 #include "MG_State/GLState/RenderbufferState/RenderbufferObject.h"
 #include "MG_State/EGLState/Core.h"
 #include <MG_Backend/BackendObjects.h>
@@ -43,6 +44,10 @@ namespace MobileGL::MG_State {
         void GLContext::InvalidateCompileEnv() {
             m_compileEnv.reset();
             m_compileEnvBackend = nullptr;
+        }
+
+        void GLContext::SetSharedBufferObjectTable(const SharedPtr<SharedBufferObjectTable>& table) {
+            m_bufferState.SetSharedObjectTable(table);
         }
 
         Uint64 GLContext::GetObjectHandle(Uint32 objectKind, Uint32 glName) const {

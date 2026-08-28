@@ -10,6 +10,7 @@
 - monolith（`MobileGL` / `MobileGL_s`）编译通过 ✅
 - C/S 目标编译通过：`FullServer`、`MobileGL_Client`、`MobileGL_UtilRuntime`、`BackendObject_DirectGLES.so`、`BackendObject_DirectVulkan.so`、`MobileGL_Transport` ✅
 - 单元测试：`ContextRegistryTest` 5/5、`HandleRegistryTest` 5/5 通过 ✅
+- 第二次构建（共享 Buffer 表迁移后）：`BufferState` 委托 group 级 `SharedBufferObjectTable`，跨 session 可见性测试通过 ✅
 
 ## Phase 0 — 契约定稿 ✅
 
@@ -39,8 +40,9 @@
 - [x] `MobileGL/MG_State/GLState/HandleRegistry.h/.cpp` — `(groupId/sessionId, kind, glName) → MobileGLBackendHandle`
 - [x] `GLContext::GetObjectHandle` — 前端对象首次访问时分配/复用 C/S handle
 - [x] Buffer/Texture 对象创建时分配 handle、删除时释放（`CreateBufferObject` / `CreateTextureObject` / `CreateTextureViewObject` / 对应 Mark*ForDeletion）
+- [x] **Buffer 共享对象表迁移**：`SharedBufferObjectTable` 由 `SharedObjectTables` 持有，`BufferState` 的 name/object 表委托给 group；binding slots 仍 per-context（GL shareCtx 语义）
 - [x] `MobileGL/MG_Test/State/ContextRegistryTest.cpp` / `HandleRegistryTest.cpp` — 单元测试
-- [ ] 共享对象表真正替换 GLContext 内的 per-context *State（BufferState/TextureState/... 迁移）
+- [ ] 共享对象表真正替换 GLContext 内的 per-context *State（Texture/VAO/Program/... 继续迁移）
 - [ ] `pGLContext` 切换为按 `(sessionId, clientThreadId)` 取 current（Huge: 数百处访问点）
 
 ## Phase 3 — BFA 落地（进行中）
