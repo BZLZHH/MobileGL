@@ -14,6 +14,8 @@
 #include "TextureUnit.h"
 
 namespace MobileGL::MG_State::GLState {
+    class SharedTextureObjectTable;
+
     struct ImageTextureBinding {
         SharedPtr<ITextureObject> Texture;
         GLint Level = 0;
@@ -46,6 +48,8 @@ namespace MobileGL::MG_State::GLState {
         static constexpr int MAX_PER_STAGE_TEXTURE_IMAGE_UNITS = 32;
 
         TextureState();
+        void SetSharedObjectTable(const SharedPtr<SharedTextureObjectTable>& table) { m_sharedObjectTable = table; }
+        const SharedPtr<SharedTextureObjectTable>& GetSharedObjectTable() const { return m_sharedObjectTable; }
         void GenerateNames(Uint number, Vector<Uint>& textures);
         const SharedPtr<ITextureObject>& CreateTextureObject(Uint index, TextureTarget target);
         // glTextureView (GL 4.6 core 8.18). `storageOwner` must already be a texture with
@@ -127,6 +131,7 @@ namespace MobileGL::MG_State::GLState {
         Int m_activeTextureUnit = 0;
         Array<TextureUnit, MAX_TEXTURE_IMAGE_UNITS> m_textureUnits;
         Array<ImageTextureBinding, MAX_TEXTURE_IMAGE_UNITS> m_imageTextureBindings;
+        SharedPtr<SharedTextureObjectTable> m_sharedObjectTable;
         IndexGenerator<Uint> m_indexGenerator;
         UnorderedMap<GLuint, SharedPtr<ITextureObject>> m_textureObjects;
         // One default texture object (external name 0) per target, created with the context and

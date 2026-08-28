@@ -7,6 +7,7 @@
 // End of Source File Header
 
 #include "TextureState.h"
+#include "MG_State/GLState/SharedObjectTables.h"
 
 #include <atomic>
 #include "Defines.h"
@@ -59,6 +60,60 @@ namespace MobileGL::MG_State::GLState {
         }
     }
 
+    const SharedPtr<ITextureObject>& SharedTextureObjectTable::GetObject(Uint index) const {
+        auto it = m_textureObjects.find(index);
+        if (it != m_textureObjects.end()) {
+            return it->second;
+        }
+        static SharedPtr<ITextureObject> nullTextureObject = nullptr;
+        return nullTextureObject;
+    }
+
+    void SharedTextureObjectTable::GenerateNames(Uint number, Vector<Uint>& textures) {
+        textures.resize(number);
+        m_indexGenerator.Generate(number, textures.data());
+    }
+
+    const SharedPtr<ITextureObject>& SharedTextureObjectTable::CreateObject(Uint index, TextureTarget target) {
+        auto& textureObject = m_textureObjects[index];
+        textureObject = MakeTextureObjectForTarget(index, target);
+        if (!textureObject) {
+            static SharedPtr<ITextureObject> nullTextureObject = nullptr;
+            return nullTextureObject;
+        }
+        return textureObject;
+    }
+
+    const SharedPtr<ITextureObject>& SharedTextureObjectTable::CreateTextureViewObject(
+        Uint index, TextureTarget target, const SharedPtr<ITextureObject>& storageOwner, Uint minLevel,
+        Uint numLevels, Uint minLayer, Uint numLayers) {
+        MOBILEGL_ASSERT(storageOwner != nullptr, "CreateTextureViewObject: storage owner is null");
+        auto& textureObject = m_textureObjects[index];
+        textureObject = MakeShared<TextureObjectView>(index, target, storageOwner, minLevel, numLevels, minLayer,
+                                                      numLayers);
+        return textureObject;
+    }
+
+    void SharedTextureObjectTable::MarkObjectForDeletion(Uint index, Bool keepUnboundReservation) {
+        if (m_indexGenerator.IsValid(index)) {
+            auto it = m_textureObjects.find(index);
+            if (it != m_textureObjects.end()) {
+                m_textureObjects.erase(index);
+                m_indexGenerator.Delete(index);
+            } else if (!keepUnboundReservation) {
+                m_indexGenerator.Delete(index);
+            }
+        }
+    }
+
+    Bool SharedTextureObjectTable::ValidateName(Uint index) const {
+        return m_indexGenerator.IsValid(index);
+    }
+
+    Bool SharedTextureObjectTable::ValidateObject(Uint index) const {
+        return m_textureObjects.find(index) != m_textureObjects.end();
+    }
+
     TextureState::TextureState() : m_contextId(AllocateContextId()), m_indexGenerator(1024, 1) {
         // GL 3.3 core 3.8: each target owns one default texture object (name 0) per context,
         // shared across all texture units, and it is the initial binding of every unit/target
@@ -76,6 +131,9 @@ namespace MobileGL::MG_State::GLState {
     }
 
     const SharedPtr<ITextureObject>& TextureState::GetTextureObject(Uint index) {
+        if (m_sharedObjectTable) {
+            return m_sharedObjectTable->GetObject(index);
+        }
         auto it = m_textureObjects.find(index);
         if (it != m_textureObjects.end()) {
             return it->second;
@@ -91,11 +149,18 @@ namespace MobileGL::MG_State::GLState {
     }
 
     void TextureState::GenerateNames(Uint number, Vector<Uint>& textures) {
+        if (m_sharedObjectTable) {
+            m_sharedObjectTable->GenerateNames(number, textures);
+            return;
+        }
         textures.resize(number);
         m_indexGenerator.Generate(number, textures.data());
     }
 
     const SharedPtr<ITextureObject>& TextureState::CreateTextureObject(Uint index, TextureTarget target) {
+        if (m_sharedObjectTable) {
+            return m_sharedObjectTable->CreateObject(index, target);
+        }
         auto& textureObject = m_textureObjects[index];
         textureObject = MakeTextureObjectForTarget(index, target);
         if (!textureObject) {
@@ -108,6 +173,10 @@ namespace MobileGL::MG_State::GLState {
     const SharedPtr<ITextureObject>& TextureState::CreateTextureViewObject(
         Uint index, TextureTarget target, const SharedPtr<ITextureObject>& storageOwner, Uint minLevel,
         Uint numLevels, Uint minLayer, Uint numLayers) {
+        if (m_sharedObjectTable) {
+            return m_sharedObjectTable->CreateTextureViewObject(index, target, storageOwner, minLevel, numLevels,
+                                                                minLayer, numLayers);
+        }
         MOBILEGL_ASSERT(storageOwner != nullptr, "CreateTextureViewObject: storage owner is null");
         auto& textureObject = m_textureObjects[index];
         textureObject = MakeShared<TextureObjectView>(index, target, storageOwner, minLevel, numLevels, minLayer,
@@ -116,30 +185,43 @@ namespace MobileGL::MG_State::GLState {
     }
 
     void TextureState::MarkTextureObjectForDeletion(Uint index, Bool keepUnboundReservation) {
+        const SharedPtr<ITextureObject> textureObject =
+            m_sharedObjectTable ? m_sharedObjectTable->GetObject(index)
+                                : (m_textureObjects.find(index) != m_textureObjects.end()
+                                       ? m_textureObjects.find(index)->second
+                                       : nullptr);
+        if (textureObject) {
+            // Units past the touched high-water mark can never reference a texture.
+            for (Int unit = 0; unit <= m_maxTouchedUnit; ++unit) {
+                auto& bindingSlots = m_textureUnits[unit].GetAllBindingSlots();
+                for (auto& bindingSlot : bindingSlots) {
+                    if (bindingSlot.GetBoundObject() == textureObject) {
+                        // GL 3.3 core 3.8.1: deleting a bound texture rebinds zero, i.e. the
+                        // target's default texture object, on every unit it was bound to.
+                        bindingSlot.Bind(m_defaultTextureObjects[(int)bindingSlot.GetTarget()]);
+                    }
+                }
+            }
+            for (Int unit = 0; unit <= m_maxTouchedUnit; ++unit) {
+                auto& imageBinding = m_imageTextureBindings[unit];
+                if (imageBinding.Texture == textureObject) {
+                    imageBinding.Bind(nullptr, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R8);
+                }
+            }
+            // Deleting a texture unbinds it from every unit above; treat that as a binding
+            // change so a cached sampled-texture set (which may hold this raw pointer) is
+            // re-resolved instead of dangling.
+            BumpTextureBindGeneration();
+        }
+
+        if (m_sharedObjectTable) {
+            m_sharedObjectTable->MarkObjectForDeletion(index, keepUnboundReservation);
+            return;
+        }
+
         if (m_indexGenerator.IsValid(index)) {
             auto it = m_textureObjects.find(index);
             if (it != m_textureObjects.end()) {
-                // Units past the touched high-water mark can never reference a texture.
-                for (Int unit = 0; unit <= m_maxTouchedUnit; ++unit) {
-                    auto& bindingSlots = m_textureUnits[unit].GetAllBindingSlots();
-                    for (auto& bindingSlot : bindingSlots) {
-                        if (bindingSlot.GetBoundObject() == it->second) {
-                            // GL 3.3 core 3.8.1: deleting a bound texture rebinds zero, i.e. the
-                            // target's default texture object, on every unit it was bound to.
-                            bindingSlot.Bind(m_defaultTextureObjects[(int)bindingSlot.GetTarget()]);
-                        }
-                    }
-                }
-                for (Int unit = 0; unit <= m_maxTouchedUnit; ++unit) {
-                    auto& imageBinding = m_imageTextureBindings[unit];
-                    if (imageBinding.Texture == it->second) {
-                        imageBinding.Bind(nullptr, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R8);
-                    }
-                }
-                // Deleting a texture unbinds it from every unit above; treat that as a binding
-                // change so a cached sampled-texture set (which may hold this raw pointer) is
-                // re-resolved instead of dangling.
-                BumpTextureBindGeneration();
                 m_textureObjects.erase(index);
                 m_indexGenerator.Delete(index);
             } else if (!keepUnboundReservation) {
@@ -181,10 +263,16 @@ namespace MobileGL::MG_State::GLState {
     }
 
     Bool TextureState::ValidateName(Uint index) const {
+        if (m_sharedObjectTable) {
+            return m_sharedObjectTable->ValidateName(index);
+        }
         return m_indexGenerator.IsValid(index);
     }
 
     Bool TextureState::ValidateTextureObject(Uint index) const {
+        if (m_sharedObjectTable) {
+            return m_sharedObjectTable->ValidateObject(index);
+        }
         return m_textureObjects.find(index) != m_textureObjects.end();
     }
 } // namespace MobileGL::MG_State::GLState

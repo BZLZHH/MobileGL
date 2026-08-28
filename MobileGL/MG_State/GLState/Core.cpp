@@ -50,6 +50,10 @@ namespace MobileGL::MG_State {
             m_bufferState.SetSharedObjectTable(table);
         }
 
+        void GLContext::SetSharedTextureObjectTable(const SharedPtr<SharedTextureObjectTable>& table) {
+            m_textureState.SetSharedObjectTable(table);
+        }
+
         Uint64 GLContext::GetObjectHandle(Uint32 objectKind, Uint32 glName) const {
             const auto kind = static_cast<MobileGLObjectKind>(objectKind);
             const Bool isSessionPrivate =

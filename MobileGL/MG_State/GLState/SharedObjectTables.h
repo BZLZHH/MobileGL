@@ -10,6 +10,7 @@
 
 #include <Includes.h>
 #include "MG_State/GLState/BufferState/BufferState.h"
+#include "MG_State/GLState/TextureState/TextureState.h"
 #include <MG_Util/Miscellany/IndexGenerator.h>
 
 namespace MobileGL::MG_State::GLState {
@@ -68,6 +69,27 @@ namespace MobileGL::MG_State::GLState {
         IndexGenerator<Uint> m_indexGenerator;
     };
 
+    // Shared texture object table (object map + name generator). Default
+    // texture objects (name 0) and texture-unit bindings stay per-context.
+    class SharedTextureObjectTable {
+    public:
+        SharedTextureObjectTable() : m_indexGenerator(1024, 1) {}
+
+        const SharedPtr<ITextureObject>& GetObject(Uint index) const;
+        void GenerateNames(Uint number, Vector<Uint>& textures);
+        const SharedPtr<ITextureObject>& CreateObject(Uint index, TextureTarget target);
+        const SharedPtr<ITextureObject>& CreateTextureViewObject(
+            Uint index, TextureTarget target, const SharedPtr<ITextureObject>& storageOwner,
+            Uint minLevel, Uint numLevels, Uint minLayer, Uint numLayers);
+        void MarkObjectForDeletion(Uint index, Bool keepUnboundReservation);
+        Bool ValidateName(Uint index) const;
+        Bool ValidateObject(Uint index) const;
+
+    private:
+        UnorderedMap<Uint, SharedPtr<ITextureObject>> m_textureObjects;
+        IndexGenerator<Uint> m_indexGenerator;
+    };
+
     class SharedObjectTables {
     public:
         SharedObjectTables() = default;
@@ -79,13 +101,21 @@ namespace MobileGL::MG_State::GLState {
             return m_sharedBufferObjects;
         }
 
-        // Legacy per-context BufferState; kept until every buffer access is
-        // routed through GetSharedBufferObjects().
+        SharedPtr<SharedTextureObjectTable>& GetSharedTextureObjects() {
+            return m_sharedTextureObjects;
+        }
+        const SharedPtr<SharedTextureObjectTable>& GetSharedTextureObjects() const {
+            return m_sharedTextureObjects;
+        }
+
+        // Legacy per-context states; kept until every object access is
+        // routed through the GetShared*Objects() accessors.
         BufferState& GetBufferState() { return m_bufferState; }
         const BufferState& GetBufferState() const { return m_bufferState; }
 
     private:
         SharedPtr<SharedBufferObjectTable> m_sharedBufferObjects = MakeShared<SharedBufferObjectTable>();
+        SharedPtr<SharedTextureObjectTable> m_sharedTextureObjects = MakeShared<SharedTextureObjectTable>();
         BufferState m_bufferState;
     };
 } // namespace MobileGL::MG_State::GLState
