@@ -68,6 +68,21 @@ table BindTransformFeedback {
     name: uint;
 }
 
+table BlitFramebuffer {
+    read_framebuffer: ulong;
+    draw_framebuffer: ulong;
+    src_x0: int;
+    src_y0: int;
+    src_x1: int;
+    src_y1: int;
+    dst_x0: int;
+    dst_y0: int;
+    dst_x1: int;
+    dst_y1: int;
+    mask: uint;
+    filter: uint;
+}
+
 table DataBlob {
     offset: ulong;
     size: ulong;
@@ -88,6 +103,7 @@ table Command {
     dispatch_compute: DispatchCompute;
     begin_transform_feedback: BeginTransformFeedback;
     bind_transform_feedback: BindTransformFeedback;
+    blit_framebuffer: BlitFramebuffer;
     data: DataBlob;
 }
 

@@ -74,6 +74,12 @@ namespace MobileGL::Client {
     // Sends a typed glBindTransformFeedback command (awaits response).
     Bool SendBindTransformFeedback(Uint64 sessionId, uint32_t name, Uint64 token);
 
+    // Sends a typed glBlitFramebuffer command (awaits response).
+    Bool SendBlitFramebuffer(Uint64 sessionId, uint64_t readFramebuffer, uint64_t drawFramebuffer,
+                             int32_t srcX0, int32_t srcY0, int32_t srcX1,
+                             int32_t srcY1, int32_t dstX0, int32_t dstY0, int32_t dstX1,
+                             int32_t dstY1, uint32_t mask, uint32_t filter, Uint64 token);
+
     // Submits a command without waiting for its response.
     Bool SubmitCommand(Uint32 sessionId, Uint32 opcode, Uint64 token);
 

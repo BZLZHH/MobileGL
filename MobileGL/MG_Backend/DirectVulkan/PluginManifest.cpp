@@ -109,6 +109,28 @@ namespace {
         (void)name;
     }
 
+    void BlitFramebufferBackend(MobileGLBackend* self, MobileGLSessionId session,
+                                MobileGLBackendHandle readFramebuffer,
+                                MobileGLBackendHandle drawFramebuffer,
+                                int32_t srcX0, int32_t srcY0, int32_t srcX1, int32_t srcY1,
+                                int32_t dstX0, int32_t dstY0, int32_t dstX1, int32_t dstY1,
+                                uint32_t mask, uint32_t filter) {
+        (void)self;
+        (void)session;
+        (void)readFramebuffer;
+        (void)drawFramebuffer;
+        (void)srcX0;
+        (void)srcY0;
+        (void)srcX1;
+        (void)srcY1;
+        (void)dstX0;
+        (void)dstY0;
+        (void)dstX1;
+        (void)dstY1;
+        (void)mask;
+        (void)filter;
+    }
+
     void DrawElementsBackend(MobileGLBackend* self, MobileGLSessionId session,
                              uint32_t mode, int32_t count, uint32_t type, const void* indices) {
         (void)self;
@@ -204,7 +226,8 @@ namespace {
         .EndTransformFeedback = &EndTransformFeedbackBackend,
         .PauseTransformFeedback = &PauseTransformFeedbackBackend,
         .ResumeTransformFeedback = &ResumeTransformFeedbackBackend,
-        .BindTransformFeedback = &BindTransformFeedbackBackend
+        .BindTransformFeedback = &BindTransformFeedbackBackend,
+        .BlitFramebuffer = &BlitFramebufferBackend
     };
 
     const MobileGLBackendVTable* GetBackendVTable() {

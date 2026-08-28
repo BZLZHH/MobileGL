@@ -264,6 +264,27 @@ namespace MobileGL::FullServer {
                                                 btf == nullptr ? 0 : btf->name());
                 status = 0;
             }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glBlitFramebuffer) &&
+                   m_vtable->BlitFramebuffer != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else {
+                const auto* blit = command->blit_framebuffer();
+                m_vtable->BlitFramebuffer(m_backend, sessionId,
+                                          blit == nullptr ? 0 : blit->read_framebuffer(),
+                                          blit == nullptr ? 0 : blit->draw_framebuffer(),
+                                          blit == nullptr ? 0 : blit->src_x0(),
+                                          blit == nullptr ? 0 : blit->src_y0(),
+                                          blit == nullptr ? 0 : blit->src_x1(),
+                                          blit == nullptr ? 0 : blit->src_y1(),
+                                          blit == nullptr ? 0 : blit->dst_x0(),
+                                          blit == nullptr ? 0 : blit->dst_y0(),
+                                          blit == nullptr ? 0 : blit->dst_x1(),
+                                          blit == nullptr ? 0 : blit->dst_y1(),
+                                          blit == nullptr ? 0 : blit->mask(),
+                                          blit == nullptr ? 0 : blit->filter());
+                status = 0;
+            }
         }
 
         for (auto& handle : receivedShm) {

@@ -50,6 +50,9 @@ struct BeginTransformFeedbackBuilder;
 struct BindTransformFeedback;
 struct BindTransformFeedbackBuilder;
 
+struct BlitFramebuffer;
+struct BlitFramebufferBuilder;
+
 struct DataBlob;
 struct DataBlobBuilder;
 
@@ -654,6 +657,158 @@ inline ::flatbuffers::Offset<BindTransformFeedback> CreateBindTransformFeedback(
   return builder_.Finish();
 }
 
+struct BlitFramebuffer FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef BlitFramebufferBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_READ_FRAMEBUFFER = 4,
+    VT_DRAW_FRAMEBUFFER = 6,
+    VT_SRC_X0 = 8,
+    VT_SRC_Y0 = 10,
+    VT_SRC_X1 = 12,
+    VT_SRC_Y1 = 14,
+    VT_DST_X0 = 16,
+    VT_DST_Y0 = 18,
+    VT_DST_X1 = 20,
+    VT_DST_Y1 = 22,
+    VT_MASK = 24,
+    VT_FILTER = 26
+  };
+  uint64_t read_framebuffer() const {
+    return GetField<uint64_t>(VT_READ_FRAMEBUFFER, 0);
+  }
+  uint64_t draw_framebuffer() const {
+    return GetField<uint64_t>(VT_DRAW_FRAMEBUFFER, 0);
+  }
+  int32_t src_x0() const {
+    return GetField<int32_t>(VT_SRC_X0, 0);
+  }
+  int32_t src_y0() const {
+    return GetField<int32_t>(VT_SRC_Y0, 0);
+  }
+  int32_t src_x1() const {
+    return GetField<int32_t>(VT_SRC_X1, 0);
+  }
+  int32_t src_y1() const {
+    return GetField<int32_t>(VT_SRC_Y1, 0);
+  }
+  int32_t dst_x0() const {
+    return GetField<int32_t>(VT_DST_X0, 0);
+  }
+  int32_t dst_y0() const {
+    return GetField<int32_t>(VT_DST_Y0, 0);
+  }
+  int32_t dst_x1() const {
+    return GetField<int32_t>(VT_DST_X1, 0);
+  }
+  int32_t dst_y1() const {
+    return GetField<int32_t>(VT_DST_Y1, 0);
+  }
+  uint32_t mask() const {
+    return GetField<uint32_t>(VT_MASK, 0);
+  }
+  uint32_t filter() const {
+    return GetField<uint32_t>(VT_FILTER, 0);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint64_t>(verifier, VT_READ_FRAMEBUFFER, 8) &&
+           VerifyField<uint64_t>(verifier, VT_DRAW_FRAMEBUFFER, 8) &&
+           VerifyField<int32_t>(verifier, VT_SRC_X0, 4) &&
+           VerifyField<int32_t>(verifier, VT_SRC_Y0, 4) &&
+           VerifyField<int32_t>(verifier, VT_SRC_X1, 4) &&
+           VerifyField<int32_t>(verifier, VT_SRC_Y1, 4) &&
+           VerifyField<int32_t>(verifier, VT_DST_X0, 4) &&
+           VerifyField<int32_t>(verifier, VT_DST_Y0, 4) &&
+           VerifyField<int32_t>(verifier, VT_DST_X1, 4) &&
+           VerifyField<int32_t>(verifier, VT_DST_Y1, 4) &&
+           VerifyField<uint32_t>(verifier, VT_MASK, 4) &&
+           VerifyField<uint32_t>(verifier, VT_FILTER, 4) &&
+           verifier.EndTable();
+  }
+};
+
+struct BlitFramebufferBuilder {
+  typedef BlitFramebuffer Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_read_framebuffer(uint64_t read_framebuffer) {
+    fbb_.AddElement<uint64_t>(BlitFramebuffer::VT_READ_FRAMEBUFFER, read_framebuffer, 0);
+  }
+  void add_draw_framebuffer(uint64_t draw_framebuffer) {
+    fbb_.AddElement<uint64_t>(BlitFramebuffer::VT_DRAW_FRAMEBUFFER, draw_framebuffer, 0);
+  }
+  void add_src_x0(int32_t src_x0) {
+    fbb_.AddElement<int32_t>(BlitFramebuffer::VT_SRC_X0, src_x0, 0);
+  }
+  void add_src_y0(int32_t src_y0) {
+    fbb_.AddElement<int32_t>(BlitFramebuffer::VT_SRC_Y0, src_y0, 0);
+  }
+  void add_src_x1(int32_t src_x1) {
+    fbb_.AddElement<int32_t>(BlitFramebuffer::VT_SRC_X1, src_x1, 0);
+  }
+  void add_src_y1(int32_t src_y1) {
+    fbb_.AddElement<int32_t>(BlitFramebuffer::VT_SRC_Y1, src_y1, 0);
+  }
+  void add_dst_x0(int32_t dst_x0) {
+    fbb_.AddElement<int32_t>(BlitFramebuffer::VT_DST_X0, dst_x0, 0);
+  }
+  void add_dst_y0(int32_t dst_y0) {
+    fbb_.AddElement<int32_t>(BlitFramebuffer::VT_DST_Y0, dst_y0, 0);
+  }
+  void add_dst_x1(int32_t dst_x1) {
+    fbb_.AddElement<int32_t>(BlitFramebuffer::VT_DST_X1, dst_x1, 0);
+  }
+  void add_dst_y1(int32_t dst_y1) {
+    fbb_.AddElement<int32_t>(BlitFramebuffer::VT_DST_Y1, dst_y1, 0);
+  }
+  void add_mask(uint32_t mask) {
+    fbb_.AddElement<uint32_t>(BlitFramebuffer::VT_MASK, mask, 0);
+  }
+  void add_filter(uint32_t filter) {
+    fbb_.AddElement<uint32_t>(BlitFramebuffer::VT_FILTER, filter, 0);
+  }
+  explicit BlitFramebufferBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<BlitFramebuffer> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<BlitFramebuffer>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<BlitFramebuffer> CreateBlitFramebuffer(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint64_t read_framebuffer = 0,
+    uint64_t draw_framebuffer = 0,
+    int32_t src_x0 = 0,
+    int32_t src_y0 = 0,
+    int32_t src_x1 = 0,
+    int32_t src_y1 = 0,
+    int32_t dst_x0 = 0,
+    int32_t dst_y0 = 0,
+    int32_t dst_x1 = 0,
+    int32_t dst_y1 = 0,
+    uint32_t mask = 0,
+    uint32_t filter = 0) {
+  BlitFramebufferBuilder builder_(_fbb);
+  builder_.add_draw_framebuffer(draw_framebuffer);
+  builder_.add_read_framebuffer(read_framebuffer);
+  builder_.add_filter(filter);
+  builder_.add_mask(mask);
+  builder_.add_dst_y1(dst_y1);
+  builder_.add_dst_x1(dst_x1);
+  builder_.add_dst_y0(dst_y0);
+  builder_.add_dst_x0(dst_x0);
+  builder_.add_src_y1(src_y1);
+  builder_.add_src_x1(src_x1);
+  builder_.add_src_y0(src_y0);
+  builder_.add_src_x0(src_x0);
+  return builder_.Finish();
+}
+
 struct DataBlob FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef DataBlobBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
@@ -723,7 +878,8 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_DISPATCH_COMPUTE = 26,
     VT_BEGIN_TRANSFORM_FEEDBACK = 28,
     VT_BIND_TRANSFORM_FEEDBACK = 30,
-    VT_DATA = 32
+    VT_BLIT_FRAMEBUFFER = 32,
+    VT_DATA = 34
   };
   uint32_t opcode() const {
     return GetField<uint32_t>(VT_OPCODE, 0);
@@ -767,6 +923,9 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   const MobileGL::Protocol::Wire::BindTransformFeedback *bind_transform_feedback() const {
     return GetPointer<const MobileGL::Protocol::Wire::BindTransformFeedback *>(VT_BIND_TRANSFORM_FEEDBACK);
   }
+  const MobileGL::Protocol::Wire::BlitFramebuffer *blit_framebuffer() const {
+    return GetPointer<const MobileGL::Protocol::Wire::BlitFramebuffer *>(VT_BLIT_FRAMEBUFFER);
+  }
   const MobileGL::Protocol::Wire::DataBlob *data() const {
     return GetPointer<const MobileGL::Protocol::Wire::DataBlob *>(VT_DATA);
   }
@@ -798,6 +957,8 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            verifier.VerifyTable(begin_transform_feedback()) &&
            VerifyOffset(verifier, VT_BIND_TRANSFORM_FEEDBACK) &&
            verifier.VerifyTable(bind_transform_feedback()) &&
+           VerifyOffset(verifier, VT_BLIT_FRAMEBUFFER) &&
+           verifier.VerifyTable(blit_framebuffer()) &&
            VerifyOffset(verifier, VT_DATA) &&
            verifier.VerifyTable(data()) &&
            verifier.EndTable();
@@ -850,6 +1011,9 @@ struct CommandBuilder {
   void add_bind_transform_feedback(::flatbuffers::Offset<MobileGL::Protocol::Wire::BindTransformFeedback> bind_transform_feedback) {
     fbb_.AddOffset(Command::VT_BIND_TRANSFORM_FEEDBACK, bind_transform_feedback);
   }
+  void add_blit_framebuffer(::flatbuffers::Offset<MobileGL::Protocol::Wire::BlitFramebuffer> blit_framebuffer) {
+    fbb_.AddOffset(Command::VT_BLIT_FRAMEBUFFER, blit_framebuffer);
+  }
   void add_data(::flatbuffers::Offset<MobileGL::Protocol::Wire::DataBlob> data) {
     fbb_.AddOffset(Command::VT_DATA, data);
   }
@@ -880,11 +1044,13 @@ inline ::flatbuffers::Offset<Command> CreateCommand(
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::DispatchCompute> dispatch_compute = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::BeginTransformFeedback> begin_transform_feedback = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::BindTransformFeedback> bind_transform_feedback = 0,
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::BlitFramebuffer> blit_framebuffer = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::DataBlob> data = 0) {
   CommandBuilder builder_(_fbb);
   builder_.add_token(token);
   builder_.add_session_id(session_id);
   builder_.add_data(data);
+  builder_.add_blit_framebuffer(blit_framebuffer);
   builder_.add_bind_transform_feedback(bind_transform_feedback);
   builder_.add_begin_transform_feedback(begin_transform_feedback);
   builder_.add_dispatch_compute(dispatch_compute);
