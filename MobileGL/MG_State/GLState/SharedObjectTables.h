@@ -9,6 +9,7 @@
 #pragma once
 
 #include <Includes.h>
+#include "MG_State/GLState/Core.h"
 #include "MG_State/GLState/BufferState/BufferState.h"
 #include "MG_State/GLState/TextureState/TextureState.h"
 #include "MG_State/GLState/SamplerState/SamplerState.h"
@@ -223,6 +224,21 @@ namespace MobileGL::MG_State::GLState {
         IndexGenerator<Uint> m_programShaderNameGenerator;
     };
 
+    // Shared transform-feedback object table. The bound object index and the
+    // live capture state remain per-context in GLContext.
+    class SharedTransformFeedbackObjectTable {
+    public:
+        SharedTransformFeedbackObjectTable() : m_names(1024, 1) {}
+
+        UnorderedMap<Uint, TransformFeedbackObjectState>& GetObjects() { return m_objects; }
+        const UnorderedMap<Uint, TransformFeedbackObjectState>& GetObjects() const { return m_objects; }
+        IndexGenerator<Uint>& GetNames() { return m_names; }
+
+    private:
+        UnorderedMap<Uint, TransformFeedbackObjectState> m_objects;
+        IndexGenerator<Uint> m_names;
+    };
+
     class SharedObjectTables {
     public:
         SharedObjectTables() = default;
@@ -276,6 +292,13 @@ namespace MobileGL::MG_State::GLState {
             return m_sharedProgramObjects;
         }
 
+        SharedPtr<SharedTransformFeedbackObjectTable>& GetSharedTransformFeedbackObjects() {
+            return m_sharedTransformFeedbackObjects;
+        }
+        const SharedPtr<SharedTransformFeedbackObjectTable>& GetSharedTransformFeedbackObjects() const {
+            return m_sharedTransformFeedbackObjects;
+        }
+
         // Legacy per-context states; kept until every object access is
         // routed through the GetShared*Objects() accessors.
         BufferState& GetBufferState() { return m_bufferState; }
@@ -289,6 +312,8 @@ namespace MobileGL::MG_State::GLState {
         SharedPtr<SharedFramebufferObjectTable> m_sharedFramebufferObjects = MakeShared<SharedFramebufferObjectTable>();
         SharedPtr<SharedVertexArrayObjectTable> m_sharedVertexArrayObjects = MakeShared<SharedVertexArrayObjectTable>();
         SharedPtr<SharedProgramObjectTable> m_sharedProgramObjects = MakeShared<SharedProgramObjectTable>();
+        SharedPtr<SharedTransformFeedbackObjectTable> m_sharedTransformFeedbackObjects =
+            MakeShared<SharedTransformFeedbackObjectTable>();
         BufferState m_bufferState;
     };
 } // namespace MobileGL::MG_State::GLState

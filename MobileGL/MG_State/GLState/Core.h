@@ -37,6 +37,7 @@ namespace MobileGL {
             class SharedFramebufferObjectTable;
             class SharedVertexArrayObjectTable;
             class SharedProgramObjectTable;
+            class SharedTransformFeedbackObjectTable;
 
             struct CurrentVertexAttributeValue {
                 Array<Float, 4> floatValue{0.f, 0.f, 0.f, 1.f};
@@ -66,6 +67,27 @@ namespace MobileGL {
                 Bool HasExplicitRange = false;
             };
 
+            // Everything a transform feedback object owns while it is NOT the bound one.
+            // Now namespace-level so the SharedGroup-owned object table can use it.
+            struct TransformFeedbackObjectState {
+                struct SavedBufferBinding {
+                    SharedPtr<BufferObject> buffer;
+                    Range1D range;
+                    Bool hasExplicitRange = false;
+                };
+                Array<SavedBufferBinding, 4> bindings;
+                Bool active = false;
+                Bool paused = false;
+                GLenum primitiveMode = GL_POINTS;
+                SharedPtr<ProgramObject> program;
+                Uint64 generation = 0;
+                Uint64 capturedVertices = 0;
+                Uint64 inputPrimitives = 0;
+                Uint64 recordedVertices = 0;
+                Bool hasCompletedSpan = false;
+                Bool everBound = false;
+            };
+
             class GLContext {
             public:
                 GLContext() = default;
@@ -86,6 +108,8 @@ namespace MobileGL {
                 void SetSharedFramebufferObjectTable(const SharedPtr<SharedFramebufferObjectTable>& table);
                 void SetSharedVertexArrayObjectTable(const SharedPtr<SharedVertexArrayObjectTable>& table);
                 void SetSharedProgramObjectTable(const SharedPtr<SharedProgramObjectTable>& table);
+                void SetSharedTransformFeedbackObjectTable(
+                    const SharedPtr<SharedTransformFeedbackObjectTable>& table);
 
                 // C/S object handle for a GL name; allocates on first use.
                 // objectKind uses MobileGLObjectKind values (Protocol/bfa.h).
@@ -514,6 +538,11 @@ namespace MobileGL {
                 void InvalidateCompileEnv();
 
             private:
+                UnorderedMap<Uint, TransformFeedbackObjectState>& GetTransformFeedbackObjectTable();
+                const UnorderedMap<Uint, TransformFeedbackObjectState>& GetTransformFeedbackObjectTable() const;
+                IndexGenerator<Uint>& GetTransformFeedbackNameGenerator();
+                const IndexGenerator<Uint>& GetTransformFeedbackNameGenerator() const;
+
                 // State Components
                 ErrorState m_errorState;
                 BufferState m_bufferState;
@@ -544,26 +573,11 @@ namespace MobileGL {
                 GLenum m_conditionalRenderMode = GL_NONE;
 
                 // Everything a transform feedback object owns while it is NOT the bound one.
-                struct TransformFeedbackObjectState {
-                    struct SavedBufferBinding {
-                        SharedPtr<BufferObject> buffer;
-                        Range1D range;
-                        Bool hasExplicitRange = false;
-                    };
-                    Array<SavedBufferBinding, MAX_TRANSFORM_FEEDBACK_BUFFERS> bindings;
-                    Bool active = false;
-                    Bool paused = false;
-                    GLenum primitiveMode = GL_POINTS;
-                    SharedPtr<ProgramObject> program;
-                    Uint64 generation = 0;
-                    Uint64 capturedVertices = 0;
-                    Uint64 inputPrimitives = 0;
-                    Uint64 recordedVertices = 0;
-                    Bool hasCompletedSpan = false;
-                    Bool everBound = false;
-                };
+                // The type itself moved to namespace scope (TransformFeedbackObjectState) so
+                // the SharedGroup-owned object table can store it.
                 void SaveBoundTransformFeedbackState();
                 void RestoreBoundTransformFeedbackState();
+                SharedPtr<SharedTransformFeedbackObjectTable> m_sharedTransformFeedback;
                 // operator[] materialises an entry with the default state on first touch, so
                 // the default object (name 0) needs no seeding here.
                 UnorderedMap<Uint, TransformFeedbackObjectState> m_transformFeedbackObjects;

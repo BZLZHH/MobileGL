@@ -105,6 +105,16 @@ namespace MobileGL::MG_State::GLState {
         ASSERT_NE(shaderId, 0u);
         const auto& seenShader = second->GetContext().GetShaderObject(shaderId);
         ASSERT_TRUE(seenShader);
+
+        // Transform-feedback object table is shared: a name created/instantiated
+        // through one session answers glIsTransformFeedback through the other.
+        Vector<Uint> transformFeedbackNames;
+        first->GetContext().GenTransformFeedbackNames(1, transformFeedbackNames);
+        ASSERT_EQ(transformFeedbackNames.size(), 1u);
+        const Uint transformFeedbackId = transformFeedbackNames[0];
+        ASSERT_NE(transformFeedbackId, 0u);
+        first->GetContext().CreateTransformFeedbackObject(transformFeedbackId);
+        EXPECT_TRUE(second->GetContext().IsTransformFeedbackObject(transformFeedbackId));
     }
 
     TEST(ContextRegistryTest, TracksCurrentSessionPerThread) {

@@ -74,6 +74,27 @@ namespace MobileGL::MG_State {
             m_programState.SetSharedObjectTable(table);
         }
 
+        void GLContext::SetSharedTransformFeedbackObjectTable(
+            const SharedPtr<SharedTransformFeedbackObjectTable>& table) {
+            m_sharedTransformFeedback = table;
+        }
+
+        UnorderedMap<Uint, TransformFeedbackObjectState>& GLContext::GetTransformFeedbackObjectTable() {
+            return m_sharedTransformFeedback ? m_sharedTransformFeedback->GetObjects() : GetTransformFeedbackObjectTable();
+        }
+
+        const UnorderedMap<Uint, TransformFeedbackObjectState>& GLContext::GetTransformFeedbackObjectTable() const {
+            return m_sharedTransformFeedback ? m_sharedTransformFeedback->GetObjects() : GetTransformFeedbackObjectTable();
+        }
+
+        IndexGenerator<Uint>& GLContext::GetTransformFeedbackNameGenerator() {
+            return m_sharedTransformFeedback ? m_sharedTransformFeedback->GetNames() : GetTransformFeedbackNameGenerator();
+        }
+
+        const IndexGenerator<Uint>& GLContext::GetTransformFeedbackNameGenerator() const {
+            return m_sharedTransformFeedback ? m_sharedTransformFeedback->GetNames() : GetTransformFeedbackNameGenerator();
+        }
+
         Uint64 GLContext::GetObjectHandle(Uint32 objectKind, Uint32 glName) const {
             const auto kind = static_cast<MobileGLObjectKind>(objectKind);
             const Bool isSessionPrivate =
@@ -1326,7 +1347,7 @@ namespace MobileGL::MG_State {
         }
 
         void GLContext::SaveBoundTransformFeedbackState() {
-            auto& object = m_transformFeedbackObjects[m_boundTransformFeedback];
+            auto& object = GetTransformFeedbackObjectTable()[m_boundTransformFeedback];
             for (Uint i = 0; i < MAX_TRANSFORM_FEEDBACK_BUFFERS; ++i) {
                 const auto& point = m_bufferState.GetBindingPoint(BufferTarget::TransformFeedback, i);
                 object.bindings[i] = {point.GetBoundObject(), point.GetRange(), point.HasExplicitRange()};
@@ -1341,7 +1362,7 @@ namespace MobileGL::MG_State {
         }
 
         void GLContext::RestoreBoundTransformFeedbackState() {
-            const auto& object = m_transformFeedbackObjects[m_boundTransformFeedback];
+            const auto& object = GetTransformFeedbackObjectTable()[m_boundTransformFeedback];
             for (Uint i = 0; i < MAX_TRANSFORM_FEEDBACK_BUFFERS; ++i) {
                 auto& point = m_bufferState.GetBindingPoint(BufferTarget::TransformFeedback, i);
                 point.Bind(object.bindings[i].buffer);
@@ -1366,11 +1387,11 @@ namespace MobileGL::MG_State {
         void GLContext::GenTransformFeedbackNames(Uint number, Vector<Uint>& ids) {
             ids.resize(number);
             if (number == 0) return;
-            m_transformFeedbackNames.Generate(number, ids.data());
+            GetTransformFeedbackNameGenerator().Generate(number, ids.data());
             // A generated name already denotes an object with the default state, so that a
             // bind never has to distinguish "first use" from any later one.
             for (const Uint id : ids) {
-                m_transformFeedbackObjects[id] = {};
+                GetTransformFeedbackObjectTable()[id] = {};
             }
         }
         // Program pipeline
@@ -1451,62 +1472,62 @@ namespace MobileGL::MG_State {
 
 
         Bool GLContext::ValidateTransformFeedbackName(Uint index) const {
-            return index == 0 || m_transformFeedbackNames.IsValid(index);
+            return index == 0 || GetTransformFeedbackNameGenerator().IsValid(index);
         }
 
         void GLContext::BindTransformFeedbackObject(Uint index) {
             if (index == m_boundTransformFeedback) return;
             SaveBoundTransformFeedbackState();
             m_boundTransformFeedback = index;
-            m_transformFeedbackObjects[index].everBound = true;
+            GetTransformFeedbackObjectTable()[index].everBound = true;
             RestoreBoundTransformFeedbackState();
         }
 
         Bool GLContext::IsTransformFeedbackObject(Uint index) const {
-            if (index == 0 || !m_transformFeedbackNames.IsValid(index)) return false;
-            const auto it = m_transformFeedbackObjects.find(index);
-            return it != m_transformFeedbackObjects.end() && it->second.everBound;
+            if (index == 0 || !GetTransformFeedbackNameGenerator().IsValid(index)) return false;
+            const auto it = GetTransformFeedbackObjectTable().find(index);
+            return it != GetTransformFeedbackObjectTable().end() && it->second.everBound;
         }
 
         void GLContext::MarkTransformFeedbackObjectForDeletion(Uint index) {
-            if (index == 0 || !m_transformFeedbackNames.IsValid(index)) return;
+            if (index == 0 || !GetTransformFeedbackNameGenerator().IsValid(index)) return;
             // Deleting the bound object reverts to the default one (GL 4.6 core 13.2.1);
             // its state is dropped rather than saved back into the dying object.
             if (index == m_boundTransformFeedback) {
                 m_boundTransformFeedback = 0;
                 RestoreBoundTransformFeedbackState();
             }
-            m_transformFeedbackObjects.erase(index);
-            m_transformFeedbackNames.Delete(index);
+            GetTransformFeedbackObjectTable().erase(index);
+            GetTransformFeedbackNameGenerator().Delete(index);
         }
 
         Uint64 GLContext::GetTransformFeedbackRecordedVertices(Uint index) const {
-            const auto it = m_transformFeedbackObjects.find(index);
-            return it == m_transformFeedbackObjects.end() ? 0 : it->second.recordedVertices;
+            const auto it = GetTransformFeedbackObjectTable().find(index);
+            return it == GetTransformFeedbackObjectTable().end() ? 0 : it->second.recordedVertices;
         }
 
         Bool GLContext::HasTransformFeedbackCompletedSpan(Uint index) const {
-            const auto it = m_transformFeedbackObjects.find(index);
-            return it != m_transformFeedbackObjects.end() && it->second.hasCompletedSpan;
+            const auto it = GetTransformFeedbackObjectTable().find(index);
+            return it != GetTransformFeedbackObjectTable().end() && it->second.hasCompletedSpan;
         }
 
         void GLContext::CreateTransformFeedbackObject(Uint index) {
             // glCreateTransformFeedbacks has no bind step to infer existence from, so the name it
             // hands out is already the name of an object (GL 4.6 core 13.2.1).
-            m_transformFeedbackObjects[index] = {};
-            m_transformFeedbackObjects[index].everBound = true;
+            GetTransformFeedbackObjectTable()[index] = {};
+            GetTransformFeedbackObjectTable()[index].everBound = true;
         }
 
         Bool GLContext::IsNamedTransformFeedbackActive(Uint index) const {
             if (index == m_boundTransformFeedback) return m_transformFeedbackActive;
-            const auto it = m_transformFeedbackObjects.find(index);
-            return it != m_transformFeedbackObjects.end() && it->second.active;
+            const auto it = GetTransformFeedbackObjectTable().find(index);
+            return it != GetTransformFeedbackObjectTable().end() && it->second.active;
         }
 
         Bool GLContext::IsNamedTransformFeedbackPaused(Uint index) const {
             if (index == m_boundTransformFeedback) return m_transformFeedbackPaused;
-            const auto it = m_transformFeedbackObjects.find(index);
-            return it != m_transformFeedbackObjects.end() && it->second.paused;
+            const auto it = GetTransformFeedbackObjectTable().find(index);
+            return it != GetTransformFeedbackObjectTable().end() && it->second.paused;
         }
 
         NamedTransformFeedbackBinding GLContext::GetNamedTransformFeedbackBinding(Uint index, Uint bufferIndex) const {
@@ -1521,8 +1542,8 @@ namespace MobileGL::MG_State {
                 result.HasExplicitRange = point.HasExplicitRange();
                 return result;
             }
-            const auto it = m_transformFeedbackObjects.find(index);
-            if (it == m_transformFeedbackObjects.end()) return result;
+            const auto it = GetTransformFeedbackObjectTable().find(index);
+            if (it == GetTransformFeedbackObjectTable().end()) return result;
             const auto& saved = it->second.bindings[bufferIndex];
             result.Buffer = saved.buffer;
             result.Range = saved.range;
@@ -1544,7 +1565,7 @@ namespace MobileGL::MG_State {
                 }
                 return;
             }
-            auto& object = m_transformFeedbackObjects[index];
+            auto& object = GetTransformFeedbackObjectTable()[index];
             object.bindings[bufferIndex] = {buffer, range, hasExplicitRange};
         }
     } // namespace GLState
