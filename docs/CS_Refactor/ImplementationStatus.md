@@ -2,6 +2,14 @@
 
 > 更新：Phase 0 完成，Phase 1-4 进行中（见下方清单）
 > 分支：`Feat/cs-refactor`（从 `dev@81b17c0` 创建）
+> 首次提交：`9be8bcff [Feat] (All): Add C/S refactor Phase 0-5 scaffolding and state/handle registry.`
+
+## 本阶段验证记录（已通过）
+
+- 配置：`cmake -S . -B build_agent -DMOBILEGL_BUILD_TEST=ON -DMOBILEGL_BUILD_CS_REFACTOR=ON` ✅
+- monolith（`MobileGL` / `MobileGL_s`）编译通过 ✅
+- C/S 目标编译通过：`FullServer`、`MobileGL_Client`、`MobileGL_UtilRuntime`、`BackendObject_DirectGLES.so`、`BackendObject_DirectVulkan.so`、`MobileGL_Transport` ✅
+- 单元测试：`ContextRegistryTest` 5/5、`HandleRegistryTest` 5/5 通过 ✅
 
 ## Phase 0 — 契约定稿 ✅
 
