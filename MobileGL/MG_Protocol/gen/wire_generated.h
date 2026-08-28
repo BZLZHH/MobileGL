@@ -41,6 +41,9 @@ struct PatchParameteriBuilder;
 struct GenerateMipmap;
 struct GenerateMipmapBuilder;
 
+struct DispatchCompute;
+struct DispatchComputeBuilder;
+
 struct DataBlob;
 struct DataBlobBuilder;
 
@@ -499,6 +502,68 @@ inline ::flatbuffers::Offset<GenerateMipmap> CreateGenerateMipmap(
   return builder_.Finish();
 }
 
+struct DispatchCompute FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef DispatchComputeBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_NUM_GROUPS_X = 4,
+    VT_NUM_GROUPS_Y = 6,
+    VT_NUM_GROUPS_Z = 8
+  };
+  uint32_t num_groups_x() const {
+    return GetField<uint32_t>(VT_NUM_GROUPS_X, 0);
+  }
+  uint32_t num_groups_y() const {
+    return GetField<uint32_t>(VT_NUM_GROUPS_Y, 0);
+  }
+  uint32_t num_groups_z() const {
+    return GetField<uint32_t>(VT_NUM_GROUPS_Z, 0);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint32_t>(verifier, VT_NUM_GROUPS_X, 4) &&
+           VerifyField<uint32_t>(verifier, VT_NUM_GROUPS_Y, 4) &&
+           VerifyField<uint32_t>(verifier, VT_NUM_GROUPS_Z, 4) &&
+           verifier.EndTable();
+  }
+};
+
+struct DispatchComputeBuilder {
+  typedef DispatchCompute Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_num_groups_x(uint32_t num_groups_x) {
+    fbb_.AddElement<uint32_t>(DispatchCompute::VT_NUM_GROUPS_X, num_groups_x, 0);
+  }
+  void add_num_groups_y(uint32_t num_groups_y) {
+    fbb_.AddElement<uint32_t>(DispatchCompute::VT_NUM_GROUPS_Y, num_groups_y, 0);
+  }
+  void add_num_groups_z(uint32_t num_groups_z) {
+    fbb_.AddElement<uint32_t>(DispatchCompute::VT_NUM_GROUPS_Z, num_groups_z, 0);
+  }
+  explicit DispatchComputeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<DispatchCompute> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<DispatchCompute>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<DispatchCompute> CreateDispatchCompute(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint32_t num_groups_x = 0,
+    uint32_t num_groups_y = 0,
+    uint32_t num_groups_z = 0) {
+  DispatchComputeBuilder builder_(_fbb);
+  builder_.add_num_groups_z(num_groups_z);
+  builder_.add_num_groups_y(num_groups_y);
+  builder_.add_num_groups_x(num_groups_x);
+  return builder_.Finish();
+}
+
 struct DataBlob FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef DataBlobBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
@@ -565,7 +630,8 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_MEMORY_BARRIER = 20,
     VT_PATCH_PARAMETERI = 22,
     VT_GENERATE_MIPMAP = 24,
-    VT_DATA = 26
+    VT_DISPATCH_COMPUTE = 26,
+    VT_DATA = 28
   };
   uint32_t opcode() const {
     return GetField<uint32_t>(VT_OPCODE, 0);
@@ -600,6 +666,9 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   const MobileGL::Protocol::Wire::GenerateMipmap *generate_mipmap() const {
     return GetPointer<const MobileGL::Protocol::Wire::GenerateMipmap *>(VT_GENERATE_MIPMAP);
   }
+  const MobileGL::Protocol::Wire::DispatchCompute *dispatch_compute() const {
+    return GetPointer<const MobileGL::Protocol::Wire::DispatchCompute *>(VT_DISPATCH_COMPUTE);
+  }
   const MobileGL::Protocol::Wire::DataBlob *data() const {
     return GetPointer<const MobileGL::Protocol::Wire::DataBlob *>(VT_DATA);
   }
@@ -625,6 +694,8 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            verifier.VerifyTable(patch_parameteri()) &&
            VerifyOffset(verifier, VT_GENERATE_MIPMAP) &&
            verifier.VerifyTable(generate_mipmap()) &&
+           VerifyOffset(verifier, VT_DISPATCH_COMPUTE) &&
+           verifier.VerifyTable(dispatch_compute()) &&
            VerifyOffset(verifier, VT_DATA) &&
            verifier.VerifyTable(data()) &&
            verifier.EndTable();
@@ -668,6 +739,9 @@ struct CommandBuilder {
   void add_generate_mipmap(::flatbuffers::Offset<MobileGL::Protocol::Wire::GenerateMipmap> generate_mipmap) {
     fbb_.AddOffset(Command::VT_GENERATE_MIPMAP, generate_mipmap);
   }
+  void add_dispatch_compute(::flatbuffers::Offset<MobileGL::Protocol::Wire::DispatchCompute> dispatch_compute) {
+    fbb_.AddOffset(Command::VT_DISPATCH_COMPUTE, dispatch_compute);
+  }
   void add_data(::flatbuffers::Offset<MobileGL::Protocol::Wire::DataBlob> data) {
     fbb_.AddOffset(Command::VT_DATA, data);
   }
@@ -695,11 +769,13 @@ inline ::flatbuffers::Offset<Command> CreateCommand(
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::MemoryBarrier> memory_barrier = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::PatchParameteri> patch_parameteri = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::GenerateMipmap> generate_mipmap = 0,
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::DispatchCompute> dispatch_compute = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::DataBlob> data = 0) {
   CommandBuilder builder_(_fbb);
   builder_.add_token(token);
   builder_.add_session_id(session_id);
   builder_.add_data(data);
+  builder_.add_dispatch_compute(dispatch_compute);
   builder_.add_generate_mipmap(generate_mipmap);
   builder_.add_patch_parameteri(patch_parameteri);
   builder_.add_memory_barrier(memory_barrier);

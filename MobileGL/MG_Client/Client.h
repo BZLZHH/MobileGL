@@ -57,6 +57,10 @@ namespace MobileGL::Client {
     // Sends a typed glGenerateMipmap command (awaits response).
     Bool SendGenerateMipmap(Uint64 sessionId, uint32_t target, Uint64 token);
 
+    // Sends a typed glDispatchCompute command (awaits response).
+    Bool SendDispatchCompute(Uint64 sessionId, uint32_t numGroupsX, uint32_t numGroupsY,
+                             uint32_t numGroupsZ, Uint64 token);
+
     // Submits a command without waiting for its response.
     Bool SubmitCommand(Uint32 sessionId, Uint32 opcode, Uint64 token);
 

@@ -54,6 +54,12 @@ table GenerateMipmap {
     target: uint;
 }
 
+table DispatchCompute {
+    num_groups_x: uint;
+    num_groups_y: uint;
+    num_groups_z: uint;
+}
+
 table DataBlob {
     offset: ulong;
     size: ulong;
@@ -71,6 +77,7 @@ table Command {
     memory_barrier: MemoryBarrier;
     patch_parameteri: PatchParameteri;
     generate_mipmap: GenerateMipmap;
+    dispatch_compute: DispatchCompute;
     data: DataBlob;
 }
 
