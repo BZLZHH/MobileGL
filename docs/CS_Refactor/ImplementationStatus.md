@@ -80,7 +80,8 @@
 - [x] `MobileGL/FullServer/BackendHost.h/.cpp` — Host vtable 注入
 - [x] `MobileGL/FullServer/Main.cpp` — 启动流程接线（UtilRuntime→BackendPlugin→Create→Initialize→Shutdown）
 - [x] **插件生命周期 E2E 验证**：`FullServer <UtilRuntime.so> <BackendObject_DirectGLES.so>` 运行退出码 0
-- [ ] BigServer 全链路 E2E（transport server 循环）
+- [x] **BigServer 全链路 E2E（in-process）**：Client 命令 → InProcessTransport → `FullServer::ServerCore` → Backend VTable → Response → Client；`BigServerE2ETest` 1/1 通过
+- [ ] BigServer 全链路 E2E（socket transport + FlatBuffers 解码）
 
 ## Phase 6 — 正确性 / 性能 / 平台
 

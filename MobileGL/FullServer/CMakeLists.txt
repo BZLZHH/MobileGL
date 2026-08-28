@@ -11,6 +11,7 @@ add_executable(FullServer
     BackendHost.cpp
     BackendPluginLoader.cpp
     UtilRuntimeLoader.cpp
+    ServerCore.cpp
 )
 
 target_link_libraries(FullServer PRIVATE
