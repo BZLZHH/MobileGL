@@ -152,6 +152,16 @@ namespace MobileGL::MG_State::GLState {
         EXPECT_EQ(GLContextRegistry::GetSessionCount(), before - 1);
         EXPECT_EQ(GLContextRegistry::FindSession(contextHandle), nullptr);
     }
+
+    TEST(ContextRegistryTest, DifferentDisplaysGetDifferentGroups) {
+        const DisplayId firstDisplay = 11;
+        const DisplayId secondDisplay = 12;
+        const SharedGroupId firstGroup = GLContextRegistry::GetOrCreateSharedGroup(firstDisplay, 0);
+        const SharedGroupId secondGroup = GLContextRegistry::GetOrCreateSharedGroup(secondDisplay, 0);
+        EXPECT_NE(firstGroup, secondGroup);
+        EXPECT_NE(firstGroup, 0u);
+        EXPECT_NE(secondGroup, 0u);
+    }
 } // namespace MobileGL::MG_State::GLState
 
 // End of File

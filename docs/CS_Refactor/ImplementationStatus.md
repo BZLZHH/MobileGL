@@ -102,7 +102,7 @@
 
 ## Phase 6 — 正确性 / 性能 / 平台
 
-- [ ] 多 Session / 多 Display / share group 回归
+- [x] 多 Session / 多 Display / share group 回归：`ContextRegistryTest` 6/6 通过（含跨 session 对象可见性、不同 Display 分组隔离）
 - [ ] 命令批处理、零拷贝 benchmark
 - [ ] 平台 Surface：X11 → Win32 → Android Binder
 
