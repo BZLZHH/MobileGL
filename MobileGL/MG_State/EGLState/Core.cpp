@@ -7,6 +7,7 @@
 // End of Source File Header
 
 #include "Core.h"
+#include "MG_State/GLState/ContextRegistry.h"
 #include <EGL/eglext.h>
 
 namespace MobileGL {
@@ -219,6 +220,9 @@ namespace MobileGL {
             }
 
             void EGLContext::ReleaseThreadUnlocked(const std::thread::id& threadKey) {
+                GLState::GLContextRegistry::SetCurrent(
+                    static_cast<Uint64>(std::hash<std::thread::id>{}(threadKey)), 0);
+
                 auto currentIt = m_threadCurrents.find(threadKey);
                 if (currentIt == m_threadCurrents.end()) {
                     return;
@@ -686,6 +690,18 @@ namespace MobileGL {
 
                 const auto context = EncodeHandle<EGLContextHandle>(m_nextContextHandle++);
                 m_contexts[context] = contextObject;
+
+                // Phase 2: register the new context session with the C/S
+                // state registry. The legacy global pGLContext keeps serving
+                // the existing frontend until the per-session switch lands.
+                const auto sessionHandle = static_cast<Uint64>(ToNativeKey(context));
+                const auto shareHandle = shareCtx == nullptr
+                                             ? Uint64(0)
+                                             : static_cast<Uint64>(ToNativeKey(shareCtx));
+                const auto displayHandle = static_cast<Uint64>(ToNativeKey(display));
+                GLState::SharedGroupId groupId = GLState::GLContextRegistry::GetOrCreateSharedGroup(
+                    displayHandle, shareHandle);
+                GLState::GLContextRegistry::CreateSession(displayHandle, groupId, sessionHandle);
                 return context;
             }
 
@@ -706,6 +722,9 @@ namespace MobileGL {
                     SetError(EGL_BAD_ACCESS);
                     return false;
                 }
+
+                GLState::GLContextRegistry::DestroySession(
+                    static_cast<Uint64>(ToNativeKey(context)));
                 m_contexts.erase(contextIt);
                 return true;
             }
@@ -1230,6 +1249,9 @@ namespace MobileGL {
                 if (context != nullptr) {
                     m_contextOwners[context] = threadKey;
                 }
+                GLState::GLContextRegistry::SetCurrent(
+                    static_cast<Uint64>(std::hash<std::thread::id>{}(threadKey)),
+                    context == nullptr ? Uint64(0) : static_cast<Uint64>(ToNativeKey(context)));
                 return true;
             }
 

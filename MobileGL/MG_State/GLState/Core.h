@@ -62,6 +62,17 @@ namespace MobileGL {
             public:
                 GLContext() = default;
 
+                // C/S identity. Set by GLContextRegistry when the EGL layer
+                // creates a context session; used to key shared object handles.
+                Uint64 GetSharedGroupId() const { return m_sharedGroupId; }
+                Uint64 GetSessionId() const { return m_sessionId; }
+                void SetSharedGroupId(Uint64 sharedGroupId) { m_sharedGroupId = sharedGroupId; }
+                void SetSessionId(Uint64 sessionId) { m_sessionId = sessionId; }
+
+                // C/S object handle for a GL name; allocates on first use.
+                // objectKind uses MobileGLObjectKind values (Protocol/bfa.h).
+                Uint64 GetObjectHandle(Uint32 objectKind, Uint32 glName) const;
+
                 // Error
                 void RecordError(ErrorCode code, UniquePtr<ErrorInfo> info);
                 Bool HasGLError() const;
@@ -558,6 +569,10 @@ namespace MobileGL {
                 // Identity of the backend object m_compileEnv was captured against; a plain
                 // pointer compare, never dereferenced.
                 const void* m_compileEnvBackend = nullptr;
+
+                // C/S identity populated by GLContextRegistry::CreateSession.
+                Uint64 m_sharedGroupId = 0;
+                Uint64 m_sessionId = 0;
             };
         } // namespace GLState
 

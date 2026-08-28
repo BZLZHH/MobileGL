@@ -94,3 +94,53 @@ if (MSVC)
 endif()
 
 gtest_discover_tests(NegativeApiErrorsTest DISCOVERY_TIMEOUT 30 PROPERTIES LABELS unit)
+
+add_executable(
+        ContextRegistryTest
+        ContextRegistryTest.cpp
+)
+
+target_include_directories(ContextRegistryTest PRIVATE
+        ${MGL_ROOT}/include
+        ${MGL_ROOT}/MobileGL
+        ${MGL_ROOT}/3rdparty/xxHash
+        ${MGL_ROOT}/3rdparty/Vulkan-Headers/include
+        ${MGL_ROOT}/3rdparty/SPIRV-Reflect
+)
+
+target_link_libraries(
+        ContextRegistryTest PRIVATE
+        GTest::gtest_main
+        ${LINK_LIBRARIES}
+)
+
+if (MSVC)
+        target_compile_options(ContextRegistryTest PRIVATE /Zc:preprocessor)
+endif()
+
+gtest_discover_tests(ContextRegistryTest DISCOVERY_TIMEOUT 30 PROPERTIES LABELS unit)
+
+add_executable(
+        HandleRegistryTest
+        HandleRegistryTest.cpp
+)
+
+target_include_directories(HandleRegistryTest PRIVATE
+        ${MGL_ROOT}/include
+        ${MGL_ROOT}/MobileGL
+        ${MGL_ROOT}/3rdparty/xxHash
+        ${MGL_ROOT}/3rdparty/Vulkan-Headers/include
+        ${MGL_ROOT}/3rdparty/SPIRV-Reflect
+)
+
+target_link_libraries(
+        HandleRegistryTest PRIVATE
+        GTest::gtest_main
+        ${LINK_LIBRARIES}
+)
+
+if (MSVC)
+        target_compile_options(HandleRegistryTest PRIVATE /Zc:preprocessor)
+endif()
+
+gtest_discover_tests(HandleRegistryTest DISCOVERY_TIMEOUT 30 PROPERTIES LABELS unit)

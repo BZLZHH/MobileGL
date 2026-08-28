@@ -14,6 +14,10 @@ option(MOBILEGL_ENABLE_TRACY      "Enable tracy for profiling"                  
 option(MOBILEGL_BUILD_TRACE_REPLAY "Build desktop apitrace replay runner"            OFF)
 option(MOBILEGL_TRACE_ANGLE_VARIANTS "Enable signed trace-APK ANGLE variant loading" OFF)
 option(MOBILEGL_IOS               "Build MobileGL for iOS instead of macOS when APPLE is set" OFF)
+# C/S refactor scaffold: build the new Client / FullServer / UtilRuntime /
+# BackendObject_*.so targets alongside the legacy monolith. The monolith stays
+# the default build until Phase 1 migration completes.
+option(MOBILEGL_BUILD_CS_REFACTOR "Build C/S refactor targets (Client/FullServer/UtilRuntime/BackendObject plugins)" OFF)
 set(MOBILEGL_LOG_ACTIVE_LEVEL "MOBILEGL_LOG_LEVEL_INFO" CACHE STRING "MobileGL active log level macro")
 set(MOBILEGL_VULKAN_LIBRARY "" CACHE FILEPATH "Vulkan loader/MoltenVK library to link for iOS builds")
 
@@ -383,6 +387,8 @@ set(SOURCE_FILES
     MobileGL/MG_Backend/DirectVulkan/Renderer/VkRenderPassManager.cpp
 
     MobileGL/MG_State/GLState/Core.cpp
+    MobileGL/MG_State/GLState/ContextRegistry.cpp
+    MobileGL/MG_State/GLState/HandleRegistry.cpp
     MobileGL/MG_State/EGLState/Core.cpp
     MobileGL/MG_State/GLState/ErrorState/Error.cpp
     MobileGL/MG_State/GLState/BufferState/BufferState.cpp
@@ -651,6 +657,20 @@ if (APPLE AND MOBILEGL_IOS)
             target_link_libraries(${CMAKE_PROJECT_NAME}_s PUBLIC "${MOBILEGL_VULKAN_LIBRARY}")
         endif()
     endif()
+endif()
+
+# -----------------------------------------------------------------------------
+# C/S refactor targets. Protocol/BFA/RuntimeApi headers are always available;
+# the executable/shared/module targets are built behind the migration option.
+# -----------------------------------------------------------------------------
+add_subdirectory(MobileGL/Protocol)
+
+if (MOBILEGL_BUILD_CS_REFACTOR)
+    add_subdirectory(MobileGL/Transport)
+    add_subdirectory(MobileGL/Client)
+    add_subdirectory(MobileGL/FullServer)
+    add_subdirectory(MobileGL/UtilRuntime)
+    add_subdirectory(MobileGL/MG_Backend)
 endif()
 
 if (NOT ANDROID AND NOT MOBILEGL_IOS)

@@ -7,6 +7,7 @@
 // End of Source File Header
 
 #include "Core.h"
+#include "MG_State/GLState/HandleRegistry.h"
 #include "MG_State/GLState/RenderbufferState/RenderbufferObject.h"
 #include "MG_State/EGLState/Core.h"
 #include <MG_Backend/BackendObjects.h>
@@ -42,6 +43,16 @@ namespace MobileGL::MG_State {
         void GLContext::InvalidateCompileEnv() {
             m_compileEnv.reset();
             m_compileEnvBackend = nullptr;
+        }
+
+        Uint64 GLContext::GetObjectHandle(Uint32 objectKind, Uint32 glName) const {
+            const auto kind = static_cast<MobileGLObjectKind>(objectKind);
+            const Bool isSessionPrivate =
+                kind == MobileGLObjectKindQuery || kind == MobileGLObjectKindSync;
+            const ObjectHandleScope scope = isSessionPrivate ? ObjectHandleScope::Session
+                                                             : ObjectHandleScope::SharedGroup;
+            const Uint64 scopeId = isSessionPrivate ? m_sessionId : m_sharedGroupId;
+            return ObjectHandleRegistry::Allocate(scope, scopeId, kind, glName);
         }
 
         // Error
@@ -108,11 +119,23 @@ namespace MobileGL::MG_State {
         }
 
         const SharedPtr<BufferObject>& GLContext::CreateBufferObject(Uint index) {
-            return m_bufferState.CreateBufferObject(index);
+            auto& bufferObject = m_bufferState.CreateBufferObject(index);
+            // C/S: allocate (or reuse) the opaque MobileGLBackendHandle for this
+            // buffer in the owning SharedGroup.
+            (void)GetObjectHandle(static_cast<Uint32>(MobileGLObjectKindBuffer), index);
+            return bufferObject;
         }
 
         void GLContext::MarkBufferObjectForDeletion(Uint index) {
             if (ValidateBufferObject(index)) {
+                // C/S: release the backend handle for the shared buffer.
+                const Uint64 handle = ObjectHandleRegistry::Lookup(
+                    ObjectHandleScope::SharedGroup, m_sharedGroupId,
+                    MobileGLObjectKindBuffer, index);
+                if (handle != 0) {
+                    ObjectHandleRegistry::Destroy(handle);
+                }
+
                 // GL semantics: deleting a buffer detaches it only from the CURRENT
                 // context's bindings, including the currently bound VAO's attachment
                 // points; attachments in other VAOs must survive (the shared_ptr keeps
@@ -264,14 +287,20 @@ namespace MobileGL::MG_State {
         }
 
         const SharedPtr<ITextureObject>& GLContext::CreateTextureObject(Uint index, TextureTarget target) {
-            return m_textureState.CreateTextureObject(index, target);
+            auto& textureObject = m_textureState.CreateTextureObject(index, target);
+            // C/S: register the shared texture handle on first materialization.
+            (void)GetObjectHandle(static_cast<Uint32>(MobileGLObjectKindTexture), index);
+            return textureObject;
         }
 
         const SharedPtr<ITextureObject>& GLContext::CreateTextureViewObject(
             Uint index, TextureTarget target, const SharedPtr<ITextureObject>& storageOwner, Uint minLevel,
             Uint numLevels, Uint minLayer, Uint numLayers) {
-            return m_textureState.CreateTextureViewObject(index, target, storageOwner, minLevel, numLevels, minLayer,
-                                                          numLayers);
+            auto& textureObject = m_textureState.CreateTextureViewObject(index, target, storageOwner, minLevel,
+                                                                        numLevels, minLayer, numLayers);
+            // Texture views share the texture namespace and are shared objects too.
+            (void)GetObjectHandle(static_cast<Uint32>(MobileGLObjectKindTexture), index);
+            return textureObject;
         }
 
         void GLContext::MarkTextureObjectForDeletion(Uint index) {
@@ -286,6 +315,14 @@ namespace MobileGL::MG_State {
             // it deleted usually comes straight back from the next glGenTextures, so the two are
             // indistinguishable from the outside (KHR-GL32.packed_pixels read a stale gradient).
             if (const auto& textureObject = m_textureState.GetTextureObject(index)) {
+                // C/S: release the shared texture backend handle.
+                const Uint64 handle = ObjectHandleRegistry::Lookup(
+                    ObjectHandleScope::SharedGroup, m_sharedGroupId,
+                    MobileGLObjectKindTexture, index);
+                if (handle != 0) {
+                    ObjectHandleRegistry::Destroy(handle);
+                }
+
                 for (SizeT targetIndex = 0; targetIndex < SizeT(FramebufferTarget::FramebufferTargetCount);
                      ++targetIndex) {
                     const auto& framebuffer =
