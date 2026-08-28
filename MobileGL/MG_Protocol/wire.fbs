@@ -18,6 +18,7 @@ table GlClear {
 table Command {
     opcode: uint;
     session_id: ulong;
+    token: ulong;
     clear: GlClear;
 }
 
@@ -27,6 +28,7 @@ table Message {
 
 table Response {
     status: uint;
+    token: ulong;
 }
 
 root_type Message;

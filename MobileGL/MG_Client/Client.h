@@ -28,8 +28,9 @@ namespace MobileGL::Client {
     Bool InitializeWithTransport(MobileGLTransport* transport, const MobileGLTransportOps* ops);
 
     // Sends one command (opcode from MG_Protocol/generated_opcodes.h) and waits
-    // for its response. Returns true when the response status is OK.
-    Bool SendCommand(Uint32 sessionId, Uint32 opcode);
+    // for its response. Returns true when the response status is OK and the
+    // echoed token matches `token`.
+    Bool SendCommand(Uint32 sessionId, Uint32 opcode, Uint64 token = 0);
 
     void Shutdown();
     const String& GetLastError();

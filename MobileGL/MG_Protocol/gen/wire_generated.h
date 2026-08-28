@@ -76,13 +76,17 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_OPCODE = 4,
     VT_SESSION_ID = 6,
-    VT_CLEAR = 8
+    VT_TOKEN = 8,
+    VT_CLEAR = 10
   };
   uint32_t opcode() const {
     return GetField<uint32_t>(VT_OPCODE, 0);
   }
   uint64_t session_id() const {
     return GetField<uint64_t>(VT_SESSION_ID, 0);
+  }
+  uint64_t token() const {
+    return GetField<uint64_t>(VT_TOKEN, 0);
   }
   const MobileGL::Protocol::Wire::GlClear *clear() const {
     return GetPointer<const MobileGL::Protocol::Wire::GlClear *>(VT_CLEAR);
@@ -92,6 +96,7 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     return VerifyTableStart(verifier) &&
            VerifyField<uint32_t>(verifier, VT_OPCODE, 4) &&
            VerifyField<uint64_t>(verifier, VT_SESSION_ID, 8) &&
+           VerifyField<uint64_t>(verifier, VT_TOKEN, 8) &&
            VerifyOffset(verifier, VT_CLEAR) &&
            verifier.VerifyTable(clear()) &&
            verifier.EndTable();
@@ -107,6 +112,9 @@ struct CommandBuilder {
   }
   void add_session_id(uint64_t session_id) {
     fbb_.AddElement<uint64_t>(Command::VT_SESSION_ID, session_id, 0);
+  }
+  void add_token(uint64_t token) {
+    fbb_.AddElement<uint64_t>(Command::VT_TOKEN, token, 0);
   }
   void add_clear(::flatbuffers::Offset<MobileGL::Protocol::Wire::GlClear> clear) {
     fbb_.AddOffset(Command::VT_CLEAR, clear);
@@ -126,8 +134,10 @@ inline ::flatbuffers::Offset<Command> CreateCommand(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     uint32_t opcode = 0,
     uint64_t session_id = 0,
+    uint64_t token = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::GlClear> clear = 0) {
   CommandBuilder builder_(_fbb);
+  builder_.add_token(token);
   builder_.add_session_id(session_id);
   builder_.add_clear(clear);
   builder_.add_opcode(opcode);
@@ -180,15 +190,20 @@ inline ::flatbuffers::Offset<Message> CreateMessage(
 struct Response FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef ResponseBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_STATUS = 4
+    VT_STATUS = 4,
+    VT_TOKEN = 6
   };
   uint32_t status() const {
     return GetField<uint32_t>(VT_STATUS, 0);
+  }
+  uint64_t token() const {
+    return GetField<uint64_t>(VT_TOKEN, 0);
   }
   template <bool B = false>
   bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<uint32_t>(verifier, VT_STATUS, 4) &&
+           VerifyField<uint64_t>(verifier, VT_TOKEN, 8) &&
            verifier.EndTable();
   }
 };
@@ -199,6 +214,9 @@ struct ResponseBuilder {
   ::flatbuffers::uoffset_t start_;
   void add_status(uint32_t status) {
     fbb_.AddElement<uint32_t>(Response::VT_STATUS, status, 0);
+  }
+  void add_token(uint64_t token) {
+    fbb_.AddElement<uint64_t>(Response::VT_TOKEN, token, 0);
   }
   explicit ResponseBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -213,8 +231,10 @@ struct ResponseBuilder {
 
 inline ::flatbuffers::Offset<Response> CreateResponse(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    uint32_t status = 0) {
+    uint32_t status = 0,
+    uint64_t token = 0) {
   ResponseBuilder builder_(_fbb);
+  builder_.add_token(token);
   builder_.add_status(status);
   return builder_.Finish();
 }

@@ -65,7 +65,7 @@ namespace MobileGL::Client {
         return true;
     }
 
-    Bool SendCommand(Uint32 sessionId, Uint32 opcode) {
+    Bool SendCommand(Uint32 sessionId, Uint32 opcode, Uint64 token) {
         if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
             s_lastError = "Client is not initialized.";
             return false;
@@ -74,7 +74,7 @@ namespace MobileGL::Client {
         flatbuffers::FlatBufferBuilder builder;
         const auto clear = MobileGL::Protocol::Wire::CreateGlClear(builder, 0);
         const auto command =
-            MobileGL::Protocol::Wire::CreateCommand(builder, opcode, sessionId, clear);
+            MobileGL::Protocol::Wire::CreateCommand(builder, opcode, sessionId, token, clear);
         const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command);
         builder.Finish(message);
 
@@ -97,6 +97,10 @@ namespace MobileGL::Client {
             flatbuffers::GetRoot<MobileGL::Protocol::Wire::Response>(response.flatBufferData);
         if (parsed == nullptr) {
             s_lastError = "Invalid response.";
+            return false;
+        }
+        if (parsed->token() != token) {
+            s_lastError = "Response token mismatch.";
             return false;
         }
         s_lastError.clear();

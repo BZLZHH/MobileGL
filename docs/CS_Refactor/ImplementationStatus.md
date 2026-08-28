@@ -87,6 +87,7 @@
 - [x] FlatBuffers 迁移后回归：`BigServerE2ETest` 2/2、`ClientServerEndToEndTest` 1/1、`InProcessTransportTest` 2/2、`ProtocolOpcodeTest` 1/1 全部通过
 - [ ] 完整 source-list 合并进 `protocol.fbs`（trampoline / dispatch / 分类表）
 - [ ] 异步命令流 + 同步查询 / barrier
+- [x] **Token 透传**：`Command.token` / `Response.token`；`Client::SendCommand` 校验回显 token；Python 跨进程 E2E 仍 status=0
 - [ ] map/unmap/readback/字符串返回数据通路
 - [ ] Token 透传模型 + 会话生命周期
 

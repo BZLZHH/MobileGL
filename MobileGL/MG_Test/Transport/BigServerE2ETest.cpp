@@ -59,7 +59,7 @@ namespace {
             MobileGL::Protocol::Wire::CreateCommand(s_batchBuilder,
                                                     static_cast<uint32_t>(
                                                         MobileGL::Protocol::MobileGLOpcode::glClear),
-                                                    sessionId, clear);
+                                                    sessionId, 0, clear);
         const auto message = MobileGL::Protocol::Wire::CreateMessage(s_batchBuilder, command);
         s_batchBuilder.Finish(message);
         batch.flatBufferData = s_batchBuilder.GetBufferPointer();

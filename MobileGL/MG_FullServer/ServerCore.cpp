@@ -61,7 +61,8 @@ namespace MobileGL::FullServer {
         }
 
         flatbuffers::FlatBufferBuilder responseBuilder;
-        const auto response = MobileGL::Protocol::Wire::CreateResponse(responseBuilder, status);
+        const auto response = MobileGL::Protocol::Wire::CreateResponse(responseBuilder, status,
+                                                                       command->token());
         responseBuilder.Finish(response);
 
         MobileGLCommandBatch out{};
