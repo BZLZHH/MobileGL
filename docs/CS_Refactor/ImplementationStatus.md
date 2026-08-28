@@ -73,7 +73,9 @@
 - [x] `MobileGL/MG_Test/Transport/InProcessTransportTest.cpp` — in-process + LocalSocketShm 往返测试 2/2 通过
 - [x] `MobileGL/MG_Transport/CMakeLists.txt` — `MobileGL_Transport` static library
 - [x] `scripts/generate_protocol_fbs.py` → `MobileGL/MG_Protocol/protocol_generated.fbs`（2750 个 `Gl*` payload 表）
-- [ ] FlatBuffers codegen 合并进 `protocol.fbs`（trampoline / dispatch / opcode / 分类表）
+- [x] `scripts/generate_opcode_table.py` → `MobileGL/MG_Protocol/generated_opcodes.h`（1396 个 GL/EGL opcode + 名称表）
+- [x] `MobileGL/MG_Test/Transport/ProtocolOpcodeTest.cpp` — 生成表计数与名称查询 1/1 通过
+- [ ] FlatBuffers codegen 合并进 `protocol.fbs`（trampoline / dispatch / 分类表）
 - [ ] 异步命令流 + 同步查询 / barrier
 - [ ] map/unmap/readback/字符串返回数据通路
 - [ ] Token 透传模型 + 会话生命周期
