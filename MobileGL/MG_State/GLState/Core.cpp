@@ -80,19 +80,40 @@ namespace MobileGL::MG_State {
         }
 
         UnorderedMap<Uint, TransformFeedbackObjectState>& GLContext::GetTransformFeedbackObjectTable() {
-            return m_sharedTransformFeedback ? m_sharedTransformFeedback->GetObjects() : GetTransformFeedbackObjectTable();
+            return m_sharedTransformFeedback ? m_sharedTransformFeedback->GetObjects() : m_transformFeedbackObjects;
         }
 
         const UnorderedMap<Uint, TransformFeedbackObjectState>& GLContext::GetTransformFeedbackObjectTable() const {
-            return m_sharedTransformFeedback ? m_sharedTransformFeedback->GetObjects() : GetTransformFeedbackObjectTable();
+            return m_sharedTransformFeedback ? m_sharedTransformFeedback->GetObjects() : m_transformFeedbackObjects;
         }
 
         IndexGenerator<Uint>& GLContext::GetTransformFeedbackNameGenerator() {
-            return m_sharedTransformFeedback ? m_sharedTransformFeedback->GetNames() : GetTransformFeedbackNameGenerator();
+            return m_sharedTransformFeedback ? m_sharedTransformFeedback->GetNames() : m_transformFeedbackNames;
         }
 
         const IndexGenerator<Uint>& GLContext::GetTransformFeedbackNameGenerator() const {
-            return m_sharedTransformFeedback ? m_sharedTransformFeedback->GetNames() : GetTransformFeedbackNameGenerator();
+            return m_sharedTransformFeedback ? m_sharedTransformFeedback->GetNames() : m_transformFeedbackNames;
+        }
+
+        void GLContext::SetSharedProgramPipelineObjectTable(
+            const SharedPtr<SharedProgramPipelineObjectTable>& table) {
+            m_sharedProgramPipelines = table;
+        }
+
+        UnorderedMap<Uint, SharedPtr<ProgramPipelineObject>>& GLContext::GetProgramPipelineTable() {
+            return m_sharedProgramPipelines ? m_sharedProgramPipelines->GetPipelines() : m_programPipelines;
+        }
+
+        const UnorderedMap<Uint, SharedPtr<ProgramPipelineObject>>& GLContext::GetProgramPipelineTable() const {
+            return m_sharedProgramPipelines ? m_sharedProgramPipelines->GetPipelines() : m_programPipelines;
+        }
+
+        IndexGenerator<Uint>& GLContext::GetProgramPipelineNameGenerator() {
+            return m_sharedProgramPipelines ? m_sharedProgramPipelines->GetNames() : m_programPipelineNames;
+        }
+
+        const IndexGenerator<Uint>& GLContext::GetProgramPipelineNameGenerator() const {
+            return m_sharedProgramPipelines ? m_sharedProgramPipelines->GetNames() : m_programPipelineNames;
         }
 
         Uint64 GLContext::GetObjectHandle(Uint32 objectKind, Uint32 glName) const {
@@ -1400,7 +1421,7 @@ namespace MobileGL::MG_State {
             // Names only. The OBJECT appears as soon as a command needs somewhere to put state
             // (see MaterializeProgramPipelineObject), but glIsProgramPipeline still answers
             // GL_FALSE until the name is bound or created - see IsProgramPipelineObject.
-            m_programPipelineNames.Generate(number, pipelines.data());
+            GetProgramPipelineNameGenerator().Generate(number, pipelines.data());
         }
 
         void GLContext::CreateProgramPipelineObject(Uint index) {
@@ -1409,11 +1430,11 @@ namespace MobileGL::MG_State {
             // glIsProgramPipeline immediately - unlike a name that only got here through
             // GenProgramPipelines plus a command that materialized it.
             object->MarkEverBound();
-            m_programPipelines[index] = object;
+            GetProgramPipelineTable()[index] = object;
         }
 
         Bool GLContext::ValidateProgramPipelineName(Uint index) const {
-            return index == 0 || m_programPipelineNames.IsValid(index);
+            return index == 0 || GetProgramPipelineNameGenerator().IsValid(index);
         }
 
         // glIsProgramPipeline. Materialization is NOT the test: the object now appears as soon
@@ -1423,9 +1444,9 @@ namespace MobileGL::MG_State {
         // core 7.4 gives the real rule: a GenProgramPipelines name acquires program pipeline
         // state when it is first bound. Same shape as IsTransformFeedbackObject.
         Bool GLContext::IsProgramPipelineObject(Uint index) const {
-            if (index == 0 || !m_programPipelineNames.IsValid(index)) return false;
-            const auto it = m_programPipelines.find(index);
-            return it != m_programPipelines.end() && it->second && it->second->GetEverBound();
+            if (index == 0 || !GetProgramPipelineNameGenerator().IsValid(index)) return false;
+            const auto it = GetProgramPipelineTable().find(index);
+            return it != GetProgramPipelineTable().end() && it->second && it->second->GetEverBound();
         }
 
         void GLContext::BindProgramPipelineObject(Uint index) {
@@ -1445,25 +1466,25 @@ namespace MobileGL::MG_State {
         // which is why IsProgramPipelineObject stays as it is.
         const SharedPtr<ProgramPipelineObject>& GLContext::MaterializeProgramPipelineObject(Uint index) {
             static const SharedPtr<ProgramPipelineObject> kNone;
-            if (index == 0 || !m_programPipelineNames.IsValid(index)) return kNone;
-            const auto it = m_programPipelines.find(index);
-            if (it != m_programPipelines.end()) return it->second;
-            return m_programPipelines[index] = MakeShared<ProgramPipelineObject>(index);
+            if (index == 0 || !GetProgramPipelineNameGenerator().IsValid(index)) return kNone;
+            const auto it = GetProgramPipelineTable().find(index);
+            if (it != GetProgramPipelineTable().end()) return it->second;
+            return GetProgramPipelineTable()[index] = MakeShared<ProgramPipelineObject>(index);
         }
 
         void GLContext::MarkProgramPipelineForDeletion(Uint index) {
-            if (index == 0 || !m_programPipelineNames.IsValid(index)) return;
+            if (index == 0 || !GetProgramPipelineNameGenerator().IsValid(index)) return;
             if (index == m_boundProgramPipeline) {
                 m_boundProgramPipeline = 0;
             }
-            m_programPipelines.erase(index);
-            m_programPipelineNames.Delete(index);
+            GetProgramPipelineTable().erase(index);
+            GetProgramPipelineNameGenerator().Delete(index);
         }
 
         const SharedPtr<ProgramPipelineObject>& GLContext::GetProgramPipelineObject(Uint index) const {
             static const SharedPtr<ProgramPipelineObject> kNone;
-            const auto it = m_programPipelines.find(index);
-            return it == m_programPipelines.end() ? kNone : it->second;
+            const auto it = GetProgramPipelineTable().find(index);
+            return it == GetProgramPipelineTable().end() ? kNone : it->second;
         }
 
         const SharedPtr<ProgramPipelineObject>& GLContext::GetBoundProgramPipeline() const {

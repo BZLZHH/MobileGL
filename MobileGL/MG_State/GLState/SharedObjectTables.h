@@ -239,6 +239,21 @@ namespace MobileGL::MG_State::GLState {
         IndexGenerator<Uint> m_names;
     };
 
+    // Shared program-pipeline object table. The bound pipeline index remains
+    // per-context in GLContext.
+    class SharedProgramPipelineObjectTable {
+    public:
+        SharedProgramPipelineObjectTable() : m_names(1024, 1) {}
+
+        UnorderedMap<Uint, SharedPtr<ProgramPipelineObject>>& GetPipelines() { return m_pipelines; }
+        const UnorderedMap<Uint, SharedPtr<ProgramPipelineObject>>& GetPipelines() const { return m_pipelines; }
+        IndexGenerator<Uint>& GetNames() { return m_names; }
+
+    private:
+        UnorderedMap<Uint, SharedPtr<ProgramPipelineObject>> m_pipelines;
+        IndexGenerator<Uint> m_names;
+    };
+
     class SharedObjectTables {
     public:
         SharedObjectTables() = default;
@@ -299,6 +314,13 @@ namespace MobileGL::MG_State::GLState {
             return m_sharedTransformFeedbackObjects;
         }
 
+        SharedPtr<SharedProgramPipelineObjectTable>& GetSharedProgramPipelineObjects() {
+            return m_sharedProgramPipelineObjects;
+        }
+        const SharedPtr<SharedProgramPipelineObjectTable>& GetSharedProgramPipelineObjects() const {
+            return m_sharedProgramPipelineObjects;
+        }
+
         // Legacy per-context states; kept until every object access is
         // routed through the GetShared*Objects() accessors.
         BufferState& GetBufferState() { return m_bufferState; }
@@ -314,6 +336,8 @@ namespace MobileGL::MG_State::GLState {
         SharedPtr<SharedProgramObjectTable> m_sharedProgramObjects = MakeShared<SharedProgramObjectTable>();
         SharedPtr<SharedTransformFeedbackObjectTable> m_sharedTransformFeedbackObjects =
             MakeShared<SharedTransformFeedbackObjectTable>();
+        SharedPtr<SharedProgramPipelineObjectTable> m_sharedProgramPipelineObjects =
+            MakeShared<SharedProgramPipelineObjectTable>();
         BufferState m_bufferState;
     };
 } // namespace MobileGL::MG_State::GLState

@@ -115,6 +115,15 @@ namespace MobileGL::MG_State::GLState {
         ASSERT_NE(transformFeedbackId, 0u);
         first->GetContext().CreateTransformFeedbackObject(transformFeedbackId);
         EXPECT_TRUE(second->GetContext().IsTransformFeedbackObject(transformFeedbackId));
+
+        // Program-pipeline object table is shared too.
+        Vector<Uint> pipelineNames;
+        first->GetContext().GenProgramPipelineNames(1, pipelineNames);
+        ASSERT_EQ(pipelineNames.size(), 1u);
+        const Uint pipelineId = pipelineNames[0];
+        ASSERT_NE(pipelineId, 0u);
+        first->GetContext().CreateProgramPipelineObject(pipelineId);
+        EXPECT_TRUE(second->GetContext().IsProgramPipelineObject(pipelineId));
     }
 
     TEST(ContextRegistryTest, TracksCurrentSessionPerThread) {

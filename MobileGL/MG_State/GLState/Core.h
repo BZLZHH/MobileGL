@@ -38,6 +38,7 @@ namespace MobileGL {
             class SharedVertexArrayObjectTable;
             class SharedProgramObjectTable;
             class SharedTransformFeedbackObjectTable;
+            class SharedProgramPipelineObjectTable;
 
             struct CurrentVertexAttributeValue {
                 Array<Float, 4> floatValue{0.f, 0.f, 0.f, 1.f};
@@ -110,6 +111,8 @@ namespace MobileGL {
                 void SetSharedProgramObjectTable(const SharedPtr<SharedProgramObjectTable>& table);
                 void SetSharedTransformFeedbackObjectTable(
                     const SharedPtr<SharedTransformFeedbackObjectTable>& table);
+                void SetSharedProgramPipelineObjectTable(
+                    const SharedPtr<SharedProgramPipelineObjectTable>& table);
 
                 // C/S object handle for a GL name; allocates on first use.
                 // objectKind uses MobileGLObjectKind values (Protocol/bfa.h).
@@ -542,6 +545,10 @@ namespace MobileGL {
                 const UnorderedMap<Uint, TransformFeedbackObjectState>& GetTransformFeedbackObjectTable() const;
                 IndexGenerator<Uint>& GetTransformFeedbackNameGenerator();
                 const IndexGenerator<Uint>& GetTransformFeedbackNameGenerator() const;
+                UnorderedMap<Uint, SharedPtr<ProgramPipelineObject>>& GetProgramPipelineTable();
+                const UnorderedMap<Uint, SharedPtr<ProgramPipelineObject>>& GetProgramPipelineTable() const;
+                IndexGenerator<Uint>& GetProgramPipelineNameGenerator();
+                const IndexGenerator<Uint>& GetProgramPipelineNameGenerator() const;
 
                 // State Components
                 ErrorState m_errorState;
@@ -589,6 +596,7 @@ namespace MobileGL {
                 // bound. ProgramPipelineObject::everBound carries the Is* answer.
                 UnorderedMap<Uint, SharedPtr<ProgramPipelineObject>> m_programPipelines;
                 IndexGenerator<Uint> m_programPipelineNames;
+                SharedPtr<SharedProgramPipelineObjectTable> m_sharedProgramPipelines;
                 Uint m_boundProgramPipeline = 0;
                 TextureState m_textureState;
                 ProgramState m_programState;
