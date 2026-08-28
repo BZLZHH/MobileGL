@@ -221,6 +221,8 @@ namespace {
     void* FenceSyncBackend(MobileGLBackend* self, MobileGLSessionId session,
                            uint32_t condition, uint32_t flags);
     void DeleteSyncBackend(MobileGLBackend* self, MobileGLSessionId session, void* sync);
+    void WaitSyncBackend(MobileGLBackend* self, MobileGLSessionId session, void* sync,
+                         uint32_t flags, uint64_t timeout);
     const MobileGLBackendVTable s_backendVTable = {
         .structSize = sizeof(MobileGLBackendVTable),
         .apiVersion = (MOBILEGL_BFA_ABI_MAJOR << 16) | MOBILEGL_BFA_ABI_MINOR,
@@ -251,7 +253,8 @@ namespace {
         .BlitFramebuffer = &BlitFramebufferBackend,
         .SwapBuffers = &SwapBuffersBackend,
         .FenceSync = &FenceSyncBackend,
-        .DeleteSync = &DeleteSyncBackend
+        .DeleteSync = &DeleteSyncBackend,
+        .WaitSync = &WaitSyncBackend
     };
 
     bool SwapBuffersBackend(MobileGLBackend* self, MobileGLSessionId session,
@@ -275,6 +278,15 @@ namespace {
         (void)self;
         (void)session;
         (void)sync;
+    }
+
+    void WaitSyncBackend(MobileGLBackend* self, MobileGLSessionId session, void* sync,
+                         uint32_t flags, uint64_t timeout) {
+        (void)self;
+        (void)session;
+        (void)sync;
+        (void)flags;
+        (void)timeout;
     }
 
     const MobileGLBackendVTable* GetBackendVTable() {

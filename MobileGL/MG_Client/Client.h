@@ -96,6 +96,10 @@ namespace MobileGL::Client {
     // Sends a glDeleteSync command (awaits response).
     Bool SendDeleteSync(Uint64 sessionId, uint64_t sync, Uint64 token);
 
+    // Sends a glWaitSync command (awaits response).
+    Bool SendWaitSync(Uint64 sessionId, uint64_t sync, uint32_t flags, uint64_t timeout,
+                      Uint64 token);
+
     // Submits a command without waiting for its response.
     Bool SubmitCommand(Uint32 sessionId, Uint32 opcode, Uint64 token);
 

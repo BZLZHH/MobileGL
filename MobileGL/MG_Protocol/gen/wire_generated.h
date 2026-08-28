@@ -68,6 +68,9 @@ struct FenceSyncBuilder;
 struct DeleteSync;
 struct DeleteSyncBuilder;
 
+struct WaitSync;
+struct WaitSyncBuilder;
+
 struct DataBlob;
 struct DataBlobBuilder;
 
@@ -1044,6 +1047,68 @@ inline ::flatbuffers::Offset<DeleteSync> CreateDeleteSync(
   return builder_.Finish();
 }
 
+struct WaitSync FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef WaitSyncBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_SYNC = 4,
+    VT_FLAGS = 6,
+    VT_TIMEOUT = 8
+  };
+  uint64_t sync() const {
+    return GetField<uint64_t>(VT_SYNC, 0);
+  }
+  uint32_t flags() const {
+    return GetField<uint32_t>(VT_FLAGS, 0);
+  }
+  uint64_t timeout() const {
+    return GetField<uint64_t>(VT_TIMEOUT, 0);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint64_t>(verifier, VT_SYNC, 8) &&
+           VerifyField<uint32_t>(verifier, VT_FLAGS, 4) &&
+           VerifyField<uint64_t>(verifier, VT_TIMEOUT, 8) &&
+           verifier.EndTable();
+  }
+};
+
+struct WaitSyncBuilder {
+  typedef WaitSync Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_sync(uint64_t sync) {
+    fbb_.AddElement<uint64_t>(WaitSync::VT_SYNC, sync, 0);
+  }
+  void add_flags(uint32_t flags) {
+    fbb_.AddElement<uint32_t>(WaitSync::VT_FLAGS, flags, 0);
+  }
+  void add_timeout(uint64_t timeout) {
+    fbb_.AddElement<uint64_t>(WaitSync::VT_TIMEOUT, timeout, 0);
+  }
+  explicit WaitSyncBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<WaitSync> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<WaitSync>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<WaitSync> CreateWaitSync(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint64_t sync = 0,
+    uint32_t flags = 0,
+    uint64_t timeout = 0) {
+  WaitSyncBuilder builder_(_fbb);
+  builder_.add_timeout(timeout);
+  builder_.add_sync(sync);
+  builder_.add_flags(flags);
+  return builder_.Finish();
+}
+
 struct DataBlob FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef DataBlobBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
@@ -1119,7 +1184,8 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_DATA = 38,
     VT_DISPATCH_COMPUTE_INDIRECT = 40,
     VT_FENCE_SYNC = 42,
-    VT_DELETE_SYNC = 44
+    VT_DELETE_SYNC = 44,
+    VT_WAIT_SYNC = 46
   };
   uint32_t opcode() const {
     return GetField<uint32_t>(VT_OPCODE, 0);
@@ -1184,6 +1250,9 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   const MobileGL::Protocol::Wire::DeleteSync *delete_sync() const {
     return GetPointer<const MobileGL::Protocol::Wire::DeleteSync *>(VT_DELETE_SYNC);
   }
+  const MobileGL::Protocol::Wire::WaitSync *wait_sync() const {
+    return GetPointer<const MobileGL::Protocol::Wire::WaitSync *>(VT_WAIT_SYNC);
+  }
   template <bool B = false>
   bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -1226,6 +1295,8 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            verifier.VerifyTable(fence_sync()) &&
            VerifyOffset(verifier, VT_DELETE_SYNC) &&
            verifier.VerifyTable(delete_sync()) &&
+           VerifyOffset(verifier, VT_WAIT_SYNC) &&
+           verifier.VerifyTable(wait_sync()) &&
            verifier.EndTable();
   }
 };
@@ -1297,6 +1368,9 @@ struct CommandBuilder {
   void add_delete_sync(::flatbuffers::Offset<MobileGL::Protocol::Wire::DeleteSync> delete_sync) {
     fbb_.AddOffset(Command::VT_DELETE_SYNC, delete_sync);
   }
+  void add_wait_sync(::flatbuffers::Offset<MobileGL::Protocol::Wire::WaitSync> wait_sync) {
+    fbb_.AddOffset(Command::VT_WAIT_SYNC, wait_sync);
+  }
   explicit CommandBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -1330,10 +1404,12 @@ inline ::flatbuffers::Offset<Command> CreateCommand(
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::DataBlob> data = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::DispatchComputeIndirect> dispatch_compute_indirect = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::FenceSync> fence_sync = 0,
-    ::flatbuffers::Offset<MobileGL::Protocol::Wire::DeleteSync> delete_sync = 0) {
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::DeleteSync> delete_sync = 0,
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::WaitSync> wait_sync = 0) {
   CommandBuilder builder_(_fbb);
   builder_.add_token(token);
   builder_.add_session_id(session_id);
+  builder_.add_wait_sync(wait_sync);
   builder_.add_delete_sync(delete_sync);
   builder_.add_fence_sync(fence_sync);
   builder_.add_dispatch_compute_indirect(dispatch_compute_indirect);

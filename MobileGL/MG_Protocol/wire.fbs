@@ -104,6 +104,12 @@ table DeleteSync {
     sync: ulong;
 }
 
+table WaitSync {
+    sync: ulong;
+    flags: uint;
+    timeout: ulong;
+}
+
 table DataBlob {
     offset: ulong;
     size: ulong;
@@ -131,6 +137,7 @@ table Command {
     dispatch_compute_indirect: DispatchComputeIndirect;
     fence_sync: FenceSync;
     delete_sync: DeleteSync;
+    wait_sync: WaitSync;
 }
 
 table Message {

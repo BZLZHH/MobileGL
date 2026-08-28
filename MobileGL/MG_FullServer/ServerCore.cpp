@@ -337,6 +337,18 @@ namespace MobileGL::FullServer {
                                      reinterpret_cast<void*>(ds == nullptr ? 0 : ds->sync()));
                 status = 0;
             }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glWaitSync) &&
+                   m_vtable->WaitSync != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else {
+                const auto* ws = command->wait_sync();
+                m_vtable->WaitSync(m_backend, sessionId,
+                                   reinterpret_cast<void*>(ws == nullptr ? 0 : ws->sync()),
+                                   ws == nullptr ? 0 : ws->flags(),
+                                   ws == nullptr ? 0 : ws->timeout());
+                status = 0;
+            }
         }
 
         for (auto& handle : receivedShm) {

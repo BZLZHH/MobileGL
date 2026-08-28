@@ -243,8 +243,19 @@ class Command(object):
             return obj
         return None
 
+    # Command
+    def WaitSync(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(46))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from MobileGL.Protocol.Wire.WaitSync import WaitSync
+            obj = WaitSync()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
 def CommandStart(builder):
-    builder.StartObject(21)
+    builder.StartObject(22)
 
 def Start(builder):
     CommandStart(builder)
@@ -374,6 +385,12 @@ def CommandAddDeleteSync(builder, deleteSync):
 
 def AddDeleteSync(builder, deleteSync):
     CommandAddDeleteSync(builder, deleteSync)
+
+def CommandAddWaitSync(builder, waitSync):
+    builder.PrependUOffsetTRelativeSlot(21, flatbuffers.number_types.UOffsetTFlags.py_type(waitSync), 0)
+
+def AddWaitSync(builder, waitSync):
+    CommandAddWaitSync(builder, waitSync)
 
 def CommandEnd(builder):
     return builder.EndObject()
