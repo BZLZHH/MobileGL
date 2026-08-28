@@ -7,6 +7,7 @@
 // End of Source File Header
 
 #include "Client.h"
+#include "MG_Protocol/control.h"
 #include "MG_Protocol/gen/wire_generated.h"
 #include "MG_Transport/LocalSocketShmTransport.h"
 
@@ -101,6 +102,13 @@ namespace MobileGL::Client {
         }
         s_lastError.clear();
         return true;
+    }
+
+    Bool SubmitSessionControl(Uint64 sessionId, Bool create, Uint64 token) {
+        const uint32_t opcode = create
+            ? static_cast<uint32_t>(MobileGL::Protocol::MobileGLControlOpcode::SessionCreate)
+            : static_cast<uint32_t>(MobileGL::Protocol::MobileGLControlOpcode::SessionDestroy);
+        return SubmitCommand(static_cast<Uint32>(sessionId), opcode, token);
     }
 
     Bool WaitResponseForToken(Uint64 token, Uint32 timeoutMs) {

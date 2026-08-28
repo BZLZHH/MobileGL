@@ -7,6 +7,7 @@
 // End of Source File Header
 
 #include "ServerCore.h"
+#include "MG_Protocol/control.h"
 #include "MG_Protocol/gen/wire_generated.h"
 #include "MG_Protocol/generated_opcodes.h"
 
@@ -70,11 +71,19 @@ namespace MobileGL::FullServer {
         }
 
         uint32_t status = 1;
-        // Dispatch by the generated opcode table (Phase 4).
-        if (command->opcode() == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glClear) &&
-            m_vtable->Clear != nullptr) {
+        const uint32_t opcode = command->opcode();
+        const auto sessionId = static_cast<MobileGLSessionId>(command->session_id());
+        if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLControlOpcode::SessionCreate) &&
+            m_vtable->OnSessionCreated != nullptr) {
+            status = m_vtable->OnSessionCreated(m_backend, sessionId, nullptr) ? 0 : 1;
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLControlOpcode::SessionDestroy) &&
+                   m_vtable->OnSessionDestroyed != nullptr) {
+            m_vtable->OnSessionDestroyed(m_backend, sessionId);
+            status = 0;
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glClear) &&
+                   m_vtable->Clear != nullptr) {
             const uint32_t mask = command->clear() == nullptr ? 0 : command->clear()->mask();
-            m_vtable->Clear(m_backend, static_cast<MobileGLSessionId>(command->session_id()), mask);
+            m_vtable->Clear(m_backend, sessionId, mask);
             status = 0;
         }
 

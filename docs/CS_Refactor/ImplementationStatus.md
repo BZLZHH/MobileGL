@@ -96,6 +96,7 @@
 - [x] **异步命令提交 + 按 token 等待**（`Client::SubmitCommand` / `WaitResponseForToken`；`ClientAsyncBatchTest` 1/1 通过）
 - [x] **Token 透传**：`Command.token` / `Response.token`；`Client::SendCommand` 校验回显 token；Python 跨进程 E2E 仍 status=0
 - [x] **shm payload 回读**：`ClientShmPayloadTest` 已验证（0xAB 写入 → fd → server 读回 → data_byte=0xAB）
+- [x] **会话生命周期**：`control.h` 定义 `SessionCreate/Destroy` 控制 opcode；`Client::SubmitSessionControl` + `ServerCore` 调 `OnSessionCreated/OnSessionDestroyed`；`ClientSessionLifecycleTest` 1/1 通过
 - [ ] 会话生命周期完整模型（Token 与 session 关联/失效）
 
 ## Phase 5 — Plugin 化集成（进行中）
@@ -105,7 +106,7 @@
 - [x] `MobileGL/MG_FullServer/BackendHost.h/.cpp` — Host vtable 注入
 - [x] `MobileGL/MG_FullServer/Main.cpp` — 启动流程接线（UtilRuntime→BackendPlugin→Create→Initialize→Shutdown）
 - [x] **插件生命周期链路（组件级验证）**：`UtilRuntimeLoader` / `BackendPluginLoader` / `ServerCore` 在 `libMobileGL_FullServer.so` 内编译通过；`BigServerE2ETest` 覆盖 Create→Initialize→command dispatch→Shutdown
-- [x] DirectGLES / DirectVulkan null adapter 提供 `Initialize/Shutdown/Clear` 存根（`mobilegl_fullserver_run_socket` 可返回 status=0）
+- [x] DirectGLES / DirectVulkan null adapter 提供 `Initialize/Shutdown/Clear/OnSessionCreated/OnSessionDestroyed` 存根
 - [x] **BigServer 全链路 E2E（in-process）**：Client 命令 → InProcessTransport → `FullServer::ServerCore` → Backend VTable → Response → Client；`BigServerE2ETest` 1/1 通过
 - [x] **BigServer 全链路 E2E（LocalSocketShm）**：client socket → server accept → `ServerCore` 分发 → 响应返回 client；`BigServerE2ETest` 2/2 通过
 - [x] ServerCore 分发改为使用生成 opcode 表（`MobileGLOpcode::glClear`），BigServerE2E 通过
