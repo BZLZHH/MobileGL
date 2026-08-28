@@ -45,6 +45,11 @@ table MemoryBarrier {
     barriers: uint;
 }
 
+table PatchParameteri {
+    pname: uint;
+    value: int;
+}
+
 table DataBlob {
     offset: ulong;
     size: ulong;
@@ -60,6 +65,7 @@ table Command {
     draw_elements: DrawElements;
     buffer_sub_data: BufferSubData;
     memory_barrier: MemoryBarrier;
+    patch_parameteri: PatchParameteri;
     data: DataBlob;
 }
 

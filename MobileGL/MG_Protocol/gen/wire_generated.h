@@ -35,6 +35,9 @@ struct BufferSubDataBuilder;
 struct MemoryBarrier;
 struct MemoryBarrierBuilder;
 
+struct PatchParameteri;
+struct PatchParameteriBuilder;
+
 struct DataBlob;
 struct DataBlobBuilder;
 
@@ -399,6 +402,58 @@ inline ::flatbuffers::Offset<MemoryBarrier> CreateMemoryBarrier(
   return builder_.Finish();
 }
 
+struct PatchParameteri FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef PatchParameteriBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_PNAME = 4,
+    VT_VALUE = 6
+  };
+  uint32_t pname() const {
+    return GetField<uint32_t>(VT_PNAME, 0);
+  }
+  int32_t value() const {
+    return GetField<int32_t>(VT_VALUE, 0);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint32_t>(verifier, VT_PNAME, 4) &&
+           VerifyField<int32_t>(verifier, VT_VALUE, 4) &&
+           verifier.EndTable();
+  }
+};
+
+struct PatchParameteriBuilder {
+  typedef PatchParameteri Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_pname(uint32_t pname) {
+    fbb_.AddElement<uint32_t>(PatchParameteri::VT_PNAME, pname, 0);
+  }
+  void add_value(int32_t value) {
+    fbb_.AddElement<int32_t>(PatchParameteri::VT_VALUE, value, 0);
+  }
+  explicit PatchParameteriBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<PatchParameteri> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<PatchParameteri>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<PatchParameteri> CreatePatchParameteri(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint32_t pname = 0,
+    int32_t value = 0) {
+  PatchParameteriBuilder builder_(_fbb);
+  builder_.add_value(value);
+  builder_.add_pname(pname);
+  return builder_.Finish();
+}
+
 struct DataBlob FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef DataBlobBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
@@ -463,7 +518,8 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_DRAW_ELEMENTS = 16,
     VT_BUFFER_SUB_DATA = 18,
     VT_MEMORY_BARRIER = 20,
-    VT_DATA = 22
+    VT_PATCH_PARAMETERI = 22,
+    VT_DATA = 24
   };
   uint32_t opcode() const {
     return GetField<uint32_t>(VT_OPCODE, 0);
@@ -492,6 +548,9 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   const MobileGL::Protocol::Wire::MemoryBarrier *memory_barrier() const {
     return GetPointer<const MobileGL::Protocol::Wire::MemoryBarrier *>(VT_MEMORY_BARRIER);
   }
+  const MobileGL::Protocol::Wire::PatchParameteri *patch_parameteri() const {
+    return GetPointer<const MobileGL::Protocol::Wire::PatchParameteri *>(VT_PATCH_PARAMETERI);
+  }
   const MobileGL::Protocol::Wire::DataBlob *data() const {
     return GetPointer<const MobileGL::Protocol::Wire::DataBlob *>(VT_DATA);
   }
@@ -513,6 +572,8 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            verifier.VerifyTable(buffer_sub_data()) &&
            VerifyOffset(verifier, VT_MEMORY_BARRIER) &&
            verifier.VerifyTable(memory_barrier()) &&
+           VerifyOffset(verifier, VT_PATCH_PARAMETERI) &&
+           verifier.VerifyTable(patch_parameteri()) &&
            VerifyOffset(verifier, VT_DATA) &&
            verifier.VerifyTable(data()) &&
            verifier.EndTable();
@@ -550,6 +611,9 @@ struct CommandBuilder {
   void add_memory_barrier(::flatbuffers::Offset<MobileGL::Protocol::Wire::MemoryBarrier> memory_barrier) {
     fbb_.AddOffset(Command::VT_MEMORY_BARRIER, memory_barrier);
   }
+  void add_patch_parameteri(::flatbuffers::Offset<MobileGL::Protocol::Wire::PatchParameteri> patch_parameteri) {
+    fbb_.AddOffset(Command::VT_PATCH_PARAMETERI, patch_parameteri);
+  }
   void add_data(::flatbuffers::Offset<MobileGL::Protocol::Wire::DataBlob> data) {
     fbb_.AddOffset(Command::VT_DATA, data);
   }
@@ -575,11 +639,13 @@ inline ::flatbuffers::Offset<Command> CreateCommand(
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::DrawElements> draw_elements = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::BufferSubData> buffer_sub_data = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::MemoryBarrier> memory_barrier = 0,
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::PatchParameteri> patch_parameteri = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::DataBlob> data = 0) {
   CommandBuilder builder_(_fbb);
   builder_.add_token(token);
   builder_.add_session_id(session_id);
   builder_.add_data(data);
+  builder_.add_patch_parameteri(patch_parameteri);
   builder_.add_memory_barrier(memory_barrier);
   builder_.add_buffer_sub_data(buffer_sub_data);
   builder_.add_draw_elements(draw_elements);

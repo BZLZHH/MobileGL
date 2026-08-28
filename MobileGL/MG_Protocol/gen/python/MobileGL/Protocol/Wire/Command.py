@@ -112,8 +112,19 @@ class Command(object):
         return None
 
     # Command
-    def Data(self):
+    def PatchParameteri(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(22))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from MobileGL.Protocol.Wire.PatchParameteri import PatchParameteri
+            obj = PatchParameteri()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # Command
+    def Data(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(24))
         if o != 0:
             x = self._tab.Indirect(o + self._tab.Pos)
             from MobileGL.Protocol.Wire.DataBlob import DataBlob
@@ -123,7 +134,7 @@ class Command(object):
         return None
 
 def CommandStart(builder):
-    builder.StartObject(10)
+    builder.StartObject(11)
 
 def Start(builder):
     CommandStart(builder)
@@ -182,8 +193,14 @@ def CommandAddMemoryBarrier(builder, memoryBarrier):
 def AddMemoryBarrier(builder, memoryBarrier):
     CommandAddMemoryBarrier(builder, memoryBarrier)
 
+def CommandAddPatchParameteri(builder, patchParameteri):
+    builder.PrependUOffsetTRelativeSlot(9, flatbuffers.number_types.UOffsetTFlags.py_type(patchParameteri), 0)
+
+def AddPatchParameteri(builder, patchParameteri):
+    CommandAddPatchParameteri(builder, patchParameteri)
+
 def CommandAddData(builder, data):
-    builder.PrependUOffsetTRelativeSlot(9, flatbuffers.number_types.UOffsetTFlags.py_type(data), 0)
+    builder.PrependUOffsetTRelativeSlot(10, flatbuffers.number_types.UOffsetTFlags.py_type(data), 0)
 
 def AddData(builder, data):
     CommandAddData(builder, data)

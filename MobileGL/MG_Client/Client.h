@@ -51,6 +51,9 @@ namespace MobileGL::Client {
     // Sends a typed glMemoryBarrier command (awaits response).
     Bool SendMemoryBarrier(Uint64 sessionId, uint32_t barriers, Uint64 token);
 
+    // Sends a typed glPatchParameteri command (awaits response).
+    Bool SendPatchParameteri(Uint64 sessionId, uint32_t pname, int32_t value, Uint64 token);
+
     // Submits a command without waiting for its response.
     Bool SubmitCommand(Uint32 sessionId, Uint32 opcode, Uint64 token);
 
