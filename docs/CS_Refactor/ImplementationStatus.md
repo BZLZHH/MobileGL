@@ -9,7 +9,7 @@
 
 - 配置：`cmake -S . -B build_agent -DMOBILEGL_BUILD_TEST=ON -DMOBILEGL_BUILD_CS_REFACTOR=ON` ✅
 - monolith（`MobileGL` / `MobileGL_s`）编译通过 ✅
-- C/S 目标编译通过：`libMobileGL_FullServer.so`、`libMobileGL_Client.so`、`libMobileGL_UtilRuntime.so`、`BackendObject_DirectGLES.so`、`BackendObject_DirectVulkan.so`、`libMobileGL_Transport.a` ✅
+- C/S 目标编译通过：`libMobileGL_FullServer.so`（链接 `libMobileGL_MG_FullServerCore.a`）、`libMobileGL_Client.so`、`libMobileGL_UtilRuntime.so`、`BackendObject_DirectGLES.so`、`BackendObject_DirectVulkan.so`、`libMobileGL_Transport.a` ✅
 - 单元测试：`ContextRegistryTest` 5/5、`HandleRegistryTest` 5/5 通过 ✅
 - **目录重构后全量验证**：C/S 目标与全部相关测试重编译通过；`SanityTest` 82/82、`InProcessTransportTest` 1/1、`BigServerE2ETest` 1/1 通过；`libMobileGL_FullServer.so` 构建成功
 - 第二次构建（共享 Buffer 表迁移后）：`BufferState` 委托 group 级 `SharedBufferObjectTable`，跨 session 可见性测试通过 ✅
@@ -32,7 +32,8 @@
 - [x] `MobileGL/MG_FullServer` — `MobileGL_FullServer` SHARED（`libMobileGL_FullServer.so`，BigServer host 组件）
 - [x] `MobileGL/MG_UtilRuntime` — `MobileGL_UtilRuntime` SHARED 骨架（`mobilegl_util_api` 导出）
 - [x] `MobileGL/MG_Backend/CMakeLists.txt` — `BackendObject_DirectGLES` / `BackendObject_DirectVulkan` MODULE 骨架 + manifest
-- [ ] 把真实 `MG_Impl / MG_State / MG_Util` 源列表拆入 `FullServerCore`，并从 monolith 删除（等 Phase 2/3 完成后再切）
+- [x] 把真实 `MG_Impl / MG_State / MG_Util` 源列表拆入 `MobileGL_MG_FullServerCore`（STATIC，不含 MG_Backend），`MobileGL_FullServer.so` 链接它；monolith 仍保留作对照
+- [ ] 最终从 monolith 删除（等 Phase 3 后端迁移完成后再切）
 
 ## Phase 2 — FullServer 状态模型（共享对象表迁移 + pGLContext 路由完成）
 

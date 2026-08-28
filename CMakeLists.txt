@@ -488,6 +488,34 @@ set(MOBILEGL_INCLUDE_DIR
         ${CMAKE_SOURCE_DIR}/3rdparty/asio/include
 )
 
+# -----------------------------------------------------------------------------
+# FullServer core: the real MG_Impl / MG_State / MG_Util frontend compiled without
+# any backend source. MobileGL_FullServer.so links this; BackendObject_*.so are
+# dlopened later and never linked.
+# -----------------------------------------------------------------------------
+if (MOBILEGL_BUILD_CS_REFACTOR)
+    set(MOBILEGL_CORE_SOURCES ${SOURCE_FILES})
+    list(FILTER MOBILEGL_CORE_SOURCES EXCLUDE REGEX "MG_Backend/")
+
+    add_library(MobileGL_MG_FullServerCore STATIC
+        ${MOBILEGL_CORE_SOURCES}
+    )
+
+    target_include_directories(MobileGL_MG_FullServerCore PUBLIC
+        ${MOBILEGL_INCLUDE_DIR}
+    )
+
+    target_link_libraries(MobileGL_MG_FullServerCore PUBLIC
+        ${MOBILEGL_LINK_LIBRARIES}
+    )
+
+    target_compile_definitions(MobileGL_MG_FullServerCore PUBLIC
+        ${MOBILEGL_COMPILE_DEF}
+        MOBILEGL_LOG_ACTIVE_LEVEL=${MOBILEGL_LOG_ACTIVE_LEVEL}
+        $<$<BOOL:${MOBILEGL_TRACE_ANGLE_VARIANTS}>:MOBILEGL_TRACE_ANGLE_VARIANTS=1>
+    )
+endif()
+
 add_library(${CMAKE_PROJECT_NAME} SHARED
     ${SOURCE_FILES}
 )

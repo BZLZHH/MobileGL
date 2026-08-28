@@ -17,6 +17,7 @@ add_library(MobileGL_FullServer SHARED
 )
 
 target_link_libraries(MobileGL_FullServer PRIVATE
+    MobileGL_MG_FullServerCore
     MobileGL_Protocol
     MobileGL_BFA
     MobileGL_RuntimeApi
