@@ -64,6 +64,13 @@ namespace {
         (void)value;
     }
 
+    void GenerateMipmapBackend(MobileGLBackend* self, MobileGLSessionId session,
+                               uint32_t target) {
+        (void)self;
+        (void)session;
+        (void)target;
+    }
+
     void DrawElementsBackend(MobileGLBackend* self, MobileGLSessionId session,
                              uint32_t mode, int32_t count, uint32_t type, const void* indices) {
         (void)self;
@@ -152,7 +159,8 @@ namespace {
         .DrawElements = &DrawElementsBackend,
         .BufferSubData = &BufferSubDataBackend,
         .MemoryBarrier = &MemoryBarrierBackend,
-        .PatchParameteri = &PatchParameteriBackend
+        .PatchParameteri = &PatchParameteriBackend,
+        .GenerateMipmap = &GenerateMipmapBackend
     };
 
     const MobileGLBackendVTable* GetBackendVTable() {

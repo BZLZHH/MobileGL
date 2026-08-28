@@ -199,6 +199,15 @@ namespace MobileGL::FullServer {
                                           pp == nullptr ? 0 : pp->value());
                 status = 0;
             }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glGenerateMipmap) &&
+                   m_vtable->GenerateMipmap != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else {
+                const auto* gm = command->generate_mipmap();
+                m_vtable->GenerateMipmap(m_backend, sessionId, gm == nullptr ? 0 : gm->target());
+                status = 0;
+            }
         }
 
         for (auto& handle : receivedShm) {

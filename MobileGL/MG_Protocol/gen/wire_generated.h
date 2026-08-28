@@ -38,6 +38,9 @@ struct MemoryBarrierBuilder;
 struct PatchParameteri;
 struct PatchParameteriBuilder;
 
+struct GenerateMipmap;
+struct GenerateMipmapBuilder;
+
 struct DataBlob;
 struct DataBlobBuilder;
 
@@ -454,6 +457,48 @@ inline ::flatbuffers::Offset<PatchParameteri> CreatePatchParameteri(
   return builder_.Finish();
 }
 
+struct GenerateMipmap FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef GenerateMipmapBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_TARGET = 4
+  };
+  uint32_t target() const {
+    return GetField<uint32_t>(VT_TARGET, 0);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint32_t>(verifier, VT_TARGET, 4) &&
+           verifier.EndTable();
+  }
+};
+
+struct GenerateMipmapBuilder {
+  typedef GenerateMipmap Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_target(uint32_t target) {
+    fbb_.AddElement<uint32_t>(GenerateMipmap::VT_TARGET, target, 0);
+  }
+  explicit GenerateMipmapBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<GenerateMipmap> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<GenerateMipmap>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<GenerateMipmap> CreateGenerateMipmap(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint32_t target = 0) {
+  GenerateMipmapBuilder builder_(_fbb);
+  builder_.add_target(target);
+  return builder_.Finish();
+}
+
 struct DataBlob FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef DataBlobBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
@@ -519,7 +564,8 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_BUFFER_SUB_DATA = 18,
     VT_MEMORY_BARRIER = 20,
     VT_PATCH_PARAMETERI = 22,
-    VT_DATA = 24
+    VT_GENERATE_MIPMAP = 24,
+    VT_DATA = 26
   };
   uint32_t opcode() const {
     return GetField<uint32_t>(VT_OPCODE, 0);
@@ -551,6 +597,9 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   const MobileGL::Protocol::Wire::PatchParameteri *patch_parameteri() const {
     return GetPointer<const MobileGL::Protocol::Wire::PatchParameteri *>(VT_PATCH_PARAMETERI);
   }
+  const MobileGL::Protocol::Wire::GenerateMipmap *generate_mipmap() const {
+    return GetPointer<const MobileGL::Protocol::Wire::GenerateMipmap *>(VT_GENERATE_MIPMAP);
+  }
   const MobileGL::Protocol::Wire::DataBlob *data() const {
     return GetPointer<const MobileGL::Protocol::Wire::DataBlob *>(VT_DATA);
   }
@@ -574,6 +623,8 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            verifier.VerifyTable(memory_barrier()) &&
            VerifyOffset(verifier, VT_PATCH_PARAMETERI) &&
            verifier.VerifyTable(patch_parameteri()) &&
+           VerifyOffset(verifier, VT_GENERATE_MIPMAP) &&
+           verifier.VerifyTable(generate_mipmap()) &&
            VerifyOffset(verifier, VT_DATA) &&
            verifier.VerifyTable(data()) &&
            verifier.EndTable();
@@ -614,6 +665,9 @@ struct CommandBuilder {
   void add_patch_parameteri(::flatbuffers::Offset<MobileGL::Protocol::Wire::PatchParameteri> patch_parameteri) {
     fbb_.AddOffset(Command::VT_PATCH_PARAMETERI, patch_parameteri);
   }
+  void add_generate_mipmap(::flatbuffers::Offset<MobileGL::Protocol::Wire::GenerateMipmap> generate_mipmap) {
+    fbb_.AddOffset(Command::VT_GENERATE_MIPMAP, generate_mipmap);
+  }
   void add_data(::flatbuffers::Offset<MobileGL::Protocol::Wire::DataBlob> data) {
     fbb_.AddOffset(Command::VT_DATA, data);
   }
@@ -640,11 +694,13 @@ inline ::flatbuffers::Offset<Command> CreateCommand(
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::BufferSubData> buffer_sub_data = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::MemoryBarrier> memory_barrier = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::PatchParameteri> patch_parameteri = 0,
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::GenerateMipmap> generate_mipmap = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::DataBlob> data = 0) {
   CommandBuilder builder_(_fbb);
   builder_.add_token(token);
   builder_.add_session_id(session_id);
   builder_.add_data(data);
+  builder_.add_generate_mipmap(generate_mipmap);
   builder_.add_patch_parameteri(patch_parameteri);
   builder_.add_memory_barrier(memory_barrier);
   builder_.add_buffer_sub_data(buffer_sub_data);

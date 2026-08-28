@@ -94,6 +94,13 @@ namespace {
         (void)value;
     }
 
+    void GenerateMipmapBackend(MobileGLBackend* self, MobileGLSessionId session,
+                               uint32_t target) {
+        (void)self;
+        (void)session;
+        (void)target;
+    }
+
     bool OnSessionCreatedBackend(MobileGLBackend* self, MobileGLSessionId session,
                                  const MobileGLBackendInitInfo* info) {
         (void)self;
@@ -152,7 +159,8 @@ namespace {
         .DrawElements = &DrawElementsBackend,
         .BufferSubData = &BufferSubDataBackend,
         .MemoryBarrier = &MemoryBarrierBackend,
-        .PatchParameteri = &PatchParameteriBackend
+        .PatchParameteri = &PatchParameteriBackend,
+        .GenerateMipmap = &GenerateMipmapBackend
     };
 
     const MobileGLBackendVTable* GetBackendVTable() {

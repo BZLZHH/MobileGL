@@ -123,8 +123,19 @@ class Command(object):
         return None
 
     # Command
-    def Data(self):
+    def GenerateMipmap(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(24))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from MobileGL.Protocol.Wire.GenerateMipmap import GenerateMipmap
+            obj = GenerateMipmap()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # Command
+    def Data(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(26))
         if o != 0:
             x = self._tab.Indirect(o + self._tab.Pos)
             from MobileGL.Protocol.Wire.DataBlob import DataBlob
@@ -134,7 +145,7 @@ class Command(object):
         return None
 
 def CommandStart(builder):
-    builder.StartObject(11)
+    builder.StartObject(12)
 
 def Start(builder):
     CommandStart(builder)
@@ -199,8 +210,14 @@ def CommandAddPatchParameteri(builder, patchParameteri):
 def AddPatchParameteri(builder, patchParameteri):
     CommandAddPatchParameteri(builder, patchParameteri)
 
+def CommandAddGenerateMipmap(builder, generateMipmap):
+    builder.PrependUOffsetTRelativeSlot(10, flatbuffers.number_types.UOffsetTFlags.py_type(generateMipmap), 0)
+
+def AddGenerateMipmap(builder, generateMipmap):
+    CommandAddGenerateMipmap(builder, generateMipmap)
+
 def CommandAddData(builder, data):
-    builder.PrependUOffsetTRelativeSlot(10, flatbuffers.number_types.UOffsetTFlags.py_type(data), 0)
+    builder.PrependUOffsetTRelativeSlot(11, flatbuffers.number_types.UOffsetTFlags.py_type(data), 0)
 
 def AddData(builder, data):
     CommandAddData(builder, data)

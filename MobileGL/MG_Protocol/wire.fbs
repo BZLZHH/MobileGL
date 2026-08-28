@@ -50,6 +50,10 @@ table PatchParameteri {
     value: int;
 }
 
+table GenerateMipmap {
+    target: uint;
+}
+
 table DataBlob {
     offset: ulong;
     size: ulong;
@@ -66,6 +70,7 @@ table Command {
     buffer_sub_data: BufferSubData;
     memory_barrier: MemoryBarrier;
     patch_parameteri: PatchParameteri;
+    generate_mipmap: GenerateMipmap;
     data: DataBlob;
 }
 
