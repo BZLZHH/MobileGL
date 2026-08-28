@@ -29,6 +29,14 @@ namespace {
         (void)mask;
         ++g_payloadClearCount;
     }
+
+    bool OnSessionCreated(MobileGLBackend* backend, MobileGLSessionId session,
+                          const MobileGLBackendInitInfo* info) {
+        (void)backend;
+        (void)session;
+        (void)info;
+        return true;
+    }
 } // namespace
 
 namespace MobileGL::Transport {
@@ -42,6 +50,7 @@ namespace MobileGL::Transport {
         MobileGLBackendVTable vtable{};
         vtable.structSize = sizeof(MobileGLBackendVTable);
         vtable.apiVersion = (MOBILEGL_BFA_ABI_MAJOR << 16) | MOBILEGL_BFA_ABI_MINOR;
+        vtable.OnSessionCreated = &OnSessionCreated;
         vtable.Clear = &TestClear;
 
         MobileGLTransport* server = CreateLocalSocketShmServer(endpoint);
@@ -73,9 +82,14 @@ namespace MobileGL::Transport {
 
         Bool serverOk = false;
         std::thread serverThread([&] {
-            serverOk = core.ServiceOnce();
+            for (int i = 0; i < 2; ++i) {
+                if (!core.ServiceOnce()) return;
+            }
+            serverOk = true;
         });
 
+        ASSERT_TRUE(Client::SubmitSessionControl(7, true, 76));
+        EXPECT_TRUE(Client::WaitResponseForToken(76, 5000));
         ASSERT_TRUE(Client::SubmitDataCommand(
             7, static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glClear),
             77, 0, 1, &shm));

@@ -9,6 +9,7 @@
 #include <Includes.h>
 #include <gtest/gtest.h>
 #include "MG_FullServer/ServerCore.h"
+#include "MG_Protocol/control.h"
 #include "MG_Protocol/gen/wire_generated.h"
 #include "MG_Protocol/generated_opcodes.h"
 #include "MG_Protocol/transport.h"
@@ -45,6 +46,14 @@ namespace {
         ++g_socketClearCount;
     }
 
+    bool TestOnSessionCreated(MobileGLBackend* backend, MobileGLSessionId session,
+                              const MobileGLBackendInitInfo* info) {
+        (void)backend;
+        (void)session;
+        (void)info;
+        return true;
+    }
+
     // Builds one FlatBuffer Message with a GlClear command. The buffer is kept
     // in a thread-local builder so the returned pointer stays valid until the
     // next rebuild on the same thread.
@@ -59,7 +68,7 @@ namespace {
             MobileGL::Protocol::Wire::CreateCommand(s_batchBuilder,
                                                     static_cast<uint32_t>(
                                                         MobileGL::Protocol::MobileGLOpcode::glClear),
-                                                    sessionId, 0, clear);
+                                                    sessionId, 0, clear, 0, 0);
         const auto message = MobileGL::Protocol::Wire::CreateMessage(s_batchBuilder, command);
         s_batchBuilder.Finish(message);
         batch.flatBufferData = s_batchBuilder.GetBufferPointer();
@@ -70,6 +79,19 @@ namespace {
     void DestroyBatch(MobileGLCommandBatch* batch) {
         batch->flatBufferData = nullptr;
         batch->flatBufferSize = 0;
+    }
+
+    MobileGLCommandBatch MakeControlBatch(uint32_t controlOpcode, uint64_t id, uint64_t token) {
+        s_batchBuilder.Clear();
+        MobileGLCommandBatch batch{};
+        batch.structSize = sizeof(MobileGLCommandBatch);
+        const auto command = MobileGL::Protocol::Wire::CreateCommand(s_batchBuilder, controlOpcode,
+                                                                     id, token);
+        const auto message = MobileGL::Protocol::Wire::CreateMessage(s_batchBuilder, command, 0);
+        s_batchBuilder.Finish(message);
+        batch.flatBufferData = s_batchBuilder.GetBufferPointer();
+        batch.flatBufferSize = static_cast<uint32_t>(s_batchBuilder.GetSize());
+        return batch;
     }
 
     uint32_t ParseResponseStatus(MobileGLResponseQueue* response) {
@@ -87,6 +109,7 @@ namespace MobileGL::Transport {
         MobileGLBackendVTable vtable{};
         vtable.structSize = sizeof(MobileGLBackendVTable);
         vtable.apiVersion = (MOBILEGL_BFA_ABI_MAJOR << 16) | MOBILEGL_BFA_ABI_MINOR;
+        vtable.OnSessionCreated = &TestOnSessionCreated;
         vtable.Clear = &TestClear;
 
         MobileGLTransport* client = nullptr;
@@ -104,6 +127,12 @@ namespace MobileGL::Transport {
 
         MobileGL::FullServer::ServerCore core(&ops, server, &backend, &vtable);
         ASSERT_TRUE(core.Start());
+
+        MobileGLCommandBatch createBatch = MakeControlBatch(
+            static_cast<uint32_t>(MobileGL::Protocol::MobileGLControlOpcode::SessionCreate), 42, 0);
+        ASSERT_TRUE(ops.SubmitCommands(client, &createBatch));
+        DestroyBatch(&createBatch);
+        ASSERT_TRUE(core.ServiceOnce());
 
         MobileGLCommandBatch batch = MakeClearBatch(42);
         ASSERT_TRUE(ops.SubmitCommands(client, &batch));
@@ -131,6 +160,7 @@ namespace MobileGL::Transport {
         MobileGLBackendVTable vtable{};
         vtable.structSize = sizeof(MobileGLBackendVTable);
         vtable.apiVersion = (MOBILEGL_BFA_ABI_MAJOR << 16) | MOBILEGL_BFA_ABI_MINOR;
+        vtable.OnSessionCreated = &TestOnSessionCreated;
         vtable.Clear = &TestClearSocket;
 
         MobileGLTransport* server = CreateLocalSocketShmServer(endpoint);
@@ -148,6 +178,22 @@ namespace MobileGL::Transport {
             config.endpoint = endpoint;
             config.timeoutMs = 0;
             if (!ops.Start(client, &config)) {
+                DestroyLocalSocketShmTransport(client);
+                return;
+            }
+
+            MobileGLCommandBatch createBatch = MakeControlBatch(
+                static_cast<uint32_t>(MobileGL::Protocol::MobileGLControlOpcode::SessionCreate), 7, 0);
+            if (!ops.SubmitCommands(client, &createBatch)) {
+                DestroyBatch(&createBatch);
+                DestroyLocalSocketShmTransport(client);
+                return;
+            }
+            DestroyBatch(&createBatch);
+
+            MobileGLResponseQueue createResponse{};
+            if (!ops.WaitResponses(client, &createResponse, 0) ||
+                ParseResponseStatus(&createResponse) != 0) {
                 DestroyLocalSocketShmTransport(client);
                 return;
             }
@@ -173,7 +219,8 @@ namespace MobileGL::Transport {
         MobileGL::FullServer::ServerCore core(&GetLocalSocketShmTransportOps(), accepted,
                                               &backend, &vtable);
         ASSERT_TRUE(core.Start());
-        ASSERT_TRUE(core.ServiceOnce());
+        ASSERT_TRUE(core.ServiceOnce()); // SessionCreate
+        ASSERT_TRUE(core.ServiceOnce()); // glClear
         core.Shutdown();
 
         clientThread.join();

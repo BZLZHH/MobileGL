@@ -89,6 +89,7 @@
 - [x] `MobileGL/MG_Protocol/wire.fbs` — 最小 wire schema + flatc 生成 `gen/wire_generated.h`（8KB）
 - [x] `3rdparty/FlatBuffers/include` — vendored flatbuffers 头（flatc v25.12.19 兼容）
 - [x] **Client/ServerCore 改用 FlatBuffers 实际编解码**：`Client::SendCommand` 构建 `Message`；`ServerCore` 解析 `Message` 并按 opcode 分发、构建 `Response`
+- [x] **typed payload trampoline 起步**：wire 增加 `ClearColor{red,green,blue,alpha}`；`Client::SendClearColor` + `ServerCore` 解包调 BFA `ClearColor`；`ClientClearColorTest` 1/1 通过（float 字段精确校验）
 - [x] FlatBuffers 迁移后回归：`BigServerE2ETest` 2/2、`ClientServerEndToEndTest` 1/1、`InProcessTransportTest` 2/2、`ProtocolOpcodeTest` 1/1 全部通过
 - [x] **完整 API merge 流水线**：`scripts/merge_protocol_fbs.py` 将 2750 个生成 payload 表并入 `protocol.fbs` 的插入点，产出 `protocol_full.fbs`（无重复、flatc 校验通过；`GeneratedPayload` union 因 >255 成员改为 opcode 分发）
 - [x] `scripts/generate_dispatch_table.py` → `generated_dispatch.h`（1396 条 opcode→API→payload 表元数据）
@@ -107,7 +108,7 @@
 - [x] `MobileGL/MG_FullServer/BackendHost.h/.cpp` — Host vtable 注入
 - [x] `MobileGL/MG_FullServer/Main.cpp` — 启动流程接线（UtilRuntime→BackendPlugin→Create→Initialize→Shutdown）
 - [x] **插件生命周期链路（组件级验证）**：`UtilRuntimeLoader` / `BackendPluginLoader` / `ServerCore` 在 `libMobileGL_FullServer.so` 内编译通过；`BigServerE2ETest` 覆盖 Create→Initialize→command dispatch→Shutdown
-- [x] DirectGLES / DirectVulkan null adapter 提供 `Initialize/Shutdown/Display/SharedGroup/Session/Clear` 存根
+- [x] DirectGLES / DirectVulkan null adapter 提供 `Initialize/Shutdown/Display/SharedGroup/Session/Clear/ClearColor` 存根
 - [x] **BigServer 全链路 E2E（in-process）**：Client 命令 → InProcessTransport → `FullServer::ServerCore` → Backend VTable → Response → Client；`BigServerE2ETest` 1/1 通过
 - [x] **BigServer 全链路 E2E（LocalSocketShm）**：client socket → server accept → `ServerCore` 分发 → 响应返回 client；`BigServerE2ETest` 2/2 通过
 - [x] ServerCore 分发改为使用生成 opcode 表（`MobileGLOpcode::glClear`），BigServerE2E 通过

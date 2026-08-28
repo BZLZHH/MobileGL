@@ -1,4 +1,4 @@
-// MobileGL - MobileGL/MG_Test/Transport/ClientServerEndToEndTest.cpp
+// MobileGL - MobileGL/MG_Test/Transport/ClientClearColorTest.cpp
 // Copyright (c) 2025-2026 MobileGL-Dev
 // Licensed under the GNU Lesser General Public License v3.0:
 //   https://www.gnu.org/licenses/gpl-3.0.txt
@@ -10,25 +10,15 @@
 #include <gtest/gtest.h>
 #include "MG_Client/Client.h"
 #include "MG_FullServer/ServerCore.h"
-#include "MG_Protocol/generated_opcodes.h"
 #include "MG_Protocol/transport.h"
 #include "MG_Transport/InProcessTransport.h"
 
-// This test defines the opaque backend object locally; it is not linked with
-// any BackendObject plugin .so, so completing the type here is safe.
 struct MobileGLBackend {
     uint32_t Nonce = 0;
 };
 
 namespace {
-    uint32_t g_clientServerClearCount = 0;
-
-    void TestClear(MobileGLBackend* backend, MobileGLSessionId session, uint32_t mask) {
-        (void)backend;
-        (void)session;
-        (void)mask;
-        ++g_clientServerClearCount;
-    }
+    float g_red = 0, g_green = 0, g_blue = 0, g_alpha = 0;
 
     bool OnSessionCreated(MobileGLBackend* backend, MobileGLSessionId session,
                           const MobileGLBackendInitInfo* info) {
@@ -37,18 +27,34 @@ namespace {
         (void)info;
         return true;
     }
+
+    void OnSessionDestroyed(MobileGLBackend* backend, MobileGLSessionId session) {
+        (void)backend;
+        (void)session;
+    }
+
+    void TestClearColor(MobileGLBackend* backend, MobileGLSessionId session,
+                        float red, float green, float blue, float alpha) {
+        (void)backend;
+        (void)session;
+        g_red = red;
+        g_green = green;
+        g_blue = blue;
+        g_alpha = alpha;
+    }
 } // namespace
 
 namespace MobileGL::Transport {
-    TEST(ClientServerEndToEndTest, ClientCommandRoundTrip) {
-        g_clientServerClearCount = 0;
+    TEST(ClientClearColorTest, TypedClearColorPayload) {
+        g_red = g_green = g_blue = g_alpha = 0;
 
         MobileGLBackend backend{};
         MobileGLBackendVTable vtable{};
         vtable.structSize = sizeof(MobileGLBackendVTable);
         vtable.apiVersion = (MOBILEGL_BFA_ABI_MAJOR << 16) | MOBILEGL_BFA_ABI_MINOR;
         vtable.OnSessionCreated = &OnSessionCreated;
-        vtable.Clear = &TestClear;
+        vtable.OnSessionDestroyed = &OnSessionDestroyed;
+        vtable.ClearColor = &TestClearColor;
 
         MobileGLTransport* client = nullptr;
         MobileGLTransport* server = nullptr;
@@ -65,11 +71,8 @@ namespace MobileGL::Transport {
 
         MobileGL::FullServer::ServerCore core(&ops, server, &backend, &vtable);
         ASSERT_TRUE(core.Start());
-
         ASSERT_TRUE(Client::InitializeWithTransport(client, &ops));
 
-        // Serve the command concurrently: Client::SendCommand waits for its
-        // response, so the server has to process while the client is blocked.
         Bool serverOk = false;
         std::thread serverThread([&] {
             for (int i = 0; i < 2; ++i) {
@@ -77,19 +80,21 @@ namespace MobileGL::Transport {
             }
             serverOk = true;
         });
-        EXPECT_TRUE(Client::SubmitSessionControl(42, true, 1));
-        EXPECT_TRUE(Client::WaitResponseForToken(1, 5000));
-        const Bool sent = Client::SendCommand(
-            42, static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glClear));
-        serverThread.join();
 
+        EXPECT_TRUE(Client::SubmitSessionControl(5, true, 1));
+        EXPECT_TRUE(Client::WaitResponseForToken(1, 5000));
+        EXPECT_TRUE(Client::SendClearColor(5, 0.25f, 0.5f, 0.75f, 1.0f, 2));
+
+        serverThread.join();
         EXPECT_TRUE(serverOk);
-        EXPECT_TRUE(sent) << Client::GetLastError();
+        EXPECT_FLOAT_EQ(g_red, 0.25f);
+        EXPECT_FLOAT_EQ(g_green, 0.5f);
+        EXPECT_FLOAT_EQ(g_blue, 0.75f);
+        EXPECT_FLOAT_EQ(g_alpha, 1.0f);
 
         core.Shutdown();
         Client::Shutdown();
         DestroyInProcessTransport(server);
-        EXPECT_EQ(g_clientServerClearCount, 1u);
     }
 } // namespace MobileGL::Transport
 

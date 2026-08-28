@@ -32,6 +32,10 @@ namespace MobileGL::Client {
     // echoed token matches `token`.
     Bool SendCommand(Uint32 sessionId, Uint32 opcode, Uint64 token = 0);
 
+    // Sends a typed glClearColor command (awaits response).
+    Bool SendClearColor(Uint64 sessionId, float red, float green, float blue, float alpha,
+                        Uint64 token);
+
     // Submits a command without waiting for its response.
     Bool SubmitCommand(Uint32 sessionId, Uint32 opcode, Uint64 token);
 

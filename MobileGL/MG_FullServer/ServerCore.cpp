@@ -119,6 +119,19 @@ namespace MobileGL::FullServer {
                 m_vtable->Clear(m_backend, sessionId, mask);
                 status = 0;
             }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glClearColor) &&
+                   m_vtable->ClearColor != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else {
+                const auto* color = command->clear_color();
+                m_vtable->ClearColor(m_backend, sessionId,
+                                     color == nullptr ? 0 : color->red(),
+                                     color == nullptr ? 0 : color->green(),
+                                     color == nullptr ? 0 : color->blue(),
+                                     color == nullptr ? 0 : color->alpha());
+                status = 0;
+            }
         }
 
         flatbuffers::FlatBufferBuilder responseBuilder;

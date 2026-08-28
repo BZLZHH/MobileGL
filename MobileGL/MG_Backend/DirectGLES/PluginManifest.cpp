@@ -39,6 +39,16 @@ namespace {
         (void)mask;
     }
 
+    void ClearColorBackend(MobileGLBackend* self, MobileGLSessionId session,
+                           float red, float green, float blue, float alpha) {
+        (void)self;
+        (void)session;
+        (void)red;
+        (void)green;
+        (void)blue;
+        (void)alpha;
+    }
+
     bool OnSessionCreatedBackend(MobileGLBackend* self, MobileGLSessionId session,
                                  const MobileGLBackendInitInfo* info) {
         (void)self;
@@ -91,7 +101,8 @@ namespace {
         .OnSharedGroupDestroyed = &OnSharedGroupDestroyedBackend,
         .OnSessionCreated = &OnSessionCreatedBackend,
         .OnSessionDestroyed = &OnSessionDestroyedBackend,
-        .Clear = &ClearBackend
+        .Clear = &ClearBackend,
+        .ClearColor = &ClearColorBackend
     };
 
     const MobileGLBackendVTable* GetBackendVTable() {

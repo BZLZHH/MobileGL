@@ -9,6 +9,7 @@
 #include "Client.h"
 #include "MG_Protocol/control.h"
 #include "MG_Protocol/gen/wire_generated.h"
+#include "MG_Protocol/generated_opcodes.h"
 #include "MG_Transport/LocalSocketShmTransport.h"
 
 #include <flatbuffers/flatbuffers.h>
@@ -67,6 +68,32 @@ namespace MobileGL::Client {
         return true;
     }
 
+    Bool SendClearColor(Uint64 sessionId, float red, float green, float blue, float alpha,
+                        Uint64 token) {
+        if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
+            s_lastError = "Client is not initialized.";
+            return false;
+        }
+        flatbuffers::FlatBufferBuilder builder;
+        const auto color = MobileGL::Protocol::Wire::CreateClearColor(builder, red, green, blue, alpha);
+        const auto command = MobileGL::Protocol::Wire::CreateCommand(
+            builder,
+            static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glClearColor),
+            sessionId, token, 0, color, 0);
+        const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 0);
+        builder.Finish(message);
+
+        MobileGLCommandBatch batch{};
+        batch.structSize = sizeof(MobileGLCommandBatch);
+        batch.flatBufferData = builder.GetBufferPointer();
+        batch.flatBufferSize = static_cast<Uint32>(builder.GetSize());
+        if (!s_ops->SubmitCommands(s_transport, &batch)) {
+            s_lastError = s_ops->GetLastError(s_transport);
+            return false;
+        }
+        return WaitResponseForToken(token, 0);
+    }
+
     Bool SubmitCommand(Uint32 sessionId, Uint32 opcode, Uint64 token) {
         return SubmitDataCommand(sessionId, opcode, token, 0, 0, nullptr);
     }
@@ -85,7 +112,7 @@ namespace MobileGL::Client {
             data = MobileGL::Protocol::Wire::CreateDataBlob(builder, shmOffset, shmSize);
         }
         const auto command = MobileGL::Protocol::Wire::CreateCommand(
-            builder, opcode, sessionId, token, clear, data);
+            builder, opcode, sessionId, token, clear, 0, data);
         const auto message =
             MobileGL::Protocol::Wire::CreateMessage(builder, command, shm == nullptr ? 0 : 1);
         builder.Finish(message);

@@ -57,8 +57,19 @@ class Command(object):
         return None
 
     # Command
-    def Data(self):
+    def ClearColor(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from MobileGL.Protocol.Wire.ClearColor import ClearColor
+            obj = ClearColor()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # Command
+    def Data(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
         if o != 0:
             x = self._tab.Indirect(o + self._tab.Pos)
             from MobileGL.Protocol.Wire.DataBlob import DataBlob
@@ -68,7 +79,7 @@ class Command(object):
         return None
 
 def CommandStart(builder):
-    builder.StartObject(5)
+    builder.StartObject(6)
 
 def Start(builder):
     CommandStart(builder)
@@ -97,8 +108,14 @@ def CommandAddClear(builder, clear):
 def AddClear(builder, clear):
     CommandAddClear(builder, clear)
 
+def CommandAddClearColor(builder, clearColor):
+    builder.PrependUOffsetTRelativeSlot(4, flatbuffers.number_types.UOffsetTFlags.py_type(clearColor), 0)
+
+def AddClearColor(builder, clearColor):
+    CommandAddClearColor(builder, clearColor)
+
 def CommandAddData(builder, data):
-    builder.PrependUOffsetTRelativeSlot(4, flatbuffers.number_types.UOffsetTFlags.py_type(data), 0)
+    builder.PrependUOffsetTRelativeSlot(5, flatbuffers.number_types.UOffsetTFlags.py_type(data), 0)
 
 def AddData(builder, data):
     CommandAddData(builder, data)

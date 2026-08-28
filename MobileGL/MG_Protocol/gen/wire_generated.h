@@ -20,6 +20,9 @@ namespace Wire {
 struct GlClear;
 struct GlClearBuilder;
 
+struct ClearColor;
+struct ClearColorBuilder;
+
 struct DataBlob;
 struct DataBlobBuilder;
 
@@ -71,6 +74,78 @@ inline ::flatbuffers::Offset<GlClear> CreateGlClear(
     uint32_t mask = 0) {
   GlClearBuilder builder_(_fbb);
   builder_.add_mask(mask);
+  return builder_.Finish();
+}
+
+struct ClearColor FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ClearColorBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_RED = 4,
+    VT_GREEN = 6,
+    VT_BLUE = 8,
+    VT_ALPHA = 10
+  };
+  float red() const {
+    return GetField<float>(VT_RED, 0.0f);
+  }
+  float green() const {
+    return GetField<float>(VT_GREEN, 0.0f);
+  }
+  float blue() const {
+    return GetField<float>(VT_BLUE, 0.0f);
+  }
+  float alpha() const {
+    return GetField<float>(VT_ALPHA, 0.0f);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<float>(verifier, VT_RED, 4) &&
+           VerifyField<float>(verifier, VT_GREEN, 4) &&
+           VerifyField<float>(verifier, VT_BLUE, 4) &&
+           VerifyField<float>(verifier, VT_ALPHA, 4) &&
+           verifier.EndTable();
+  }
+};
+
+struct ClearColorBuilder {
+  typedef ClearColor Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_red(float red) {
+    fbb_.AddElement<float>(ClearColor::VT_RED, red, 0.0f);
+  }
+  void add_green(float green) {
+    fbb_.AddElement<float>(ClearColor::VT_GREEN, green, 0.0f);
+  }
+  void add_blue(float blue) {
+    fbb_.AddElement<float>(ClearColor::VT_BLUE, blue, 0.0f);
+  }
+  void add_alpha(float alpha) {
+    fbb_.AddElement<float>(ClearColor::VT_ALPHA, alpha, 0.0f);
+  }
+  explicit ClearColorBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<ClearColor> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<ClearColor>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<ClearColor> CreateClearColor(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    float red = 0.0f,
+    float green = 0.0f,
+    float blue = 0.0f,
+    float alpha = 0.0f) {
+  ClearColorBuilder builder_(_fbb);
+  builder_.add_alpha(alpha);
+  builder_.add_blue(blue);
+  builder_.add_green(green);
+  builder_.add_red(red);
   return builder_.Finish();
 }
 
@@ -133,7 +208,8 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_SESSION_ID = 6,
     VT_TOKEN = 8,
     VT_CLEAR = 10,
-    VT_DATA = 12
+    VT_CLEAR_COLOR = 12,
+    VT_DATA = 14
   };
   uint32_t opcode() const {
     return GetField<uint32_t>(VT_OPCODE, 0);
@@ -147,6 +223,9 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   const MobileGL::Protocol::Wire::GlClear *clear() const {
     return GetPointer<const MobileGL::Protocol::Wire::GlClear *>(VT_CLEAR);
   }
+  const MobileGL::Protocol::Wire::ClearColor *clear_color() const {
+    return GetPointer<const MobileGL::Protocol::Wire::ClearColor *>(VT_CLEAR_COLOR);
+  }
   const MobileGL::Protocol::Wire::DataBlob *data() const {
     return GetPointer<const MobileGL::Protocol::Wire::DataBlob *>(VT_DATA);
   }
@@ -158,6 +237,8 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            VerifyField<uint64_t>(verifier, VT_TOKEN, 8) &&
            VerifyOffset(verifier, VT_CLEAR) &&
            verifier.VerifyTable(clear()) &&
+           VerifyOffset(verifier, VT_CLEAR_COLOR) &&
+           verifier.VerifyTable(clear_color()) &&
            VerifyOffset(verifier, VT_DATA) &&
            verifier.VerifyTable(data()) &&
            verifier.EndTable();
@@ -180,6 +261,9 @@ struct CommandBuilder {
   void add_clear(::flatbuffers::Offset<MobileGL::Protocol::Wire::GlClear> clear) {
     fbb_.AddOffset(Command::VT_CLEAR, clear);
   }
+  void add_clear_color(::flatbuffers::Offset<MobileGL::Protocol::Wire::ClearColor> clear_color) {
+    fbb_.AddOffset(Command::VT_CLEAR_COLOR, clear_color);
+  }
   void add_data(::flatbuffers::Offset<MobileGL::Protocol::Wire::DataBlob> data) {
     fbb_.AddOffset(Command::VT_DATA, data);
   }
@@ -200,11 +284,13 @@ inline ::flatbuffers::Offset<Command> CreateCommand(
     uint64_t session_id = 0,
     uint64_t token = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::GlClear> clear = 0,
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::ClearColor> clear_color = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::DataBlob> data = 0) {
   CommandBuilder builder_(_fbb);
   builder_.add_token(token);
   builder_.add_session_id(session_id);
   builder_.add_data(data);
+  builder_.add_clear_color(clear_color);
   builder_.add_clear(clear);
   builder_.add_opcode(opcode);
   return builder_.Finish();
