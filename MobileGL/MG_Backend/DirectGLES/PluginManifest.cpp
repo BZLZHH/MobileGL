@@ -220,6 +220,7 @@ namespace {
                             MobileGLBackendHandle draw);
     void* FenceSyncBackend(MobileGLBackend* self, MobileGLSessionId session,
                            uint32_t condition, uint32_t flags);
+    void DeleteSyncBackend(MobileGLBackend* self, MobileGLSessionId session, void* sync);
     const MobileGLBackendVTable s_backendVTable = {
         .structSize = sizeof(MobileGLBackendVTable),
         .apiVersion = (MOBILEGL_BFA_ABI_MAJOR << 16) | MOBILEGL_BFA_ABI_MINOR,
@@ -249,7 +250,8 @@ namespace {
         .BindTransformFeedback = &BindTransformFeedbackBackend,
         .BlitFramebuffer = &BlitFramebufferBackend,
         .SwapBuffers = &SwapBuffersBackend,
-        .FenceSync = &FenceSyncBackend
+        .FenceSync = &FenceSyncBackend,
+        .DeleteSync = &DeleteSyncBackend
     };
 
     bool SwapBuffersBackend(MobileGLBackend* self, MobileGLSessionId session,
@@ -267,6 +269,12 @@ namespace {
         (void)condition;
         (void)flags;
         return reinterpret_cast<void*>(0x1234);
+    }
+
+    void DeleteSyncBackend(MobileGLBackend* self, MobileGLSessionId session, void* sync) {
+        (void)self;
+        (void)session;
+        (void)sync;
     }
 
     const MobileGLBackendVTable* GetBackendVTable() {

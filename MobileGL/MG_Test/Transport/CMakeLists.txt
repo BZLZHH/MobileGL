@@ -695,6 +695,35 @@ endif()
 
 gtest_discover_tests(ClientFenceSyncTest DISCOVERY_TIMEOUT 30 PROPERTIES LABELS unit)
 
+add_executable(
+        ClientDeleteSyncTest
+        ClientDeleteSyncTest.cpp
+        ${MGL_ROOT}/MobileGL/MG_FullServer/ServerCore.cpp
+)
+
+target_include_directories(ClientDeleteSyncTest PRIVATE
+        ${MGL_ROOT}/include
+        ${MGL_ROOT}/MobileGL
+        ${MGL_ROOT}/3rdparty/xxHash
+        ${MGL_ROOT}/3rdparty/Vulkan-Headers/include
+        ${MGL_ROOT}/3rdparty/SPIRV-Reflect
+)
+
+target_link_libraries(
+        ClientDeleteSyncTest PRIVATE
+        GTest::gtest_main
+        MobileGL_Client
+        MobileGL_Transport
+        MobileGL_BFA
+)
+
+if (MSVC)
+        target_compile_options(ClientDeleteSyncTest PRIVATE /Zc:preprocessor)
+endif()
+
+gtest_discover_tests(ClientDeleteSyncTest DISCOVERY_TIMEOUT 30 PROPERTIES LABELS unit)
+
+
 
 
 

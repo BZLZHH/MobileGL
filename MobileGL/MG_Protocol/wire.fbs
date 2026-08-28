@@ -100,6 +100,10 @@ table FenceSync {
     flags: uint;
 }
 
+table DeleteSync {
+    sync: ulong;
+}
+
 table DataBlob {
     offset: ulong;
     size: ulong;
@@ -126,6 +130,7 @@ table Command {
     data: DataBlob;
     dispatch_compute_indirect: DispatchComputeIndirect;
     fence_sync: FenceSync;
+    delete_sync: DeleteSync;
 }
 
 table Message {

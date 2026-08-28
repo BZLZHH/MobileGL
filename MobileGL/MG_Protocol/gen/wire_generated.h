@@ -65,6 +65,9 @@ struct DispatchComputeIndirectBuilder;
 struct FenceSync;
 struct FenceSyncBuilder;
 
+struct DeleteSync;
+struct DeleteSyncBuilder;
+
 struct DataBlob;
 struct DataBlobBuilder;
 
@@ -999,6 +1002,48 @@ inline ::flatbuffers::Offset<FenceSync> CreateFenceSync(
   return builder_.Finish();
 }
 
+struct DeleteSync FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef DeleteSyncBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_SYNC = 4
+  };
+  uint64_t sync() const {
+    return GetField<uint64_t>(VT_SYNC, 0);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint64_t>(verifier, VT_SYNC, 8) &&
+           verifier.EndTable();
+  }
+};
+
+struct DeleteSyncBuilder {
+  typedef DeleteSync Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_sync(uint64_t sync) {
+    fbb_.AddElement<uint64_t>(DeleteSync::VT_SYNC, sync, 0);
+  }
+  explicit DeleteSyncBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<DeleteSync> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<DeleteSync>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<DeleteSync> CreateDeleteSync(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint64_t sync = 0) {
+  DeleteSyncBuilder builder_(_fbb);
+  builder_.add_sync(sync);
+  return builder_.Finish();
+}
+
 struct DataBlob FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef DataBlobBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
@@ -1073,7 +1118,8 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_SWAP_BUFFERS = 36,
     VT_DATA = 38,
     VT_DISPATCH_COMPUTE_INDIRECT = 40,
-    VT_FENCE_SYNC = 42
+    VT_FENCE_SYNC = 42,
+    VT_DELETE_SYNC = 44
   };
   uint32_t opcode() const {
     return GetField<uint32_t>(VT_OPCODE, 0);
@@ -1135,6 +1181,9 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   const MobileGL::Protocol::Wire::FenceSync *fence_sync() const {
     return GetPointer<const MobileGL::Protocol::Wire::FenceSync *>(VT_FENCE_SYNC);
   }
+  const MobileGL::Protocol::Wire::DeleteSync *delete_sync() const {
+    return GetPointer<const MobileGL::Protocol::Wire::DeleteSync *>(VT_DELETE_SYNC);
+  }
   template <bool B = false>
   bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -1175,6 +1224,8 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            verifier.VerifyTable(dispatch_compute_indirect()) &&
            VerifyOffset(verifier, VT_FENCE_SYNC) &&
            verifier.VerifyTable(fence_sync()) &&
+           VerifyOffset(verifier, VT_DELETE_SYNC) &&
+           verifier.VerifyTable(delete_sync()) &&
            verifier.EndTable();
   }
 };
@@ -1243,6 +1294,9 @@ struct CommandBuilder {
   void add_fence_sync(::flatbuffers::Offset<MobileGL::Protocol::Wire::FenceSync> fence_sync) {
     fbb_.AddOffset(Command::VT_FENCE_SYNC, fence_sync);
   }
+  void add_delete_sync(::flatbuffers::Offset<MobileGL::Protocol::Wire::DeleteSync> delete_sync) {
+    fbb_.AddOffset(Command::VT_DELETE_SYNC, delete_sync);
+  }
   explicit CommandBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -1275,10 +1329,12 @@ inline ::flatbuffers::Offset<Command> CreateCommand(
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::SwapBuffers> swap_buffers = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::DataBlob> data = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::DispatchComputeIndirect> dispatch_compute_indirect = 0,
-    ::flatbuffers::Offset<MobileGL::Protocol::Wire::FenceSync> fence_sync = 0) {
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::FenceSync> fence_sync = 0,
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::DeleteSync> delete_sync = 0) {
   CommandBuilder builder_(_fbb);
   builder_.add_token(token);
   builder_.add_session_id(session_id);
+  builder_.add_delete_sync(delete_sync);
   builder_.add_fence_sync(fence_sync);
   builder_.add_dispatch_compute_indirect(dispatch_compute_indirect);
   builder_.add_data(data);

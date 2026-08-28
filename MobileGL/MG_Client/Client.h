@@ -93,6 +93,9 @@ namespace MobileGL::Client {
     Bool SendFenceSync(Uint64 sessionId, uint32_t condition, uint32_t flags,
                        uint64_t token, uint64_t* outSync);
 
+    // Sends a glDeleteSync command (awaits response).
+    Bool SendDeleteSync(Uint64 sessionId, uint64_t sync, Uint64 token);
+
     // Submits a command without waiting for its response.
     Bool SubmitCommand(Uint32 sessionId, Uint32 opcode, Uint64 token);
 

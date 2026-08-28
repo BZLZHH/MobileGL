@@ -113,8 +113,8 @@
 - [x] **DrawElements + shm indices（零拷贝 draw 数据路径）**：wire 增加 `DrawElements{mode,count,type,indices_offset}`；`Client::SendDrawElements` 携带 shm fd；`ServerCore` 接收并映射后把 indices 指针传给 BFA `DrawElements`；`ClientDrawElementsShmTest` 1/1 通过（offset=1 读到 0x2B）
 - [x] **BufferSubData + shm data（buffer 数据通路）**：wire 增加 `BufferSubData{buffer_handle,offset,size}`；`Client::SendBufferSubData` 携带 shm fd；`ServerCore` 把 shm 指针传给 BFA `BufferSubData`；`ClientBufferSubDataShmTest` 1/1 通过（handle/offset/size/首字节 0x44 精确回查）
 - [x] **PatchParameteri scalar 命令**：wire 增加 `PatchParameteri{pname,value}`；`Client::SendPatchParameteri` + `ServerCore` 解包调 BFA `PatchParameteri`；`ClientPatchParameteriTest` 1/1 通过（0x1234/-7 精确回查）
-- [x] **FenceSync handle 返回路径**：wire `Response.sync`；`Client::SendFenceSync(…, outSync)` 拿到后端同步句柄；`ServerCore` 调 BFA `FenceSync` 并回传指针；`ClientFenceSyncTest` 1/1 通过（sync=0x1234，condition/flags 精确回查）
-- [x] DirectGLES / DirectVulkan null adapter 提供 `Initialize/Shutdown/Display/SharedGroup/Session/Clear/ClearColor/DrawArrays/DrawElements/BufferSubData/MemoryBarrier/MemoryBarrierByRegion/PatchParameteri/GenerateMipmap/DispatchCompute/DispatchComputeIndirect/Begin/End/Pause/Resume/BindTransformFeedback/BlitFramebuffer/SwapBuffers/FenceSync` 存根
+- [x] **DeleteSync 命令**：wire 增加 `DeleteSync{sync}`；`Client::SendDeleteSync` + `ServerCore` 把句柄转 `void*` 传给 BFA `DeleteSync`；`ClientDeleteSyncTest` 1/1 通过（Fence→Delete 句柄 0x1234 回查）
+- [x] DirectGLES / DirectVulkan null adapter 提供 `Initialize/Shutdown/Display/SharedGroup/Session/Clear/ClearColor/DrawArrays/DrawElements/BufferSubData/MemoryBarrier/MemoryBarrierByRegion/PatchParameteri/GenerateMipmap/DispatchCompute/DispatchComputeIndirect/Begin/End/Pause/Resume/BindTransformFeedback/BlitFramebuffer/SwapBuffers/FenceSync/DeleteSync` 存根
 - [x] **BigServer 全链路 E2E（in-process）**：Client 命令 → InProcessTransport → `FullServer::ServerCore` → Backend VTable → Response → Client；`BigServerE2ETest` 1/1 通过
 - [x] **BigServer 全链路 E2E（LocalSocketShm）**：client socket → server accept → `ServerCore` 分发 → 响应返回 client；`BigServerE2ETest` 2/2 通过
 - [x] ServerCore 分发改为使用生成 opcode 表（`MobileGLOpcode::glClear`），BigServerE2E 通过

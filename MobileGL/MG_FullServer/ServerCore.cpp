@@ -327,6 +327,16 @@ namespace MobileGL::FullServer {
                 syncHandle = reinterpret_cast<uint64_t>(sync);
                 status = 0;
             }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glDeleteSync) &&
+                   m_vtable->DeleteSync != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else {
+                const auto* ds = command->delete_sync();
+                m_vtable->DeleteSync(m_backend, sessionId,
+                                     reinterpret_cast<void*>(ds == nullptr ? 0 : ds->sync()));
+                status = 0;
+            }
         }
 
         for (auto& handle : receivedShm) {
