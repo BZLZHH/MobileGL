@@ -14,10 +14,14 @@
 namespace MobileGL {
     namespace MG_State {
         namespace GLState {
+            class SharedSamplerObjectTable;
+
             class SamplerState {
             public:
                 SamplerState();
 
+                void SetSharedObjectTable(const SharedPtr<SharedSamplerObjectTable>& table) { m_sharedObjectTable = table; }
+                const SharedPtr<SharedSamplerObjectTable>& GetSharedObjectTable() const { return m_sharedObjectTable; }
                 void GenerateNames(Uint number, Vector<Uint>& samplers);
                 const SharedPtr<SamplerObject>& GetSamplerObject(Uint index);
                 const SharedPtr<SamplerObject>& CreateSamplerObject(Uint index);
@@ -26,6 +30,7 @@ namespace MobileGL {
                 Bool ValidateSamplerObject(Uint index) const;
 
             private:
+                SharedPtr<SharedSamplerObjectTable> m_sharedObjectTable;
                 UnorderedMap<Uint, SharedPtr<SamplerObject>> m_samplerObjects;
                 IndexGenerator<Uint> m_indexGenerator;
             };

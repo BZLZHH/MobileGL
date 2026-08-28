@@ -11,6 +11,7 @@
 #include <Includes.h>
 #include "MG_State/GLState/BufferState/BufferState.h"
 #include "MG_State/GLState/TextureState/TextureState.h"
+#include "MG_State/GLState/SamplerState/SamplerState.h"
 #include <MG_Util/Miscellany/IndexGenerator.h>
 
 namespace MobileGL::MG_State::GLState {
@@ -90,6 +91,23 @@ namespace MobileGL::MG_State::GLState {
         IndexGenerator<Uint> m_indexGenerator;
     };
 
+    // Shared sampler object table (object map + name generator).
+    class SharedSamplerObjectTable {
+    public:
+        SharedSamplerObjectTable() : m_indexGenerator(1024, 1) {}
+
+        const SharedPtr<SamplerObject>& GetObject(Uint index) const;
+        void GenerateNames(Uint number, Vector<Uint>& samplers);
+        const SharedPtr<SamplerObject>& CreateObject(Uint index);
+        void MarkObjectForDeletion(Uint index);
+        Bool ValidateName(Uint index) const;
+        Bool ValidateObject(Uint index) const;
+
+    private:
+        UnorderedMap<Uint, SharedPtr<SamplerObject>> m_samplerObjects;
+        IndexGenerator<Uint> m_indexGenerator;
+    };
+
     class SharedObjectTables {
     public:
         SharedObjectTables() = default;
@@ -108,6 +126,13 @@ namespace MobileGL::MG_State::GLState {
             return m_sharedTextureObjects;
         }
 
+        SharedPtr<SharedSamplerObjectTable>& GetSharedSamplerObjects() {
+            return m_sharedSamplerObjects;
+        }
+        const SharedPtr<SharedSamplerObjectTable>& GetSharedSamplerObjects() const {
+            return m_sharedSamplerObjects;
+        }
+
         // Legacy per-context states; kept until every object access is
         // routed through the GetShared*Objects() accessors.
         BufferState& GetBufferState() { return m_bufferState; }
@@ -116,6 +141,7 @@ namespace MobileGL::MG_State::GLState {
     private:
         SharedPtr<SharedBufferObjectTable> m_sharedBufferObjects = MakeShared<SharedBufferObjectTable>();
         SharedPtr<SharedTextureObjectTable> m_sharedTextureObjects = MakeShared<SharedTextureObjectTable>();
+        SharedPtr<SharedSamplerObjectTable> m_sharedSamplerObjects = MakeShared<SharedSamplerObjectTable>();
         BufferState m_bufferState;
     };
 } // namespace MobileGL::MG_State::GLState

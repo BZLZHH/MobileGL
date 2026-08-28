@@ -66,6 +66,13 @@ namespace MobileGL::MG_State::GLState {
         const auto& seenTexture = second->GetContext().GetTextureObject(43);
         ASSERT_TRUE(seenTexture);
         EXPECT_EQ(createdTexture, seenTexture);
+
+        // Sampler object tables are shared too.
+        const auto& createdSampler = first->GetContext().CreateSamplerObject(44);
+        ASSERT_TRUE(createdSampler);
+        const auto& seenSampler = second->GetContext().GetSamplerObject(44);
+        ASSERT_TRUE(seenSampler);
+        EXPECT_EQ(createdSampler, seenSampler);
     }
 
     TEST(ContextRegistryTest, TracksCurrentSessionPerThread) {

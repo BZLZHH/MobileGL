@@ -42,8 +42,9 @@
 - [x] Buffer/Texture 对象创建时分配 handle、删除时释放（`CreateBufferObject` / `CreateTextureObject` / `CreateTextureViewObject` / 对应 Mark*ForDeletion）
 - [x] **Buffer 共享对象表迁移**：`SharedBufferObjectTable` 由 `SharedObjectTables` 持有，`BufferState` 的 name/object 表委托给 group；binding slots 仍 per-context（GL shareCtx 语义）
 - [x] **Texture 共享对象表迁移**：`SharedTextureObjectTable` 由 `SharedObjectTables` 持有，`TextureState` 的 name/object 表委托给 group；default texture 与 unit bindings 仍 per-context
-- [x] `MobileGL/MG_Test/State/ContextRegistryTest.cpp` / `HandleRegistryTest.cpp` — 单元测试（Buffer/Texture 跨 session 可见性验证）
-- [ ] 共享对象表真正替换 GLContext 内的 per-context *State（VAO/Program/Sampler/FBO/RBO/... 继续迁移）
+- [x] **Sampler 共享对象表迁移**：`SharedSamplerObjectTable` 由 `SharedObjectTables` 持有，`SamplerState` 的 name/object 表委托给 group
+- [x] `MobileGL/MG_Test/State/ContextRegistryTest.cpp` / `HandleRegistryTest.cpp` — 单元测试（Buffer/Texture/Sampler 跨 session 可见性验证）
+- [ ] 共享对象表真正替换 GLContext 内的 per-context *State（VAO/Program/FBO/RBO/... 继续迁移）
 - [ ] `pGLContext` 切换为按 `(sessionId, clientThreadId)` 取 current（Huge: 数百处访问点）
 
 ## Phase 3 — BFA 落地（进行中）

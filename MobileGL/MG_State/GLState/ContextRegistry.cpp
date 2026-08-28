@@ -41,6 +41,7 @@ namespace MobileGL::MG_State::GLState {
         if (m_sharedTables != nullptr) {
             m_context->SetSharedBufferObjectTable(m_sharedTables->GetSharedBufferObjects());
             m_context->SetSharedTextureObjectTable(m_sharedTables->GetSharedTextureObjects());
+            m_context->SetSharedSamplerObjectTable(m_sharedTables->GetSharedSamplerObjects());
         }
     }
 
