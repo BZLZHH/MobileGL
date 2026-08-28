@@ -67,6 +67,10 @@ namespace MobileGL::Client {
     // Sends an opcode-only glEndTransformFeedback command (awaits response).
     Bool SendEndTransformFeedback(Uint64 sessionId, Uint64 token);
 
+    // Sends opcode-only pause/resume transform feedback commands.
+    Bool SendPauseTransformFeedback(Uint64 sessionId, Uint64 token);
+    Bool SendResumeTransformFeedback(Uint64 sessionId, Uint64 token);
+
     // Submits a command without waiting for its response.
     Bool SubmitCommand(Uint32 sessionId, Uint32 opcode, Uint64 token);
 

@@ -238,6 +238,22 @@ namespace MobileGL::FullServer {
                 m_vtable->EndTransformFeedback(m_backend, sessionId);
                 status = 0;
             }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glPauseTransformFeedback) &&
+                   m_vtable->PauseTransformFeedback != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else {
+                m_vtable->PauseTransformFeedback(m_backend, sessionId);
+                status = 0;
+            }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glResumeTransformFeedback) &&
+                   m_vtable->ResumeTransformFeedback != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else {
+                m_vtable->ResumeTransformFeedback(m_backend, sessionId);
+                status = 0;
+            }
         }
 
         for (auto& handle : receivedShm) {

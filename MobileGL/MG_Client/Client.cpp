@@ -22,6 +22,28 @@ namespace MobileGL::Client {
         MobileGLTransport* s_transport = nullptr;
         const MobileGLTransportOps* s_ops = nullptr;
         Uint32 s_lastResponseByte = 0;
+
+        Bool SendOpcodesOnly(Uint32 opcode, Uint64 sessionId, Uint64 token) {
+            if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
+                s_lastError = "Client is not initialized.";
+                return false;
+            }
+            flatbuffers::FlatBufferBuilder builder;
+            const auto command =
+                MobileGL::Protocol::Wire::CreateCommand(builder, opcode, sessionId, token);
+            const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 0);
+            builder.Finish(message);
+
+            MobileGLCommandBatch batch{};
+            batch.structSize = sizeof(MobileGLCommandBatch);
+            batch.flatBufferData = builder.GetBufferPointer();
+            batch.flatBufferSize = static_cast<Uint32>(builder.GetSize());
+            if (!s_ops->SubmitCommands(s_transport, &batch)) {
+                s_lastError = s_ops->GetLastError(s_transport);
+                return false;
+            }
+            return WaitResponseForToken(token, 0);
+        }
     } // namespace
 
     Bool Initialize(const ClientConfig& config) {
@@ -326,6 +348,16 @@ namespace MobileGL::Client {
             return false;
         }
         return WaitResponseForToken(token, 0);
+    }
+
+    Bool SendPauseTransformFeedback(Uint64 sessionId, Uint64 token) {
+        return SendOpcodesOnly(static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glPauseTransformFeedback),
+                               sessionId, token);
+    }
+
+    Bool SendResumeTransformFeedback(Uint64 sessionId, Uint64 token) {
+        return SendOpcodesOnly(static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glResumeTransformFeedback),
+                               sessionId, token);
     }
 
     Bool SubmitCommand(Uint32 sessionId, Uint32 opcode, Uint64 token) {

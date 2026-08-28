@@ -92,6 +92,16 @@ namespace {
         (void)session;
     }
 
+    void PauseTransformFeedbackBackend(MobileGLBackend* self, MobileGLSessionId session) {
+        (void)self;
+        (void)session;
+    }
+
+    void ResumeTransformFeedbackBackend(MobileGLBackend* self, MobileGLSessionId session) {
+        (void)self;
+        (void)session;
+    }
+
     void DrawElementsBackend(MobileGLBackend* self, MobileGLSessionId session,
                              uint32_t mode, int32_t count, uint32_t type, const void* indices) {
         (void)self;
@@ -184,7 +194,9 @@ namespace {
         .GenerateMipmap = &GenerateMipmapBackend,
         .DispatchCompute = &DispatchComputeBackend,
         .BeginTransformFeedback = &BeginTransformFeedbackBackend,
-        .EndTransformFeedback = &EndTransformFeedbackBackend
+        .EndTransformFeedback = &EndTransformFeedbackBackend,
+        .PauseTransformFeedback = &PauseTransformFeedbackBackend,
+        .ResumeTransformFeedback = &ResumeTransformFeedbackBackend
     };
 
     const MobileGLBackendVTable* GetBackendVTable() {
