@@ -132,6 +132,13 @@ namespace {
         (void)session;
     }
 
+    void BindTransformFeedbackBackend(MobileGLBackend* self, MobileGLSessionId session,
+                                      uint32_t name) {
+        (void)self;
+        (void)session;
+        (void)name;
+    }
+
     bool OnSessionCreatedBackend(MobileGLBackend* self, MobileGLSessionId session,
                                  const MobileGLBackendInitInfo* info) {
         (void)self;
@@ -196,7 +203,8 @@ namespace {
         .BeginTransformFeedback = &BeginTransformFeedbackBackend,
         .EndTransformFeedback = &EndTransformFeedbackBackend,
         .PauseTransformFeedback = &PauseTransformFeedbackBackend,
-        .ResumeTransformFeedback = &ResumeTransformFeedbackBackend
+        .ResumeTransformFeedback = &ResumeTransformFeedbackBackend,
+        .BindTransformFeedback = &BindTransformFeedbackBackend
     };
 
     const MobileGLBackendVTable* GetBackendVTable() {

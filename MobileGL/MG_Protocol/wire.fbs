@@ -64,6 +64,10 @@ table BeginTransformFeedback {
     primitive_mode: uint;
 }
 
+table BindTransformFeedback {
+    name: uint;
+}
+
 table DataBlob {
     offset: ulong;
     size: ulong;
@@ -83,6 +87,7 @@ table Command {
     generate_mipmap: GenerateMipmap;
     dispatch_compute: DispatchCompute;
     begin_transform_feedback: BeginTransformFeedback;
+    bind_transform_feedback: BindTransformFeedback;
     data: DataBlob;
 }
 

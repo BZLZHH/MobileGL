@@ -71,6 +71,9 @@ namespace MobileGL::Client {
     Bool SendPauseTransformFeedback(Uint64 sessionId, Uint64 token);
     Bool SendResumeTransformFeedback(Uint64 sessionId, Uint64 token);
 
+    // Sends a typed glBindTransformFeedback command (awaits response).
+    Bool SendBindTransformFeedback(Uint64 sessionId, uint32_t name, Uint64 token);
+
     // Submits a command without waiting for its response.
     Bool SubmitCommand(Uint32 sessionId, Uint32 opcode, Uint64 token);
 

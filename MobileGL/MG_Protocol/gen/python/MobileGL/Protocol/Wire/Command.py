@@ -156,8 +156,19 @@ class Command(object):
         return None
 
     # Command
-    def Data(self):
+    def BindTransformFeedback(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(30))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from MobileGL.Protocol.Wire.BindTransformFeedback import BindTransformFeedback
+            obj = BindTransformFeedback()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # Command
+    def Data(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(32))
         if o != 0:
             x = self._tab.Indirect(o + self._tab.Pos)
             from MobileGL.Protocol.Wire.DataBlob import DataBlob
@@ -167,7 +178,7 @@ class Command(object):
         return None
 
 def CommandStart(builder):
-    builder.StartObject(14)
+    builder.StartObject(15)
 
 def Start(builder):
     CommandStart(builder)
@@ -250,8 +261,14 @@ def CommandAddBeginTransformFeedback(builder, beginTransformFeedback):
 def AddBeginTransformFeedback(builder, beginTransformFeedback):
     CommandAddBeginTransformFeedback(builder, beginTransformFeedback)
 
+def CommandAddBindTransformFeedback(builder, bindTransformFeedback):
+    builder.PrependUOffsetTRelativeSlot(13, flatbuffers.number_types.UOffsetTFlags.py_type(bindTransformFeedback), 0)
+
+def AddBindTransformFeedback(builder, bindTransformFeedback):
+    CommandAddBindTransformFeedback(builder, bindTransformFeedback)
+
 def CommandAddData(builder, data):
-    builder.PrependUOffsetTRelativeSlot(13, flatbuffers.number_types.UOffsetTFlags.py_type(data), 0)
+    builder.PrependUOffsetTRelativeSlot(14, flatbuffers.number_types.UOffsetTFlags.py_type(data), 0)
 
 def AddData(builder, data):
     CommandAddData(builder, data)

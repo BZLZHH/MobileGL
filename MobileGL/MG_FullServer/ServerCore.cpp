@@ -254,6 +254,16 @@ namespace MobileGL::FullServer {
                 m_vtable->ResumeTransformFeedback(m_backend, sessionId);
                 status = 0;
             }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glBindTransformFeedback) &&
+                   m_vtable->BindTransformFeedback != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else {
+                const auto* btf = command->bind_transform_feedback();
+                m_vtable->BindTransformFeedback(m_backend, sessionId,
+                                                btf == nullptr ? 0 : btf->name());
+                status = 0;
+            }
         }
 
         for (auto& handle : receivedShm) {
