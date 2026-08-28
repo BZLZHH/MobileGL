@@ -59,6 +59,9 @@ struct BlitFramebufferBuilder;
 struct SwapBuffers;
 struct SwapBuffersBuilder;
 
+struct DispatchComputeIndirect;
+struct DispatchComputeIndirectBuilder;
+
 struct DataBlob;
 struct DataBlobBuilder;
 
@@ -899,6 +902,48 @@ inline ::flatbuffers::Offset<SwapBuffers> CreateSwapBuffers(
   return builder_.Finish();
 }
 
+struct DispatchComputeIndirect FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef DispatchComputeIndirectBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_INDIRECT_OFFSET = 4
+  };
+  uint64_t indirect_offset() const {
+    return GetField<uint64_t>(VT_INDIRECT_OFFSET, 0);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint64_t>(verifier, VT_INDIRECT_OFFSET, 8) &&
+           verifier.EndTable();
+  }
+};
+
+struct DispatchComputeIndirectBuilder {
+  typedef DispatchComputeIndirect Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_indirect_offset(uint64_t indirect_offset) {
+    fbb_.AddElement<uint64_t>(DispatchComputeIndirect::VT_INDIRECT_OFFSET, indirect_offset, 0);
+  }
+  explicit DispatchComputeIndirectBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<DispatchComputeIndirect> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<DispatchComputeIndirect>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<DispatchComputeIndirect> CreateDispatchComputeIndirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint64_t indirect_offset = 0) {
+  DispatchComputeIndirectBuilder builder_(_fbb);
+  builder_.add_indirect_offset(indirect_offset);
+  return builder_.Finish();
+}
+
 struct DataBlob FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef DataBlobBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
@@ -971,7 +1016,8 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_BIND_TRANSFORM_FEEDBACK = 32,
     VT_BLIT_FRAMEBUFFER = 34,
     VT_SWAP_BUFFERS = 36,
-    VT_DATA = 38
+    VT_DATA = 38,
+    VT_DISPATCH_COMPUTE_INDIRECT = 40
   };
   uint32_t opcode() const {
     return GetField<uint32_t>(VT_OPCODE, 0);
@@ -1027,6 +1073,9 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   const MobileGL::Protocol::Wire::DataBlob *data() const {
     return GetPointer<const MobileGL::Protocol::Wire::DataBlob *>(VT_DATA);
   }
+  const MobileGL::Protocol::Wire::DispatchComputeIndirect *dispatch_compute_indirect() const {
+    return GetPointer<const MobileGL::Protocol::Wire::DispatchComputeIndirect *>(VT_DISPATCH_COMPUTE_INDIRECT);
+  }
   template <bool B = false>
   bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -1063,6 +1112,8 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            verifier.VerifyTable(swap_buffers()) &&
            VerifyOffset(verifier, VT_DATA) &&
            verifier.VerifyTable(data()) &&
+           VerifyOffset(verifier, VT_DISPATCH_COMPUTE_INDIRECT) &&
+           verifier.VerifyTable(dispatch_compute_indirect()) &&
            verifier.EndTable();
   }
 };
@@ -1125,6 +1176,9 @@ struct CommandBuilder {
   void add_data(::flatbuffers::Offset<MobileGL::Protocol::Wire::DataBlob> data) {
     fbb_.AddOffset(Command::VT_DATA, data);
   }
+  void add_dispatch_compute_indirect(::flatbuffers::Offset<MobileGL::Protocol::Wire::DispatchComputeIndirect> dispatch_compute_indirect) {
+    fbb_.AddOffset(Command::VT_DISPATCH_COMPUTE_INDIRECT, dispatch_compute_indirect);
+  }
   explicit CommandBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -1155,10 +1209,12 @@ inline ::flatbuffers::Offset<Command> CreateCommand(
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::BindTransformFeedback> bind_transform_feedback = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::BlitFramebuffer> blit_framebuffer = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::SwapBuffers> swap_buffers = 0,
-    ::flatbuffers::Offset<MobileGL::Protocol::Wire::DataBlob> data = 0) {
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::DataBlob> data = 0,
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::DispatchComputeIndirect> dispatch_compute_indirect = 0) {
   CommandBuilder builder_(_fbb);
   builder_.add_token(token);
   builder_.add_session_id(session_id);
+  builder_.add_dispatch_compute_indirect(dispatch_compute_indirect);
   builder_.add_data(data);
   builder_.add_swap_buffers(swap_buffers);
   builder_.add_blit_framebuffer(blit_framebuffer);

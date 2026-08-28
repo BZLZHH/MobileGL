@@ -304,6 +304,16 @@ namespace MobileGL::FullServer {
                 status = m_vtable->SwapBuffers(m_backend, sessionId,
                                                swp == nullptr ? 0 : swp->draw()) ? 0 : 1;
             }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glDispatchComputeIndirect) &&
+                   m_vtable->DispatchComputeIndirect != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else {
+                const auto* dci = command->dispatch_compute_indirect();
+                m_vtable->DispatchComputeIndirect(m_backend, sessionId,
+                                                  dci == nullptr ? 0 : dci->indirect_offset());
+                status = 0;
+            }
         }
 
         for (auto& handle : receivedShm) {

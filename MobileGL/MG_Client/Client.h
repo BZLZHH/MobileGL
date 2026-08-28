@@ -86,6 +86,9 @@ namespace MobileGL::Client {
     // Sends an eglSwapBuffers command (awaits response).
     Bool SendSwapBuffers(Uint64 sessionId, uint64_t draw, Uint64 token);
 
+    // Sends a typed glDispatchComputeIndirect command (awaits response).
+    Bool SendDispatchComputeIndirect(Uint64 sessionId, uint64_t indirectOffset, Uint64 token);
+
     // Submits a command without waiting for its response.
     Bool SubmitCommand(Uint32 sessionId, Uint32 opcode, Uint64 token);
 

@@ -210,8 +210,19 @@ class Command(object):
             return obj
         return None
 
+    # Command
+    def DispatchComputeIndirect(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(40))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from MobileGL.Protocol.Wire.DispatchComputeIndirect import DispatchComputeIndirect
+            obj = DispatchComputeIndirect()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
 def CommandStart(builder):
-    builder.StartObject(18)
+    builder.StartObject(19)
 
 def Start(builder):
     CommandStart(builder)
@@ -323,6 +334,12 @@ def CommandAddData(builder, data):
 
 def AddData(builder, data):
     CommandAddData(builder, data)
+
+def CommandAddDispatchComputeIndirect(builder, dispatchComputeIndirect):
+    builder.PrependUOffsetTRelativeSlot(18, flatbuffers.number_types.UOffsetTFlags.py_type(dispatchComputeIndirect), 0)
+
+def AddDispatchComputeIndirect(builder, dispatchComputeIndirect):
+    CommandAddDispatchComputeIndirect(builder, dispatchComputeIndirect)
 
 def CommandEnd(builder):
     return builder.EndObject()

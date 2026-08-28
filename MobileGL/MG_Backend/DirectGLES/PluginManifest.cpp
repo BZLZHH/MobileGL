@@ -117,6 +117,13 @@ namespace {
         (void)z;
     }
 
+    void DispatchComputeIndirectBackend(MobileGLBackend* self, MobileGLSessionId session,
+                                        int64_t indirectOffset) {
+        (void)self;
+        (void)session;
+        (void)indirectOffset;
+    }
+
     void BeginTransformFeedbackBackend(MobileGLBackend* self, MobileGLSessionId session,
                                        uint32_t primitiveMode) {
         (void)self;
@@ -232,6 +239,7 @@ namespace {
         .PatchParameteri = &PatchParameteriBackend,
         .GenerateMipmap = &GenerateMipmapBackend,
         .DispatchCompute = &DispatchComputeBackend,
+        .DispatchComputeIndirect = &DispatchComputeIndirectBackend,
         .BeginTransformFeedback = &BeginTransformFeedbackBackend,
         .EndTransformFeedback = &EndTransformFeedbackBackend,
         .PauseTransformFeedback = &PauseTransformFeedbackBackend,

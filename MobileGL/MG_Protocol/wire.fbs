@@ -91,6 +91,10 @@ table SwapBuffers {
     draw: ulong;
 }
 
+table DispatchComputeIndirect {
+    indirect_offset: ulong;
+}
+
 table DataBlob {
     offset: ulong;
     size: ulong;
@@ -115,6 +119,7 @@ table Command {
     blit_framebuffer: BlitFramebuffer;
     swap_buffers: SwapBuffers;
     data: DataBlob;
+    dispatch_compute_indirect: DispatchComputeIndirect;
 }
 
 table Message {
