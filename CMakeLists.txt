@@ -663,13 +663,13 @@ endif()
 # C/S refactor targets. Protocol/BFA/RuntimeApi headers are always available;
 # the executable/shared/module targets are built behind the migration option.
 # -----------------------------------------------------------------------------
-add_subdirectory(MobileGL/Protocol)
+add_subdirectory(MobileGL/MG_Protocol)
 
 if (MOBILEGL_BUILD_CS_REFACTOR)
-    add_subdirectory(MobileGL/Transport)
-    add_subdirectory(MobileGL/Client)
-    add_subdirectory(MobileGL/FullServer)
-    add_subdirectory(MobileGL/UtilRuntime)
+    add_subdirectory(MobileGL/MG_Transport)
+    add_subdirectory(MobileGL/MG_Client)
+    add_subdirectory(MobileGL/MG_FullServer)
+    add_subdirectory(MobileGL/MG_UtilRuntime)
     add_subdirectory(MobileGL/MG_Backend)
 endif()
 

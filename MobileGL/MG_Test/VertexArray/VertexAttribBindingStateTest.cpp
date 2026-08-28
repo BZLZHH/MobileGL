@@ -166,7 +166,7 @@ namespace {
             MobileGL::Initialize();
             // A fresh context per case: the state model under test is cumulative, so a leftover
             // VAO binding from a neighbour would silently change what "default state" means.
-            MG_State::pGLContext = MakeUnique<MG_State::GLState::GLContext>();
+            MG_State::SetLegacyCurrentContext(MakeUnique<MG_State::GLState::GLContext>());
             GenVertexArrays(1, &m_vao);
             BindVertexArray(m_vao);
         }

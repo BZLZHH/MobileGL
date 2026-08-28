@@ -7,7 +7,7 @@
 // End of Source File Header
 
 #include <Includes.h>
-#include "Protocol/bfa.h"
+#include "MG_Protocol/bfa.h"
 
 // bfa.h declares MobileGLBackend as an opaque C type; this plugin TU is the
 // first (and only) place that completes it for the DirectGLES adapter.

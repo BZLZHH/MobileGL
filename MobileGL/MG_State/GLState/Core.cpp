@@ -17,10 +17,32 @@
 #include <Config.h>
 
 namespace MobileGL::MG_State {
+    namespace {
+        // Leak-at-exit storage for the legacy current context. See
+        // SetLegacyCurrentContext / TakeLegacyCurrentContext in Core.h.
+        UniquePtr<GLState::GLContext>& s_legacyContextStorage = *new UniquePtr<GLState::GLContext>();
+    } // namespace
+
     void Init() {
         MGLOG_D("Initializing MobileGL State...");
-        pGLContext = MakeUnique<GLState::GLContext>();
+        SetLegacyCurrentContext(MakeUnique<GLState::GLContext>());
         pEGLContext = MakeUnique<EGLState::EGLContext>();
+    }
+
+    void SetLegacyCurrentContext(UniquePtr<GLState::GLContext>&& context) {
+        s_legacyContextStorage = Move(context);
+        pGLContext = s_legacyContextStorage.get();
+    }
+
+    UniquePtr<GLState::GLContext> TakeLegacyCurrentContext() {
+        auto previous = Move(s_legacyContextStorage);
+        pGLContext = nullptr;
+        return previous;
+    }
+
+    void ResetLegacyCurrentContext() {
+        s_legacyContextStorage.reset();
+        pGLContext = nullptr;
     }
 
     Bool IsRelaxedSemanticsActive() {
@@ -1591,6 +1613,8 @@ namespace MobileGL::MG_State {
         }
     } // namespace GLState
 
-    // Leak-at-exit storage; see GlobalObjects.cpp.
-    UniquePtr<GLState::GLContext>& pGLContext = *new UniquePtr<GLState::GLContext>();
+    // Non-owning pointer to the current GL context. Ownership lives in the
+    // legacy storage above (SetLegacyCurrentContext) or in GLContextRegistry
+    // sessions once the per-session switch fully lands.
+    GLState::GLContext* pGLContext = nullptr;
 } // namespace MobileGL::MG_State

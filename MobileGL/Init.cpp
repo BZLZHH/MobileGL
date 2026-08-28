@@ -60,7 +60,7 @@ namespace MobileGL {
             // minted it.
             MG_Impl::GLImpl::DestroyAllQueryObjects();
             MG_Backend::pActiveBackendObject.reset();
-            MG_State::pGLContext.reset();
+            MG_State::ResetLegacyCurrentContext();
             MG_State::pEGLContext.reset();
             MG_Impl::GLImpl::TextureImpl::pProxyTextureManager.reset();
             MG_Impl::GLImpl::FramebufferImpl::pDefaultFramebufferInfo.reset();

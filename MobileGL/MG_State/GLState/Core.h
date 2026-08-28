@@ -616,7 +616,15 @@ namespace MobileGL {
             };
         } // namespace GLState
 
-        extern UniquePtr<GLState::GLContext>& pGLContext;
+        extern GLState::GLContext* pGLContext;
+
+        // Legacy-frontend context holder. The C/S state model keeps one GLContext
+        // per session (GLContextRegistry); pGLContext is a non-owning pointer that
+        // points at whichever session is current. These helpers keep the legacy
+        // tests (which own a UniquePtr) and the migration period working.
+        void SetLegacyCurrentContext(UniquePtr<GLState::GLContext>&& context);
+        UniquePtr<GLState::GLContext> TakeLegacyCurrentContext();
+        void ResetLegacyCurrentContext();
 
         // True when relaxed GL semantics apply. Strict core rules are enforced only when the
         // current EGL context explicitly requested a core profile (core bit in

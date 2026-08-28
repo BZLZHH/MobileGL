@@ -8,8 +8,8 @@
 
 #include <Includes.h>
 #include <gtest/gtest.h>
-#include "Protocol/transport.h"
-#include "Transport/InProcessTransport.h"
+#include "MG_Protocol/transport.h"
+#include "MG_Transport/InProcessTransport.h"
 
 namespace MobileGL::Transport {
     TEST(InProcessTransportTest, ClientServerExchange) {

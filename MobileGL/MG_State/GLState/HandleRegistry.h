@@ -9,7 +9,7 @@
 #pragma once
 
 #include <Includes.h>
-#include "Protocol/bfa.h"
+#include "MG_Protocol/bfa.h"
 
 namespace MobileGL::MG_State::GLState {
     enum class ObjectHandleScope {

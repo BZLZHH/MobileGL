@@ -222,6 +222,7 @@ namespace MobileGL {
             void EGLContext::ReleaseThreadUnlocked(const std::thread::id& threadKey) {
                 GLState::GLContextRegistry::SetCurrent(
                     static_cast<Uint64>(std::hash<std::thread::id>{}(threadKey)), 0);
+                pGLContext = nullptr;
 
                 auto currentIt = m_threadCurrents.find(threadKey);
                 if (currentIt == m_threadCurrents.end()) {
@@ -1252,6 +1253,11 @@ namespace MobileGL {
                 GLState::GLContextRegistry::SetCurrent(
                     static_cast<Uint64>(std::hash<std::thread::id>{}(threadKey)),
                     context == nullptr ? Uint64(0) : static_cast<Uint64>(ToNativeKey(context)));
+                // Point the legacy frontend global at the registry-owned session
+                // context. pGLContext is non-owning; GLContextRegistry owns it.
+                const Uint64 clientThreadId = static_cast<Uint64>(std::hash<std::thread::id>{}(threadKey));
+                auto* currentSession = GLState::GLContextRegistry::GetCurrentSession(clientThreadId);
+                pGLContext = currentSession == nullptr ? nullptr : &currentSession->GetContext();
                 return true;
             }
 

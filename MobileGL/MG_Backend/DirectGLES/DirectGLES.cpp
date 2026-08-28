@@ -143,7 +143,7 @@ namespace MobileGL::MG_Backend::DirectGLES {
     static const MG_State::GLState::GLContext* g_fbSlotCacheContext = nullptr;
     static Array<FbBindingSlot*, SizeT(FramebufferTarget::FramebufferTargetCount)> g_fbSlotCache = {};
     static inline FbBindingSlot& GetFramebufferBindingSlotFast(FramebufferTarget target) {
-        MG_State::GLState::GLContext* ctx = MG_State::pGLContext.get();
+        MG_State::GLState::GLContext* ctx = MG_State::pGLContext;
         if (ctx != g_fbSlotCacheContext) {
             for (SizeT i = 0; i < g_fbSlotCache.size(); ++i) {
                 g_fbSlotCache[i] = &ctx->GetFramebufferBindingSlot(static_cast<FramebufferTarget>(i));

@@ -56,7 +56,7 @@ namespace {
     protected:
         void SetUp() override {
             MobileGL::Initialize();
-            MG_State::pGLContext = MakeUnique<MG_State::GLState::GLContext>();
+            MG_State::SetLegacyCurrentContext(MakeUnique<MG_State::GLState::GLContext>());
         }
 
         void TearDown() override {

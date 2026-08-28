@@ -96,7 +96,7 @@ namespace MobileGL::MG_Impl::GLImpl {
         // which MobileGL does not expose, so it falls to the INVALID_ENUM path below.
         Bool ValidateLabelledObject(GLenum identifier, GLuint name, Bool& outIdentifierKnown) {
             outIdentifierKnown = true;
-            auto* context = MG_State::pGLContext.get();
+            auto* context = MG_State::pGLContext;
             switch (identifier) {
             case GL_BUFFER:
                 return context->ValidateBufferName(name);

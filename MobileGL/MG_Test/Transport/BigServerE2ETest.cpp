@@ -8,9 +8,9 @@
 
 #include <Includes.h>
 #include <gtest/gtest.h>
-#include "FullServer/ServerCore.h"
-#include "Protocol/transport.h"
-#include "Transport/InProcessTransport.h"
+#include "MG_FullServer/ServerCore.h"
+#include "MG_Protocol/transport.h"
+#include "MG_Transport/InProcessTransport.h"
 
 // This test defines the opaque backend object locally; it is not linked with
 // any BackendObject plugin .so, so completing the type here is safe.

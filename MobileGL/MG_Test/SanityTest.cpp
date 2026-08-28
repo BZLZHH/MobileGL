@@ -152,12 +152,12 @@ namespace {
     // restores the process-wide state even when a gtest assertion unwinds the test body.
     struct ScopedDirectGLESTextureBindings {
         ScopedDirectGLESTextureBindings():
-            previousContext(MobileGL::Move(MobileGL::MG_State::pGLContext)),
+            previousContext(MobileGL::MG_State::TakeLegacyCurrentContext()),
             previousFunctions(MobileGL::MG_Backend::DirectGLES::g_GLESFuncs),
             previousActiveUnit(MobileGL::MG_Backend::DirectGLES::TextureImpl::g_activeTextureUnit),
             previousCache(MobileGL::MG_Backend::DirectGLES::TextureImpl::g_boundTexturesCache),
             previousRegistry(MobileGL::MG_Backend::DirectGLES::TextureImpl::g_backendTextureObjects) {
-            MobileGL::MG_State::pGLContext = MobileGL::MakeUnique<MobileGL::MG_State::GLState::GLContext>();
+            MobileGL::MG_State::SetLegacyCurrentContext(MobileGL::MakeUnique<MobileGL::MG_State::GLState::GLContext>());
             MobileGL::MG_Backend::DirectGLES::TextureImpl::g_activeTextureUnit = 0;
             MobileGL::MG_Backend::DirectGLES::TextureImpl::g_boundTexturesCache = {};
             MobileGL::MG_Backend::DirectGLES::TextureImpl::g_backendTextureObjects = {};
@@ -178,7 +178,7 @@ namespace {
             MobileGL::MG_Backend::DirectGLES::SetGLESFuncsTable(previousFunctions);
             MobileGL::MG_Backend::DirectGLES::TextureImpl::g_activeTextureUnit = previousActiveUnit;
             MobileGL::MG_Backend::DirectGLES::TextureImpl::g_boundTexturesCache = previousCache;
-            MobileGL::MG_State::pGLContext = MobileGL::Move(previousContext);
+            MobileGL::MG_State::SetLegacyCurrentContext(MobileGL::Move(previousContext));
         }
 
         ScopedDirectGLESTextureBindings(const ScopedDirectGLESTextureBindings&) = delete;
@@ -902,9 +902,9 @@ TEST(DirectVulkanSanity, AdvertisesSubgroupOnlyWhenVulkanReportsUsableSupport) {
 TEST(DirectVulkanSanity, CapabilityRefreshInvalidatesTheCachedCompileEnvironment) {
     using namespace MobileGL;
 
-    auto previousContext = Move(MG_State::pGLContext);
+    auto previousContext = MG_State::TakeLegacyCurrentContext();
     auto previousBackend = Move(MG_Backend::pActiveBackendObject);
-    MG_State::pGLContext = MakeUnique<MG_State::GLState::GLContext>();
+    MG_State::SetLegacyCurrentContext(MakeUnique<MG_State::GLState::GLContext>());
 
     auto backend = MakeUnique<MG_Backend::DirectVulkan::BackendObject_DirectVulkan>();
     auto* backendPtr = backend.get();
@@ -927,7 +927,7 @@ TEST(DirectVulkanSanity, CapabilityRefreshInvalidatesTheCachedCompileEnvironment
     EXPECT_EQ(after->params.SubgroupSize, 8u);
 
     MG_Backend::pActiveBackendObject = Move(previousBackend);
-    MG_State::pGLContext = Move(previousContext);
+    MG_State::SetLegacyCurrentContext(Move(previousContext));
 }
 
 TEST(DirectVulkanSanity, KeepsOptionalGpuShaderInt64BranchForVoxyQuadDecode) {
@@ -969,7 +969,7 @@ TEST(GetterSanity, ClampsMaxVertexAttribsToCurrentValueStorageCapacity) {
     using namespace MobileGL;
     constexpr GLint capacity = MG_State::GLState::VertexArrayObject::MAX_VERTEX_ATTRIBS;
 
-    MG_State::pGLContext = MakeUnique<MG_State::GLState::GLContext>();
+    MG_State::SetLegacyCurrentContext(MakeUnique<MG_State::GLState::GLContext>());
 
     // A driver reporting more attributes than MobileGL can store gets clamped.
     {
@@ -1008,15 +1008,15 @@ TEST(GetterSanity, ClampsMaxVertexAttribsToCurrentValueStorageCapacity) {
     // With no active backend the storage capacity is the bound, and nothing dereferences a null backend.
     EXPECT_EQ(MG_Impl::GLImpl::VertexArrayImpl::GetMaxVertexAttribs(), static_cast<Uint>(capacity));
 
-    MG_State::pGLContext.reset();
+    MG_State::ResetLegacyCurrentContext();
 }
 
 TEST(GetterSanity, ReportsFragmentInterpolationLimitsForFloatAndIntegerQueries) {
     using namespace MobileGL;
 
-    auto previousContext = Move(MG_State::pGLContext);
+    auto previousContext = MG_State::TakeLegacyCurrentContext();
     auto previousBackend = Move(MG_Backend::pActiveBackendObject);
-    MG_State::pGLContext = MakeUnique<MG_State::GLState::GLContext>();
+    MG_State::SetLegacyCurrentContext(MakeUnique<MG_State::GLState::GLContext>());
 
     MG_Backend::DynamicBackendParameters params;
     params.MinFragmentInterpolationOffset = -0.75f;
@@ -1050,7 +1050,7 @@ TEST(GetterSanity, ReportsFragmentInterpolationLimitsForFloatAndIntegerQueries) 
     EXPECT_EQ(MG_Impl::GLImpl::GetError(), GL_NO_ERROR);
 
     MG_Backend::pActiveBackendObject = Move(previousBackend);
-    MG_State::pGLContext = Move(previousContext);
+    MG_State::SetLegacyCurrentContext(Move(previousContext));
 }
 
 // GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT used to be answered with the UNIFORM buffer
@@ -1064,9 +1064,9 @@ TEST(GetterSanity, ReportsFragmentInterpolationLimitsForFloatAndIntegerQueries) 
 TEST(GetterSanity, StorageAndUniformBufferOffsetAlignmentsAreSeparateLimits) {
     using namespace MobileGL;
 
-    auto previousContext = Move(MG_State::pGLContext);
+    auto previousContext = MG_State::TakeLegacyCurrentContext();
     auto previousBackend = Move(MG_Backend::pActiveBackendObject);
-    MG_State::pGLContext = MakeUnique<MG_State::GLState::GLContext>();
+    MG_State::SetLegacyCurrentContext(MakeUnique<MG_State::GLState::GLContext>());
 
     MG_Backend::DynamicBackendParameters params;
     params.UniformBufferOffsetAlignment = 32;
@@ -1093,7 +1093,7 @@ TEST(GetterSanity, StorageAndUniformBufferOffsetAlignmentsAreSeparateLimits) {
     EXPECT_EQ(MG_Impl::GLImpl::GetError(), GL_NO_ERROR);
 
     MG_Backend::pActiveBackendObject = Move(previousBackend);
-    MG_State::pGLContext = Move(previousContext);
+    MG_State::SetLegacyCurrentContext(Move(previousContext));
 }
 
 TEST(GetterSanity, PerStageImageUniformQueriesMatchShaderCompilerLimits) {
@@ -1153,9 +1153,9 @@ TEST(GetterSanity, AtomicCounterQueriesMatchShaderCompilerLimits) {
     using namespace MobileGL;
     namespace Transpiler = MG_Util::ShaderTranspiler;
 
-    auto previousContext = Move(MG_State::pGLContext);
+    auto previousContext = MG_State::TakeLegacyCurrentContext();
     auto previousBackend = Move(MG_Backend::pActiveBackendObject);
-    MG_State::pGLContext = MakeUnique<MG_State::GLState::GLContext>();
+    MG_State::SetLegacyCurrentContext(MakeUnique<MG_State::GLState::GLContext>());
     MG_Backend::pActiveBackendObject = MakeUnique<DynamicParameterBackend>(MG_Backend::DynamicBackendParameters{});
 
     GLint reported = -1;
@@ -1221,7 +1221,7 @@ void main() {
     EXPECT_TRUE(compiled) << (compiled ? "" : compiled.error().log);
 
     MG_Backend::pActiveBackendObject = Move(previousBackend);
-    MG_State::pGLContext = Move(previousContext);
+    MG_State::SetLegacyCurrentContext(Move(previousContext));
 }
 
 // KHR-GL43.compute_shader.max: the test queries every GL_MAX_COMPUTE_* value through the API and
@@ -1232,9 +1232,9 @@ void main() {
 TEST(GetterSanity, ComputeWorkGroupQueriesMatchShaderCompilerLimits) {
     using namespace MobileGL;
 
-    auto previousContext = Move(MG_State::pGLContext);
+    auto previousContext = MG_State::TakeLegacyCurrentContext();
     auto previousBackend = Move(MG_Backend::pActiveBackendObject);
-    MG_State::pGLContext = MakeUnique<MG_State::GLState::GLContext>();
+    MG_State::SetLegacyCurrentContext(MakeUnique<MG_State::GLState::GLContext>());
     MG_Backend::pActiveBackendObject = MakeUnique<DynamicParameterBackend>(MG_Backend::DynamicBackendParameters{});
 
     GLint size[3] = {0, 0, 0};
@@ -1296,7 +1296,7 @@ void main() {
     }));
 
     MG_Backend::pActiveBackendObject = Move(previousBackend);
-    MG_State::pGLContext = Move(previousContext);
+    MG_State::SetLegacyCurrentContext(Move(previousContext));
 }
 
 // THE invariant every KHR-GL45.limits.* case checks, in one place. When the conformance table
@@ -1313,9 +1313,9 @@ void main() {
 TEST(GetterSanity, EveryLimitWithABuiltinAgreesWithItsQuery) {
     using namespace MobileGL;
 
-    auto previousContext = Move(MG_State::pGLContext);
+    auto previousContext = MG_State::TakeLegacyCurrentContext();
     auto previousBackend = Move(MG_Backend::pActiveBackendObject);
-    MG_State::pGLContext = MakeUnique<MG_State::GLState::GLContext>();
+    MG_State::SetLegacyCurrentContext(MakeUnique<MG_State::GLState::GLContext>());
     MG_Backend::pActiveBackendObject =
         MakeUnique<DynamicParameterBackend>(MG_Backend::DynamicBackendParameters{}, BackendType::DirectGLES);
 
@@ -1401,7 +1401,7 @@ TEST(GetterSanity, EveryLimitWithABuiltinAgreesWithItsQuery) {
     }
 
     MG_Backend::pActiveBackendObject = Move(previousBackend);
-    MG_State::pGLContext = Move(previousContext);
+    MG_State::SetLegacyCurrentContext(Move(previousContext));
 }
 
 // GL_MAX_ELEMENT_INDEX is 64-bit state whose required value (2^32-1) does not fit a GLint, so it
@@ -1412,9 +1412,9 @@ TEST(GetterSanity, EveryLimitWithABuiltinAgreesWithItsQuery) {
 TEST(GetterSanity, MaxElementIndexIsTheFull32BitIndexCeiling) {
     using namespace MobileGL;
 
-    auto previousContext = Move(MG_State::pGLContext);
+    auto previousContext = MG_State::TakeLegacyCurrentContext();
     auto previousBackend = Move(MG_Backend::pActiveBackendObject);
-    MG_State::pGLContext = MakeUnique<MG_State::GLState::GLContext>();
+    MG_State::SetLegacyCurrentContext(MakeUnique<MG_State::GLState::GLContext>());
     MG_Backend::pActiveBackendObject = MakeUnique<DynamicParameterBackend>(MG_Backend::DynamicBackendParameters{});
 
     GLint64 wide = -1;
@@ -1428,7 +1428,7 @@ TEST(GetterSanity, MaxElementIndexIsTheFull32BitIndexCeiling) {
     EXPECT_EQ(MG_Impl::GLImpl::GetError(), GL_NO_ERROR);
 
     MG_Backend::pActiveBackendObject = Move(previousBackend);
-    MG_State::pGLContext = Move(previousContext);
+    MG_State::SetLegacyCurrentContext(Move(previousContext));
 }
 
 // GL 4.6 core table 23.53 gives GL_MAX_SAMPLES a minimum of four and the three per-category
@@ -1439,9 +1439,9 @@ TEST(GetterSanity, MaxElementIndexIsTheFull32BitIndexCeiling) {
 TEST(GetterSanity, PerCategoryMultisampleCeilingsAreProbedRatherThanFlooredAtFour) {
     using namespace MobileGL;
 
-    auto previousContext = Move(MG_State::pGLContext);
+    auto previousContext = MG_State::TakeLegacyCurrentContext();
     auto previousBackend = Move(MG_Backend::pActiveBackendObject);
-    MG_State::pGLContext = MakeUnique<MG_State::GLState::GLContext>();
+    MG_State::SetLegacyCurrentContext(MakeUnique<MG_State::GLState::GLContext>());
 
     MG_Backend::DynamicBackendParameters params;
     params.MaxSamples = 4;
@@ -1466,7 +1466,7 @@ TEST(GetterSanity, PerCategoryMultisampleCeilingsAreProbedRatherThanFlooredAtFou
     EXPECT_EQ(MG_Impl::GLImpl::GetError(), GL_NO_ERROR);
 
     MG_Backend::pActiveBackendObject = Move(previousBackend);
-    MG_State::pGLContext = Move(previousContext);
+    MG_State::SetLegacyCurrentContext(Move(previousContext));
 }
 
 // GL_ARB_cull_distance below #version 450, which is the band the conformance suite actually
@@ -1481,9 +1481,9 @@ TEST(GetterSanity, PerCategoryMultisampleCeilingsAreProbedRatherThanFlooredAtFou
 TEST(ShaderCompilerSanity, ArbCullDistanceIsUsableBelow450) {
     using namespace MobileGL;
 
-    auto previousContext = Move(MG_State::pGLContext);
+    auto previousContext = MG_State::TakeLegacyCurrentContext();
     auto previousBackend = Move(MG_Backend::pActiveBackendObject);
-    MG_State::pGLContext = MakeUnique<MG_State::GLState::GLContext>();
+    MG_State::SetLegacyCurrentContext(MakeUnique<MG_State::GLState::GLContext>());
     MG_Backend::pActiveBackendObject = MakeUnique<DynamicParameterBackend>(MG_Backend::DynamicBackendParameters{});
     const auto env = MG_Util::ShaderTranspiler::CaptureCompileEnv();
 
@@ -1546,13 +1546,13 @@ void main() { mgColor = vec4(float(gl_MaxCullDistances)); }
     EXPECT_TRUE(coreCompiled) << (coreCompiled ? String() : coreCompiled.error().log);
 
     MG_Backend::pActiveBackendObject = Move(previousBackend);
-    MG_State::pGLContext = Move(previousContext);
+    MG_State::SetLegacyCurrentContext(Move(previousContext));
 }
 
 TEST(GetterSanity, ReportsKhrSubgroupDynamicParameters) {
     using namespace MobileGL;
 
-    MG_State::pGLContext = MakeUnique<MG_State::GLState::GLContext>();
+    MG_State::SetLegacyCurrentContext(MakeUnique<MG_State::GLState::GLContext>());
 
     MG_Backend::DynamicBackendParameters params;
     params.SubgroupSize = 32;
@@ -1580,7 +1580,7 @@ TEST(GetterSanity, ReportsKhrSubgroupDynamicParameters) {
     EXPECT_EQ(MG_Impl::GLImpl::GetError(), GL_NO_ERROR);
 
     MG_Backend::pActiveBackendObject.reset();
-    MG_State::pGLContext.reset();
+    MG_State::ResetLegacyCurrentContext();
 }
 
 TEST(DirectVulkanSanity, CommandMemoryBarrierMakesIndirectDrawCommandsVisible) {
@@ -1987,7 +1987,7 @@ TEST(DirectVulkanSanity, SampledViewFormatMatchesSamplerNumericDomainWithoutChan
 TEST(RenderStateSanity, ProvokingVertexUpdatesStateAndValidatesEnum) {
     using namespace MobileGL;
 
-    MG_State::pGLContext = MakeUnique<MG_State::GLState::GLContext>();
+    MG_State::SetLegacyCurrentContext(MakeUnique<MG_State::GLState::GLContext>());
     MG_Backend::pActiveBackendObject = MakeUnique<MG_Backend::DirectGLES::BackendObject_DirectGLES>();
 
     GLint mode = 0;
@@ -2010,7 +2010,7 @@ TEST(RenderStateSanity, ProvokingVertexUpdatesStateAndValidatesEnum) {
     EXPECT_EQ(mode, GL_FIRST_VERTEX_CONVENTION);
 
     MG_Backend::pActiveBackendObject.reset();
-    MG_State::pGLContext.reset();
+    MG_State::ResetLegacyCurrentContext();
 }
 
 TEST(LogSanity, UsesEnvOverrideForFilePath) {
@@ -2043,7 +2043,7 @@ TEST(LogSanity, UsesEnvOverrideForFilePath) {
 TEST(RenderStateSanity, HintStoresAndReadsBack) {
     using namespace MobileGL;
     using namespace MobileGL::MG_Impl::GLImpl;
-    MG_State::pGLContext = MakeUnique<MG_State::GLState::GLContext>();
+    MG_State::SetLegacyCurrentContext(MakeUnique<MG_State::GLState::GLContext>());
 
     // Default is GL_DONT_CARE.
     GLint value = -1;
@@ -2079,13 +2079,13 @@ TEST(RenderStateSanity, HintStoresAndReadsBack) {
     GetIntegerv(GL_LINE_SMOOTH_HINT, &value);
     EXPECT_EQ(value, GL_NICEST); // unchanged by the failed calls
 
-    MG_State::pGLContext.reset();
+    MG_State::ResetLegacyCurrentContext();
 }
 
 TEST(RenderStateSanity, PointParameterStoresAndReadsBack) {
     using namespace MobileGL;
     using namespace MobileGL::MG_Impl::GLImpl;
-    MG_State::pGLContext = MakeUnique<MG_State::GLState::GLContext>();
+    MG_State::SetLegacyCurrentContext(MakeUnique<MG_State::GLState::GLContext>());
 
     // Defaults: fade threshold 1.0, coord origin GL_UPPER_LEFT.
     GLfloat f = -1.0f;
@@ -2124,13 +2124,13 @@ TEST(RenderStateSanity, PointParameterStoresAndReadsBack) {
     GetIntegerv(GL_POINT_SPRITE_COORD_ORIGIN, &origin);
     EXPECT_EQ(origin, GL_LOWER_LEFT); // unchanged
 
-    MG_State::pGLContext.reset();
+    MG_State::ResetLegacyCurrentContext();
 }
 
 TEST(RenderStateSanity, PixelStorefRoundsAndZeroTestsBooleans) {
     using namespace MobileGL;
     using namespace MobileGL::MG_Impl::GLImpl;
-    MG_State::pGLContext = MakeUnique<MG_State::GLState::GLContext>();
+    MG_State::SetLegacyCurrentContext(MakeUnique<MG_State::GLState::GLContext>());
 
     // Integer pname: round to nearest.
     PixelStoref(GL_UNPACK_ROW_LENGTH, 7.4f);
@@ -2160,13 +2160,13 @@ TEST(RenderStateSanity, PixelStorefRoundsAndZeroTestsBooleans) {
     EXPECT_EQ(viaI, viaF);
     EXPECT_EQ(GetError(), GL_NO_ERROR);
 
-    MG_State::pGLContext.reset();
+    MG_State::ResetLegacyCurrentContext();
 }
 
 TEST(RenderStateSanity, GetDoublevMatchesGetFloatvWidened) {
     using namespace MobileGL;
     using namespace MobileGL::MG_Impl::GLImpl;
-    MG_State::pGLContext = MakeUnique<MG_State::GLState::GLContext>();
+    MG_State::SetLegacyCurrentContext(MakeUnique<MG_State::GLState::GLContext>());
 
     // Single-component pname.
     PointParameterf(GL_POINT_FADE_THRESHOLD_SIZE, 2.5f);
@@ -2192,13 +2192,13 @@ TEST(RenderStateSanity, GetDoublevMatchesGetFloatvWidened) {
     GetDoublev(GL_DEPTH_RANGE, nullptr);
     EXPECT_EQ(GetError(), GL_INVALID_VALUE);
 
-    MG_State::pGLContext.reset();
+    MG_State::ResetLegacyCurrentContext();
 }
 
 TEST(RenderStateSanity, ClampColorStoresAndReadsBack) {
     using namespace MobileGL;
     using namespace MobileGL::MG_Impl::GLImpl;
-    MG_State::pGLContext = MakeUnique<MG_State::GLState::GLContext>();
+    MG_State::SetLegacyCurrentContext(MakeUnique<MG_State::GLState::GLContext>());
 
     // Default GL_CLAMP_READ_COLOR is GL_FIXED_ONLY (NOT GL_TRUE/GL_FALSE). glGetIntegerv is the only
     // getter that faithfully round-trips the tri-state.
@@ -2242,13 +2242,13 @@ TEST(RenderStateSanity, ClampColorStoresAndReadsBack) {
     GetIntegerv(GL_CLAMP_READ_COLOR, &value);
     EXPECT_EQ(value, GL_FALSE); // unchanged by the failed calls
 
-    MG_State::pGLContext.reset();
+    MG_State::ResetLegacyCurrentContext();
 }
 
 TEST(RenderStateSanity, PolygonModeStoresAndReadsBack) {
     using namespace MobileGL;
     using namespace MobileGL::MG_Impl::GLImpl;
-    MG_State::pGLContext = MakeUnique<MG_State::GLState::GLContext>();
+    MG_State::SetLegacyCurrentContext(MakeUnique<MG_State::GLState::GLContext>());
 
     // GL_POLYGON_MODE reports TWO values (front, back); default GL_FILL for both.
     GLint mode[2] = {-1, -1};
@@ -2282,14 +2282,14 @@ TEST(RenderStateSanity, PolygonModeStoresAndReadsBack) {
     EXPECT_EQ(mode[0], GL_POINT); // unchanged by the failed calls
     EXPECT_EQ(mode[1], GL_POINT);
 
-    MG_State::pGLContext.reset();
+    MG_State::ResetLegacyCurrentContext();
 }
 
 TEST(RenderStateSanity, ColorMaskIndexedStoresAndReadsBack) {
     using namespace MobileGL;
     using namespace MobileGL::MG_Impl::GLImpl;
     constexpr GLuint kMaxDrawBuffers = MG_State::GLState::FramebufferObject::MAX_DRAW_BUFFERS;
-    MG_State::pGLContext = MakeUnique<MG_State::GLState::GLContext>();
+    MG_State::SetLegacyCurrentContext(MakeUnique<MG_State::GLState::GLContext>());
 
     // Default: every draw buffer's writemask is all-true.
     GLboolean b0[4] = {GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE};
@@ -2334,13 +2334,13 @@ TEST(RenderStateSanity, ColorMaskIndexedStoresAndReadsBack) {
     EXPECT_EQ(bi[0], GL_FALSE); // unchanged (still the broadcast value)
     EXPECT_EQ(bi[2], GL_TRUE);
 
-    MG_State::pGLContext.reset();
+    MG_State::ResetLegacyCurrentContext();
 }
 
 TEST(RenderStateSanity, PrimitiveRestartIndexStoresAndReadsBack) {
     using namespace MobileGL;
     using namespace MobileGL::MG_Impl::GLImpl;
-    MG_State::pGLContext = MakeUnique<MG_State::GLState::GLContext>();
+    MG_State::SetLegacyCurrentContext(MakeUnique<MG_State::GLState::GLContext>());
 
     // Default is 0.
     GLint value = -1;
@@ -2359,7 +2359,7 @@ TEST(RenderStateSanity, PrimitiveRestartIndexStoresAndReadsBack) {
     EXPECT_EQ(static_cast<GLuint>(value), 0xFFFFFFFFu);
     EXPECT_EQ(GetError(), GL_NO_ERROR);
 
-    MG_State::pGLContext.reset();
+    MG_State::ResetLegacyCurrentContext();
 }
 
 
@@ -3070,7 +3070,7 @@ TEST(DirectVulkanSanity, GraphicsSamplerFeedbackOnlyAliasesWritableOverlappingMi
 TEST(GetterSanity, CombinedUniformComponentsSaturateInsteadOfOverflowing) {
     using namespace MobileGL;
 
-    MG_State::pGLContext = MakeUnique<MG_State::GLState::GLContext>();
+    MG_State::SetLegacyCurrentContext(MakeUnique<MG_State::GLState::GLContext>());
 
     // GL_MAX_COMBINED_COMPUTE_UNIFORM_COMPONENTS (0x8266), NOT the per-stage
     // GL_MAX_COMPUTE_UNIFORM_COMPONENTS (0x8263) this list used to name. The per-stage token is
@@ -3116,5 +3116,5 @@ TEST(GetterSanity, CombinedUniformComponentsSaturateInsteadOfOverflowing) {
         MG_Backend::pActiveBackendObject.reset();
     }
 
-    MG_State::pGLContext.reset();
+    MG_State::ResetLegacyCurrentContext();
 }

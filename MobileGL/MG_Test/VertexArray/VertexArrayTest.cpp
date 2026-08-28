@@ -365,7 +365,7 @@ using namespace MobileGL::MG_Impl::GLImpl;
 
 class GeneralVertexArrayTest : public ::testing::Test {
 protected:
-    void SetUp() override { MG_State::pGLContext = MakeUnique<MG_State::GLState::GLContext>(); }
+    void SetUp() override { MG_State::SetLegacyCurrentContext(MakeUnique<MG_State::GLState::GLContext>()); }
 
     void TearDown() override {
     }

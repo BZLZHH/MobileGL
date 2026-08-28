@@ -28,7 +28,7 @@ gtest_discover_tests(InProcessTransportTest DISCOVERY_TIMEOUT 30 PROPERTIES LABE
 add_executable(
         BigServerE2ETest
         BigServerE2ETest.cpp
-        ${MGL_ROOT}/MobileGL/FullServer/ServerCore.cpp
+        ${MGL_ROOT}/MobileGL/MG_FullServer/ServerCore.cpp
 )
 
 target_include_directories(BigServerE2ETest PRIVATE
