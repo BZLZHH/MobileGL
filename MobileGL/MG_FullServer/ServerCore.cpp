@@ -76,15 +76,23 @@ namespace MobileGL::FullServer {
         if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLControlOpcode::SessionCreate) &&
             m_vtable->OnSessionCreated != nullptr) {
             status = m_vtable->OnSessionCreated(m_backend, sessionId, nullptr) ? 0 : 1;
+            if (status == 0) {
+                m_liveSessions[sessionId] = true;
+            }
         } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLControlOpcode::SessionDestroy) &&
                    m_vtable->OnSessionDestroyed != nullptr) {
             m_vtable->OnSessionDestroyed(m_backend, sessionId);
+            m_liveSessions.erase(sessionId);
             status = 0;
         } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glClear) &&
                    m_vtable->Clear != nullptr) {
             const uint32_t mask = command->clear() == nullptr ? 0 : command->clear()->mask();
-            m_vtable->Clear(m_backend, sessionId, mask);
-            status = 0;
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else {
+                m_vtable->Clear(m_backend, sessionId, mask);
+                status = 0;
+            }
         }
 
         flatbuffers::FlatBufferBuilder responseBuilder;

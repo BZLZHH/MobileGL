@@ -96,8 +96,8 @@
 - [x] **异步命令提交 + 按 token 等待**（`Client::SubmitCommand` / `WaitResponseForToken`；`ClientAsyncBatchTest` 1/1 通过）
 - [x] **Token 透传**：`Command.token` / `Response.token`；`Client::SendCommand` 校验回显 token；Python 跨进程 E2E 仍 status=0
 - [x] **shm payload 回读**：`ClientShmPayloadTest` 已验证（0xAB 写入 → fd → server 读回 → data_byte=0xAB）
-- [x] **会话生命周期**：`control.h` 定义 `SessionCreate/Destroy` 控制 opcode；`Client::SubmitSessionControl` + `ServerCore` 调 `OnSessionCreated/OnSessionDestroyed`；`ClientSessionLifecycleTest` 1/1 通过
-- [ ] 会话生命周期完整模型（Token 与 session 关联/失效）
+- [x] **会话生命周期**：`control.h` 定义 `SessionCreate/Destroy` 控制 opcode；`Client::SubmitSessionControl` + `ServerCore` 调 `OnSessionCreated/OnSessionDestroyed`；ServerCore 维护 live-session 集合，destroy 后同一 session 命令被拒绝（status!=0）；`ClientSessionLifecycleTest` 1/1 通过
+- [ ] Token↔session 完整失效模型（多 socket/超时）
 
 ## Phase 5 — Plugin 化集成（进行中）
 

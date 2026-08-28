@@ -43,6 +43,9 @@ namespace MobileGL::FullServer {
         MobileGLBackend* m_backend = nullptr;
         const MobileGLBackendVTable* m_vtable = nullptr;
         Bool m_running = false;
+        // Sessions created through SessionCreate control commands; commands for
+        // unknown/destroyed sessions are rejected until re-created.
+        UnorderedMap<MobileGLSessionId, Bool> m_liveSessions;
     };
 } // namespace MobileGL::FullServer
 

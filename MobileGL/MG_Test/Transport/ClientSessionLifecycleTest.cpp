@@ -10,6 +10,7 @@
 #include <gtest/gtest.h>
 #include "MG_Client/Client.h"
 #include "MG_FullServer/ServerCore.h"
+#include "MG_Protocol/generated_opcodes.h"
 #include "MG_Protocol/transport.h"
 #include "MG_Transport/InProcessTransport.h"
 
@@ -67,7 +68,7 @@ namespace MobileGL::Transport {
 
         Bool serverOk = false;
         std::thread serverThread([&] {
-            for (int i = 0; i < 2; ++i) {
+            for (int i = 0; i < 3; ++i) {
                 if (!core.ServiceOnce()) return;
             }
             serverOk = true;
@@ -77,6 +78,10 @@ namespace MobileGL::Transport {
         EXPECT_TRUE(Client::WaitResponseForToken(1, 5000));
         EXPECT_TRUE(Client::SubmitSessionControl(kTrackedSession, false, 2));
         EXPECT_TRUE(Client::WaitResponseForToken(2, 5000));
+        // glClear on a destroyed session must be rejected.
+        EXPECT_FALSE(Client::SendCommand(
+            static_cast<Uint32>(kTrackedSession),
+            static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glClear), 3));
 
         serverThread.join();
         EXPECT_TRUE(serverOk);
