@@ -30,3 +30,5 @@ __pycache__/
 /.gradle
 /.verify/
 /.dsh/
+
+C_S_REFACTOR_PLAN.html
