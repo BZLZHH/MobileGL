@@ -7,6 +7,7 @@
 // End of Source File Header
 
 #include "VertexArrayState.h"
+#include "MG_State/GLState/SharedObjectTables.h"
 
 namespace MobileGL::MG_State::GLState {
     namespace {
@@ -26,6 +27,9 @@ namespace MobileGL::MG_State::GLState {
     }
 
     const SharedPtr<VertexArrayObject>& VertexArrayState::GetVertexArrayObject(Uint index) {
+        if (m_sharedObjectTable) {
+            return m_sharedObjectTable->GetObject(index);
+        }
         if (index >= m_vertexArrays.size()) {
             // FIXME: report a GL error here
             return kNullVertexArrayObject;
@@ -35,6 +39,10 @@ namespace MobileGL::MG_State::GLState {
     }
 
     void VertexArrayState::GenerateNames(Uint number, Vector<Uint>& arrays) {
+        if (m_sharedObjectTable) {
+            m_sharedObjectTable->GenerateNames(number, arrays);
+            return;
+        }
         arrays.resize(number);
         m_indexGenerator.Generate(number, arrays.data());
     }
@@ -52,11 +60,25 @@ namespace MobileGL::MG_State::GLState {
         // Match the previous semantics exactly: binding an out-of-range name, or a name
         // whose slot holds no object, left the old SharedPtr member null - resolve that
         // NOW, so a slot created later does not silently become bound.
+        if (m_sharedObjectTable) {
+            m_boundIndex = (index < m_sharedObjectTable->GetSize() &&
+                            m_sharedObjectTable->GetSlice(index) != nullptr)
+                               ? index
+                               : kUnboundIndex;
+            return;
+        }
         m_boundIndex =
             (index < m_vertexArrays.size() && m_vertexArrays[index] != nullptr) ? index : kUnboundIndex;
     }
 
     const SharedPtr<VertexArrayObject>& VertexArrayState::CreateVertexArrayObject(Uint index) {
+        if (m_sharedObjectTable) {
+            auto& vao = m_sharedObjectTable->CreateObject(index);
+            if (index == m_boundIndex && vao != nullptr && !m_boundDetached) {
+                m_boundDetached = std::move(vao);
+            }
+            return vao;
+        }
         if (index >= m_vertexArrays.size()) {
             // power-of-2 reallocation
             m_vertexArrays.reserve(std::bit_ceil(index + 1));
@@ -76,6 +98,24 @@ namespace MobileGL::MG_State::GLState {
     }
 
     void VertexArrayState::MarkVertexArrayForDeletion(Uint index) {
+        if (m_sharedObjectTable) {
+            const Bool deletingBound = m_boundDetached
+                ? m_boundDetached->GetExternalIndex() == index
+                : (m_boundIndex == index && m_boundIndex != kUnboundIndex);
+            if (deletingBound) {
+                m_boundDetached = nullptr;
+                m_boundIndex = 0; // the default VAO's slot always exists
+                if (index == 0) {
+                    m_boundDetached = m_sharedObjectTable->GetSlice(0);
+                }
+            }
+            if (m_sharedObjectTable->ValidateObject(index)) {
+                m_sharedObjectTable->GetSlice(index) = nullptr;
+            }
+            m_sharedObjectTable->MarkObjectForDeletion(index);
+            return;
+        }
+
         if (m_indexGenerator.IsValid(index)) {
             // "Deleting the bound VAO rebinds the default VAO" needs the same answer the old
             // SharedPtr compare gave: either the live bound slot is the one being deleted, or
@@ -105,10 +145,16 @@ namespace MobileGL::MG_State::GLState {
     }
 
     Bool VertexArrayState::ValidateName(Uint index) const {
+        if (m_sharedObjectTable) {
+            return m_sharedObjectTable->ValidateName(index);
+        }
         return m_indexGenerator.IsValid(index);
     }
 
     Bool VertexArrayState::ValidateVertexArrayObject(Uint index) const {
+        if (m_sharedObjectTable) {
+            return m_sharedObjectTable->ValidateObject(index);
+        }
         return index < m_vertexArrays.size() && m_vertexArrays[index] != nullptr;
     }
 
@@ -119,6 +165,12 @@ namespace MobileGL::MG_State::GLState {
         if (m_boundDetached) [[unlikely]] {
             return m_boundDetached;
         }
+        if (m_sharedObjectTable) {
+            if (m_boundIndex < m_sharedObjectTable->GetSize()) {
+                return m_sharedObjectTable->GetSliceRef(m_boundIndex);
+            }
+            return kNullVertexArrayObject;
+        }
         if (m_boundIndex < m_vertexArrays.size()) {
             return m_vertexArrays[m_boundIndex];
         }
@@ -126,6 +178,11 @@ namespace MobileGL::MG_State::GLState {
     }
 
     Vector<SharedPtr<VertexArrayObject>>& VertexArrayState::GetAllVertexArrays() {
+        if (m_sharedObjectTable) {
+            return m_sharedObjectTable->GetAllVertexArrays();
+        }
         return m_vertexArrays;
     }
 } // namespace MobileGL::MG_State::GLState
+
+// End of File

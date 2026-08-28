@@ -87,6 +87,13 @@ namespace MobileGL::MG_State::GLState {
         const auto& seenFramebuffer = second->GetContext().GetFramebufferObject(46);
         ASSERT_TRUE(seenFramebuffer);
         EXPECT_EQ(createdFramebuffer, seenFramebuffer);
+
+        // Vertex-array object tables are shared too.
+        const auto& createdVao = first->GetContext().CreateVertexArrayObject(47);
+        ASSERT_TRUE(createdVao);
+        const auto& seenVao = second->GetContext().GetVertexArrayObject(47);
+        ASSERT_TRUE(seenVao);
+        EXPECT_EQ(createdVao, seenVao);
     }
 
     TEST(ContextRegistryTest, TracksCurrentSessionPerThread) {

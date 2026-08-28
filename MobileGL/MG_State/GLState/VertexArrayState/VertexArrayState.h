@@ -14,9 +14,14 @@
 namespace MobileGL {
     namespace MG_State {
         namespace GLState {
+            class SharedVertexArrayObjectTable;
+
             class VertexArrayState {
             public:
                 VertexArrayState();
+
+                void SetSharedObjectTable(const SharedPtr<SharedVertexArrayObjectTable>& table) { m_sharedObjectTable = table; }
+                const SharedPtr<SharedVertexArrayObjectTable>& GetSharedObjectTable() const { return m_sharedObjectTable; }
 
                 const SharedPtr<VertexArrayObject>& GetVertexArrayObject(Uint index);
                 void GenerateNames(Uint number, Vector<Uint>& arrays);
@@ -34,6 +39,7 @@ namespace MobileGL {
                 // retroactively become the bound VAO.
                 static constexpr Uint kUnboundIndex = ~static_cast<Uint>(0);
 
+                SharedPtr<SharedVertexArrayObjectTable> m_sharedObjectTable;
                 Vector<SharedPtr<VertexArrayObject>> m_vertexArrays;
                 IndexGenerator<Uint> m_indexGenerator;
 

@@ -44,6 +44,7 @@ namespace MobileGL::MG_State::GLState {
             m_context->SetSharedSamplerObjectTable(m_sharedTables->GetSharedSamplerObjects());
             m_context->SetSharedRenderbufferObjectTable(m_sharedTables->GetSharedRenderbufferObjects());
             m_context->SetSharedFramebufferObjectTable(m_sharedTables->GetSharedFramebufferObjects());
+            m_context->SetSharedVertexArrayObjectTable(m_sharedTables->GetSharedVertexArrayObjects());
         }
     }
 

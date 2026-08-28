@@ -14,6 +14,7 @@
 #include "MG_State/GLState/SamplerState/SamplerState.h"
 #include "MG_State/GLState/RenderbufferState/RenderbufferState.h"
 #include "MG_State/GLState/FramebufferState/FramebufferState.h"
+#include "MG_State/GLState/VertexArrayState/VertexArrayState.h"
 #include <MG_Util/Miscellany/IndexGenerator.h>
 
 namespace MobileGL::MG_State::GLState {
@@ -146,6 +147,61 @@ namespace MobileGL::MG_State::GLState {
         IndexGenerator<Uint> m_indexGenerator;
     };
 
+    // Shared vertex-array object table. The bound VAO index/detached object
+    // remain per-context in VertexArrayState; only the object vector and name
+    // generator are shared.
+    class SharedVertexArrayObjectTable {
+    public:
+        SharedVertexArrayObjectTable() : m_indexGenerator(1024, 1) {
+            m_indexGenerator.Insert(0);
+            m_vertexArrays.push_back(MakeShared<VertexArrayObject>(0));
+        }
+
+        SizeT GetSize() const { return m_vertexArrays.size(); }
+        SharedPtr<VertexArrayObject>& GetSlot(Uint index) { return m_vertexArrays[index]; }
+        SharedPtr<VertexArrayObject>& GetSlice(Uint index) { return m_vertexArrays[index]; }
+        const SharedPtr<VertexArrayObject>& GetSliceRef(Uint index) const { return m_vertexArrays[index]; }
+        const SharedPtr<VertexArrayObject>& GetObject(Uint index) const {
+            if (index >= m_vertexArrays.size()) {
+                static SharedPtr<VertexArrayObject> nullObject = nullptr;
+                return nullObject;
+            }
+            return m_vertexArrays[index];
+        }
+        Vector<SharedPtr<VertexArrayObject>>& GetAllVertexArrays() { return m_vertexArrays; }
+        void GenerateNames(Uint number, Vector<Uint>& arrays) {
+            arrays.resize(number);
+            m_indexGenerator.Generate(number, arrays.data());
+        }
+        SharedPtr<VertexArrayObject>& CreateObject(Uint index) {
+            if (index >= m_vertexArrays.size()) {
+                m_vertexArrays.reserve(std::bit_ceil(index + 1));
+                m_vertexArrays.resize(index + 1, nullptr);
+            }
+            auto& vao = m_vertexArrays[index];
+            if (!vao) {
+                vao = MakeShared<VertexArrayObject>(index);
+            }
+            return vao;
+        }
+        void MarkObjectForDeletion(Uint index) {
+            if (m_indexGenerator.IsValid(index)) {
+                if (index < m_vertexArrays.size()) {
+                    m_vertexArrays[index] = nullptr;
+                }
+                m_indexGenerator.Delete(index);
+            }
+        }
+        Bool ValidateName(Uint index) const { return m_indexGenerator.IsValid(index); }
+        Bool ValidateObject(Uint index) const {
+            return index < m_vertexArrays.size() && m_vertexArrays[index] != nullptr;
+        }
+
+    private:
+        Vector<SharedPtr<VertexArrayObject>> m_vertexArrays;
+        IndexGenerator<Uint> m_indexGenerator;
+    };
+
     class SharedObjectTables {
     public:
         SharedObjectTables() = default;
@@ -185,6 +241,13 @@ namespace MobileGL::MG_State::GLState {
             return m_sharedFramebufferObjects;
         }
 
+        SharedPtr<SharedVertexArrayObjectTable>& GetSharedVertexArrayObjects() {
+            return m_sharedVertexArrayObjects;
+        }
+        const SharedPtr<SharedVertexArrayObjectTable>& GetSharedVertexArrayObjects() const {
+            return m_sharedVertexArrayObjects;
+        }
+
         // Legacy per-context states; kept until every object access is
         // routed through the GetShared*Objects() accessors.
         BufferState& GetBufferState() { return m_bufferState; }
@@ -196,6 +259,7 @@ namespace MobileGL::MG_State::GLState {
         SharedPtr<SharedSamplerObjectTable> m_sharedSamplerObjects = MakeShared<SharedSamplerObjectTable>();
         SharedPtr<SharedRenderbufferObjectTable> m_sharedRenderbufferObjects = MakeShared<SharedRenderbufferObjectTable>();
         SharedPtr<SharedFramebufferObjectTable> m_sharedFramebufferObjects = MakeShared<SharedFramebufferObjectTable>();
+        SharedPtr<SharedVertexArrayObjectTable> m_sharedVertexArrayObjects = MakeShared<SharedVertexArrayObjectTable>();
         BufferState m_bufferState;
     };
 } // namespace MobileGL::MG_State::GLState
