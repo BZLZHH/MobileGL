@@ -34,6 +34,7 @@ namespace MobileGL {
             class SharedTextureObjectTable;
             class SharedSamplerObjectTable;
             class SharedRenderbufferObjectTable;
+            class SharedFramebufferObjectTable;
 
             struct CurrentVertexAttributeValue {
                 Array<Float, 4> floatValue{0.f, 0.f, 0.f, 1.f};
@@ -80,6 +81,7 @@ namespace MobileGL {
                 void SetSharedTextureObjectTable(const SharedPtr<SharedTextureObjectTable>& table);
                 void SetSharedSamplerObjectTable(const SharedPtr<SharedSamplerObjectTable>& table);
                 void SetSharedRenderbufferObjectTable(const SharedPtr<SharedRenderbufferObjectTable>& table);
+                void SetSharedFramebufferObjectTable(const SharedPtr<SharedFramebufferObjectTable>& table);
 
                 // C/S object handle for a GL name; allocates on first use.
                 // objectKind uses MobileGLObjectKind values (Protocol/bfa.h).

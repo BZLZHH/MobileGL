@@ -13,6 +13,7 @@
 #include "MG_State/GLState/TextureState/TextureState.h"
 #include "MG_State/GLState/SamplerState/SamplerState.h"
 #include "MG_State/GLState/RenderbufferState/RenderbufferState.h"
+#include "MG_State/GLState/FramebufferState/FramebufferState.h"
 #include <MG_Util/Miscellany/IndexGenerator.h>
 
 namespace MobileGL::MG_State::GLState {
@@ -127,6 +128,24 @@ namespace MobileGL::MG_State::GLState {
         IndexGenerator<Uint> m_indexGenerator;
     };
 
+    // Shared framebuffer object table (object map + name generator). Binding
+    // slots stay per-context.
+    class SharedFramebufferObjectTable {
+    public:
+        SharedFramebufferObjectTable() : m_indexGenerator(1024, 1) {}
+
+        const SharedPtr<FramebufferObject>& GetObject(Uint index) const;
+        void GenerateNames(Uint number, Vector<Uint>& framebuffers);
+        const SharedPtr<FramebufferObject>& CreateObject(Uint index);
+        void MarkObjectForDeletion(Uint index);
+        Bool ValidateName(Uint index) const;
+        Bool ValidateObject(Uint index) const;
+
+    private:
+        UnorderedMap<Uint, SharedPtr<FramebufferObject>> m_framebufferObjects;
+        IndexGenerator<Uint> m_indexGenerator;
+    };
+
     class SharedObjectTables {
     public:
         SharedObjectTables() = default;
@@ -159,6 +178,13 @@ namespace MobileGL::MG_State::GLState {
             return m_sharedRenderbufferObjects;
         }
 
+        SharedPtr<SharedFramebufferObjectTable>& GetSharedFramebufferObjects() {
+            return m_sharedFramebufferObjects;
+        }
+        const SharedPtr<SharedFramebufferObjectTable>& GetSharedFramebufferObjects() const {
+            return m_sharedFramebufferObjects;
+        }
+
         // Legacy per-context states; kept until every object access is
         // routed through the GetShared*Objects() accessors.
         BufferState& GetBufferState() { return m_bufferState; }
@@ -169,6 +195,7 @@ namespace MobileGL::MG_State::GLState {
         SharedPtr<SharedTextureObjectTable> m_sharedTextureObjects = MakeShared<SharedTextureObjectTable>();
         SharedPtr<SharedSamplerObjectTable> m_sharedSamplerObjects = MakeShared<SharedSamplerObjectTable>();
         SharedPtr<SharedRenderbufferObjectTable> m_sharedRenderbufferObjects = MakeShared<SharedRenderbufferObjectTable>();
+        SharedPtr<SharedFramebufferObjectTable> m_sharedFramebufferObjects = MakeShared<SharedFramebufferObjectTable>();
         BufferState m_bufferState;
     };
 } // namespace MobileGL::MG_State::GLState

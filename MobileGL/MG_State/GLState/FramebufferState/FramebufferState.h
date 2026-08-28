@@ -12,9 +12,14 @@
 #include "FramebufferObject.h"
 
 namespace MobileGL::MG_State::GLState {
+    class SharedFramebufferObjectTable;
+
     class FramebufferState {
     public:
         FramebufferState();
+
+        void SetSharedObjectTable(const SharedPtr<SharedFramebufferObjectTable>& table) { m_sharedObjectTable = table; }
+        const SharedPtr<SharedFramebufferObjectTable>& GetSharedObjectTable() const { return m_sharedObjectTable; }
 
         // FBO 0 should be created by MG_Backend when initializing the context
         const SharedPtr<FramebufferObject>& GetFramebufferObject(Uint index);
@@ -26,6 +31,7 @@ namespace MobileGL::MG_State::GLState {
         Bool ValidateFramebufferObject(Uint index) const;
 
     private:
+        SharedPtr<SharedFramebufferObjectTable> m_sharedObjectTable;
         UnorderedMap<Uint, SharedPtr<FramebufferObject>> m_framebufferObjects;
         IndexGenerator<Uint> m_indexGenerator;
         Array<BindingSlot<FramebufferObject>, static_cast<SizeT>(FramebufferTarget::FramebufferTargetCount)>

@@ -7,6 +7,7 @@
 // End of Source File Header
 
 #include "FramebufferState.h"
+#include "MG_State/GLState/SharedObjectTables.h"
 #include "MG_State/GLState/FramebufferState/FramebufferObject.h"
 
 namespace MobileGL::MG_State::GLState {
@@ -16,7 +17,55 @@ namespace MobileGL::MG_State::GLState {
         }
     }
 
+    const SharedPtr<FramebufferObject>& SharedFramebufferObjectTable::GetObject(Uint index) const {
+        auto it = m_framebufferObjects.find(index);
+        if (it != m_framebufferObjects.end()) {
+            return it->second;
+        }
+        static SharedPtr<FramebufferObject> nullFramebufferObject = nullptr;
+        return nullFramebufferObject;
+    }
+
+    void SharedFramebufferObjectTable::GenerateNames(Uint number, Vector<Uint>& framebuffers) {
+        framebuffers.resize(number);
+        m_indexGenerator.Generate(number, framebuffers.data());
+    }
+
+    const SharedPtr<FramebufferObject>& SharedFramebufferObjectTable::CreateObject(Uint index) {
+        if (index == 0) {
+            if (!m_indexGenerator.IsValid(0)) {
+                m_indexGenerator.Insert(0);
+            } else {
+                static SharedPtr<FramebufferObject> nullFramebufferObject = nullptr;
+                return nullFramebufferObject;
+            }
+        }
+        auto& framebufferObject = m_framebufferObjects[index];
+        if (!framebufferObject) {
+            framebufferObject = MakeShared<FramebufferObject>(index);
+        }
+        return framebufferObject;
+    }
+
+    void SharedFramebufferObjectTable::MarkObjectForDeletion(Uint index) {
+        if (m_indexGenerator.IsValid(index)) {
+            m_framebufferObjects.erase(index);
+            m_indexGenerator.Delete(index);
+        }
+    }
+
+    Bool SharedFramebufferObjectTable::ValidateName(Uint index) const {
+        return m_indexGenerator.IsValid(index);
+    }
+
+    Bool SharedFramebufferObjectTable::ValidateObject(Uint index) const {
+        return m_framebufferObjects.find(index) != m_framebufferObjects.end();
+    }
+
     const SharedPtr<FramebufferObject>& FramebufferState::GetFramebufferObject(Uint index) {
+        if (m_sharedObjectTable) {
+            return m_sharedObjectTable->GetObject(index);
+        }
         auto it = m_framebufferObjects.find(index);
         if (it != m_framebufferObjects.end()) {
             return it->second;
@@ -26,11 +75,18 @@ namespace MobileGL::MG_State::GLState {
     }
 
     void FramebufferState::GenerateNames(Uint number, Vector<Uint>& buffers) {
+        if (m_sharedObjectTable) {
+            m_sharedObjectTable->GenerateNames(number, buffers);
+            return;
+        }
         buffers.resize(number);
         m_indexGenerator.Generate(number, buffers.data());
     }
 
     const SharedPtr<FramebufferObject>& FramebufferState::CreateFramebufferObject(Uint index) {
+        if (m_sharedObjectTable) {
+            return m_sharedObjectTable->CreateObject(index);
+        }
         if (index == 0) {
             if (!m_indexGenerator.IsValid(0)) {
                 m_indexGenerator.Insert(0);
@@ -57,14 +113,25 @@ namespace MobileGL::MG_State::GLState {
     }
 
     void FramebufferState::MarkFramebufferObjectForDeletion(Uint index) {
+        const SharedPtr<FramebufferObject> framebufferObject =
+            m_sharedObjectTable ? m_sharedObjectTable->GetObject(index)
+                                : (m_framebufferObjects.find(index) != m_framebufferObjects.end()
+                                       ? m_framebufferObjects.find(index)->second
+                                       : nullptr);
+        if (framebufferObject) {
+            for (auto& bindingSlot : m_bindingSlots) {
+                if (bindingSlot.GetBoundObject() == framebufferObject) {
+                    bindingSlot.Bind(GetFramebufferObject(0));
+                }
+            }
+        }
+        if (m_sharedObjectTable) {
+            m_sharedObjectTable->MarkObjectForDeletion(index);
+            return;
+        }
         if (m_indexGenerator.IsValid(index)) {
             auto it = m_framebufferObjects.find(index);
             if (it != m_framebufferObjects.end()) {
-                for (auto& bindingSlot : m_bindingSlots) {
-                    if (bindingSlot.GetBoundObject() == it->second) {
-                        bindingSlot.Bind(GetFramebufferObject(0));
-                    }
-                }
                 m_framebufferObjects.erase(index);
             }
             m_indexGenerator.Delete(index);
@@ -72,10 +139,18 @@ namespace MobileGL::MG_State::GLState {
     }
 
     Bool FramebufferState::ValidateName(Uint index) const {
+        if (m_sharedObjectTable) {
+            return m_sharedObjectTable->ValidateName(index);
+        }
         return m_indexGenerator.IsValid(index);
     }
 
     Bool FramebufferState::ValidateFramebufferObject(Uint index) const {
+        if (m_sharedObjectTable) {
+            return m_sharedObjectTable->ValidateObject(index);
+        }
         return m_framebufferObjects.find(index) != m_framebufferObjects.end();
     }
 } // namespace MobileGL::MG_State::GLState
+
+// End of File
