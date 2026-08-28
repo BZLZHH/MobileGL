@@ -10,6 +10,11 @@
 #include <gtest/gtest.h>
 #include "MG_Protocol/transport.h"
 #include "MG_Transport/InProcessTransport.h"
+#include "MG_Transport/LocalSocketShmTransport.h"
+
+#if defined(__linux__) || defined(__APPLE__) || defined(__ANDROID__)
+#include <unistd.h>
+#endif
 
 namespace MobileGL::Transport {
     TEST(InProcessTransportTest, ClientServerExchange) {
@@ -57,6 +62,75 @@ namespace MobileGL::Transport {
 
         DestroyInProcessTransport(client);
         DestroyInProcessTransport(server);
+    }
+
+    TEST(InProcessTransportTest, LocalSocketShmRoundTrip) {
+        const char* endpoint = "/tmp/mobilegl_transport_test.sock";
+        unlink(endpoint);
+
+        MobileGLTransport* server = CreateLocalSocketShmServer(endpoint);
+        ASSERT_NE(server, nullptr);
+
+        Bool clientOk = false;
+        Bool exchangeOk = false;
+        std::thread clientThread([&] {
+            MobileGLTransport* client = CreateLocalSocketShmTransport();
+            ASSERT_NE(client, nullptr);
+            const MobileGLTransportOps& ops = GetLocalSocketShmTransportOps();
+
+            MobileGLTransportConfig config{};
+            config.structSize = sizeof(MobileGLTransportConfig);
+            config.kind = MobileGLTransportKindLocalSocketShm;
+            config.endpoint = endpoint;
+            config.timeoutMs = 0;
+            if (!ops.Start(client, &config)) {
+                DestroyLocalSocketShmTransport(client);
+                return;
+            }
+            clientOk = true;
+
+            const char command[] = "hello";
+            MobileGLCommandBatch batch{};
+            batch.structSize = sizeof(MobileGLCommandBatch);
+            batch.flatBufferData = command;
+            batch.flatBufferSize = static_cast<uint32_t>(sizeof(command) - 1);
+            if (!ops.SubmitCommands(client, &batch)) {
+                DestroyLocalSocketShmTransport(client);
+                return;
+            }
+
+            MobileGLResponseQueue response{};
+            if (ops.WaitResponses(client, &response, 0) && response.count == 1 &&
+                response.flatBufferSize == 5u && memcmp(response.flatBufferData, "world", 5) == 0) {
+                exchangeOk = true;
+            }
+            DestroyLocalSocketShmTransport(client);
+        });
+
+        MobileGLTransport* accepted = AcceptLocalSocketShmConnection(server);
+        ASSERT_NE(accepted, nullptr);
+        const MobileGLTransportOps& serverOps = GetLocalSocketShmTransportOps();
+
+        MobileGLResponseQueue command{};
+        ASSERT_TRUE(serverOps.WaitResponses(accepted, &command, 0));
+        ASSERT_EQ(command.count, 1u);
+        ASSERT_EQ(command.flatBufferSize, 5u);
+        EXPECT_EQ(memcmp(command.flatBufferData, "hello", 5), 0);
+
+        const char response[] = "world";
+        MobileGLCommandBatch responseBatch{};
+        responseBatch.structSize = sizeof(MobileGLCommandBatch);
+        responseBatch.flatBufferData = response;
+        responseBatch.flatBufferSize = static_cast<uint32_t>(sizeof(response) - 1);
+        ASSERT_TRUE(serverOps.SubmitCommands(accepted, &responseBatch));
+
+        clientThread.join();
+        EXPECT_TRUE(clientOk);
+        EXPECT_TRUE(exchangeOk);
+
+        DestroyLocalSocketShmTransport(accepted);
+        DestroyLocalSocketShmTransport(server);
+        unlink(endpoint);
     }
 } // namespace MobileGL::Transport
 

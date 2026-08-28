@@ -18,6 +18,13 @@ namespace MobileGL::Transport {
     MobileGLTransport* CreateLocalSocketShmTransport();
     void DestroyLocalSocketShmTransport(MobileGLTransport* t);
     const MobileGLTransportOps& GetLocalSocketShmTransportOps();
+
+    // Server side: listen on a Unix socket endpoint and accept one connection.
+    // The returned server transport must be destroyed with
+    // DestroyLocalSocketShmTransport; accepted connections are returned as
+    // ordinary client-mode transports.
+    MobileGLTransport* CreateLocalSocketShmServer(const char* endpoint);
+    MobileGLTransport* AcceptLocalSocketShmConnection(MobileGLTransport* server);
 } // namespace MobileGL::Transport
 
 // End of File
