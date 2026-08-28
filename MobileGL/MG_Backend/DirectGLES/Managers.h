@@ -11,6 +11,7 @@
 #include <atomic>
 #include <mutex>
 #include "DirectGLES.h"
+#include "MG_Protocol/bfa.h"
 #include "MG_State/GLState/SamplerState/SamplerObject.h"
 #include "MG_State/GLState/TextureState/TextureEnum.h"
 #include <MG_State/GLState/TextureState/TextureObject.h>
@@ -363,6 +364,35 @@ namespace MobileGL::MG_Backend::DirectGLES {
 
         void CollectGarbageNow() { CollectGarbage(); }
 
+        // ------------------------------------------------------------------
+        // Handle-keyed lookup. The primary map stays keyed by state pointer for
+        // the hot draw path; this secondary map lets the BFA router find a twin
+        // by MobileGLBackendHandle without touching the frontend object.
+        // ------------------------------------------------------------------
+        void RegisterHandle(MobileGLBackendHandle handle, const StatePtr& stateObj) {
+            if (handle == 0 || stateObj == nullptr) {
+                return;
+            }
+            GetOrCreate(stateObj);
+            m_handleToState[handle] = stateObj.get();
+        }
+
+        BackendPtr* FindByHandle(MobileGLBackendHandle handle) {
+            const auto it = m_handleToState.find(handle);
+            if (it == m_handleToState.end()) {
+                return nullptr;
+            }
+            BackendPtr* backend = Find(it->second);
+            if (backend == nullptr) {
+                m_handleToState.erase(it);
+            }
+            return backend;
+        }
+
+        void UnregisterHandle(MobileGLBackendHandle handle) {
+            m_handleToState.erase(handle);
+        }
+
     private:
         void CollectGarbage() {
             if (m_isCollecting) {
@@ -392,6 +422,7 @@ namespace MobileGL::MG_Backend::DirectGLES {
         // kGCInterval does.
         static constexpr Uint32 kCreationGCInterval = 64;
         BackendMap m_entries;
+        UnorderedMap<MobileGLBackendHandle, StateObject*> m_handleToState;
         Uint32 m_gcTick = 0;
         Uint32 m_creationTick = 0;
         Bool m_isCollecting = false;

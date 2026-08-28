@@ -64,8 +64,8 @@
 
 - [x] `MobileGL/MG_FullServer/BackendHost.h/.cpp` — FullServer 侧的 BackendHost vtable 骨架
 - [x] `MobileGL/MG_FullServer/BackendPluginLoader.h/.cpp` — dlopen + manifest ABI 校验 + Create
+- [x] `StateBackendObjectRegistry` 增加 handle-key 并行查找：`RegisterHandle` / `FindByHandle` / `UnregisterHandle`（主 map 仍按 state 指针走热路径；原生 Monolith 编译通过）
 - [ ] DirectGLES / DirectVulkan 后端迁移到 BFA vtable（device/sharedgroup/session 三层）
-- [ ] `StateBackendObjectRegistry` key 改为 handle
 
 ## Phase 4 — 外部协议落地（进行中）
 
