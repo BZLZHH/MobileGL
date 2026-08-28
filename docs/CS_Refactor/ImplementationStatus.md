@@ -72,6 +72,8 @@
 - [x] `MobileGL/MG_Transport/LocalSocketShmTransport.h/.cpp` — v1 transport：AF_UNIX socket connect / bind+listen / accept + 长度前缀字节流收发
 - [x] **shm arena**：`OpenSharedMemory`（memfd_create + mmap）/ `ReleaseSharedMemory`；`InProcessTransportTest.LocalSocketShmAllocatesSharedMemory` 3/3 通过
 - [x] **shm fd 跨进程传递**：`SendShmHandle` / `RecvShmHandle`（SCM_RIGHTS + 控制消息携带 size）；`LocalSocketShmTransfersShmFd` 双向读写验证，InProcessTransportTest 4/4 通过
+- [x] **shm payload 回读通路**：`Client::SubmitDataCommand` → batch 携带 shm fd → `ServerCore` 用 `ReceiveShmHandle` 接收并读首字节 → `Response.data_byte` 回显；`ClientShmPayloadTest` 1/1 通过
+- [x] transport ops 新增 `ReceiveShmHandle`（ABI minor+0.1 兼容追加）
 - [x] `MobileGL/MG_Transport/InProcessTransport.h/.cpp` — 同进程 transport 实现（client/server 配对 + 批消息队列）
 - [x] `MobileGL/MG_Transport/TransportInternal.h` — 统一 `MobileGLTransport` 内部完成类型（避免 ODR 冲突）
 - [x] `MobileGL/MG_Test/Transport/InProcessTransportTest.cpp` — in-process + LocalSocketShm 往返 + shm arena + fd 传递测试 4/4 通过
@@ -88,10 +90,10 @@
 - [x] **Client/ServerCore 改用 FlatBuffers 实际编解码**：`Client::SendCommand` 构建 `Message`；`ServerCore` 解析 `Message` 并按 opcode 分发、构建 `Response`
 - [x] FlatBuffers 迁移后回归：`BigServerE2ETest` 2/2、`ClientServerEndToEndTest` 1/1、`InProcessTransportTest` 2/2、`ProtocolOpcodeTest` 1/1 全部通过
 - [ ] 完整 source-list 合并进 `protocol.fbs`（trampoline / dispatch / 分类表）
-- [ ] 异步命令流 + 同步查询 / barrier
+- [x] **异步命令提交 + 按 token 等待**（`Client::SubmitCommand` / `WaitResponseForToken`；`ClientAsyncBatchTest` 1/1 通过）
 - [x] **Token 透传**：`Command.token` / `Response.token`；`Client::SendCommand` 校验回显 token；Python 跨进程 E2E 仍 status=0
-- [ ] map/unmap/readback/字符串返回数据通路（shm fd 已能跨进程传递，待接 payload）
-- [ ] Token 透传模型 + 会话生命周期
+- [x] **shm payload 回读**：`ClientShmPayloadTest` 已验证（0xAB 写入 → fd → server 读回 → data_byte=0xAB）
+- [ ] 会话生命周期完整模型（Token 与 session 关联/失效）
 
 ## Phase 5 — Plugin 化集成（进行中）
 

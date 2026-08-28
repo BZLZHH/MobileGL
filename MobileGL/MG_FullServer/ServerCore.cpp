@@ -51,6 +51,24 @@ namespace MobileGL::FullServer {
         }
         const auto* command = message->command();
 
+        uint32_t dataByte = 0;
+        const uint32_t shmCount = message->shm_count();
+        if (shmCount > 0) {
+            if (m_ops->ReceiveShmHandle == nullptr) {
+                return false;
+            }
+            for (Uint32 i = 0; i < shmCount; ++i) {
+                MobileGLShmHandle handle{};
+                if (!m_ops->ReceiveShmHandle(m_transport, &handle)) {
+                    return false;
+                }
+                if (command->data() != nullptr && handle.mappedAddress != nullptr) {
+                    dataByte = *static_cast<const Uint8*>(handle.mappedAddress);
+                }
+                m_ops->ReleaseSharedMemory(m_transport, &handle);
+            }
+        }
+
         uint32_t status = 1;
         // Dispatch by the generated opcode table (Phase 4).
         if (command->opcode() == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glClear) &&
@@ -62,7 +80,7 @@ namespace MobileGL::FullServer {
 
         flatbuffers::FlatBufferBuilder responseBuilder;
         const auto response = MobileGL::Protocol::Wire::CreateResponse(responseBuilder, status,
-                                                                       command->token());
+                                                                       command->token(), dataByte);
         responseBuilder.Finish(response);
 
         MobileGLCommandBatch out{};

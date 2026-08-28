@@ -94,6 +94,9 @@ typedef struct MobileGLTransportOps {
     bool (*WaitResponses)(MobileGLTransport* t, MobileGLResponseQueue* out, uint32_t timeoutMs);
     bool (*OpenSharedMemory)(MobileGLTransport* t, MobileGLShmHandle* out);
     void (*ReleaseSharedMemory)(MobileGLTransport* t, MobileGLShmHandle* handle);
+    // Receives one SCM_RIGHTS shared-memory handle (LocalSocketShm); other
+    // transports return false.
+    bool (*ReceiveShmHandle)(MobileGLTransport* t, MobileGLShmHandle* out);
     const char* (*GetLastError)(MobileGLTransport* t);
 } MobileGLTransportOps;
 

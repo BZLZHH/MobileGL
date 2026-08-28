@@ -15,20 +15,28 @@ table GlClear {
     mask: uint;
 }
 
+table DataBlob {
+    offset: ulong;
+    size: ulong;
+}
+
 table Command {
     opcode: uint;
     session_id: ulong;
     token: ulong;
     clear: GlClear;
+    data: DataBlob;
 }
 
 table Message {
     command: Command;
+    shm_count: uint;
 }
 
 table Response {
     status: uint;
     token: ulong;
+    data_byte: uint;
 }
 
 root_type Message;

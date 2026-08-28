@@ -56,8 +56,19 @@ class Command(object):
             return obj
         return None
 
+    # Command
+    def Data(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from MobileGL.Protocol.Wire.DataBlob import DataBlob
+            obj = DataBlob()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
 def CommandStart(builder):
-    builder.StartObject(4)
+    builder.StartObject(5)
 
 def Start(builder):
     CommandStart(builder)
@@ -85,6 +96,12 @@ def CommandAddClear(builder, clear):
 
 def AddClear(builder, clear):
     CommandAddClear(builder, clear)
+
+def CommandAddData(builder, data):
+    builder.PrependUOffsetTRelativeSlot(4, flatbuffers.number_types.UOffsetTFlags.py_type(data), 0)
+
+def AddData(builder, data):
+    CommandAddData(builder, data)
 
 def CommandEnd(builder):
     return builder.EndObject()

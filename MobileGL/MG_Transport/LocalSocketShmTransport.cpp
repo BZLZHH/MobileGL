@@ -187,6 +187,13 @@ namespace MobileGL::Transport {
                     m_lastError = "send() failed.";
                     return false;
                 }
+                for (Uint32 i = 0; i < batch->shmHandleCount; ++i) {
+                    if (batch->shmHandles == nullptr ||
+                        !SendShmHandle(&batch->shmHandles[i])) {
+                        m_lastError = "send shm handle failed.";
+                        return false;
+                    }
+                }
                 m_lastError.clear();
                 return true;
             }
@@ -403,6 +410,11 @@ namespace MobileGL::Transport {
             }
         }
 
+        Bool ReceiveShmHandleImpl(MobileGLTransport* t, MobileGLShmHandle* out) {
+            if (t == nullptr || t->Implementation == nullptr) return false;
+            return static_cast<LocalSocketShmTransport*>(t->Implementation)->RecvShmHandle(out);
+        }
+
         const char* GetLastErrorImpl(MobileGLTransport* t) {
             if (t == nullptr || t->Implementation == nullptr) return "null transport.";
             return static_cast<LocalSocketShmTransport*>(t->Implementation)->GetLastError();
@@ -417,6 +429,7 @@ namespace MobileGL::Transport {
             &WaitResponsesImpl,
             &OpenSharedMemoryImpl,
             &ReleaseSharedMemoryImpl,
+            &ReceiveShmHandleImpl,
             &GetLastErrorImpl
         };
     } // namespace

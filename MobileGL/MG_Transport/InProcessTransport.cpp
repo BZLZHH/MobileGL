@@ -141,6 +141,12 @@ namespace MobileGL::Transport {
             }
         }
 
+        Bool ReceiveShmHandleImpl(MobileGLTransport* t, MobileGLShmHandle* out) {
+            (void)t;
+            (void)out;
+            return false;
+        }
+
         const char* GetLastErrorImpl(MobileGLTransport* t) {
             if (t == nullptr || t->Implementation == nullptr) return "null transport.";
             return static_cast<InProcessTransport*>(t->Implementation)->GetLastError();
@@ -155,6 +161,7 @@ namespace MobileGL::Transport {
             &WaitResponsesImpl,
             &OpenSharedMemoryImpl,
             &ReleaseSharedMemoryImpl,
+            &ReceiveShmHandleImpl,
             &GetLastErrorImpl
         };
     } // namespace

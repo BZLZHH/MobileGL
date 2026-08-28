@@ -35,8 +35,17 @@ namespace MobileGL::Client {
     // Submits a command without waiting for its response.
     Bool SubmitCommand(Uint32 sessionId, Uint32 opcode, Uint64 token);
 
+    // Submits a command that carries one shared-memory payload; the shm handle
+    // must already be allocated with the transport's OpenSharedMemory.
+    Bool SubmitDataCommand(Uint32 sessionId, Uint32 opcode, Uint64 token,
+                           Uint64 shmOffset, Uint64 shmSize, MobileGLShmHandle* shm);
+
     // Waits for the response whose echoed token equals `token`.
     Bool WaitResponseForToken(Uint64 token, Uint32 timeoutMs);
+
+    // Byte echoed back by the server's response data_byte field (payload
+    // readback verification).
+    Uint32 GetLastResponseDataByte();
 
     void Shutdown();
     const String& GetLastError();

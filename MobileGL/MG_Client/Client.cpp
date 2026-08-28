@@ -19,6 +19,7 @@ namespace MobileGL::Client {
         Bool s_ownsTransport = false;
         MobileGLTransport* s_transport = nullptr;
         const MobileGLTransportOps* s_ops = nullptr;
+        Uint32 s_lastResponseByte = 0;
     } // namespace
 
     Bool Initialize(const ClientConfig& config) {
@@ -66,6 +67,11 @@ namespace MobileGL::Client {
     }
 
     Bool SubmitCommand(Uint32 sessionId, Uint32 opcode, Uint64 token) {
+        return SubmitDataCommand(sessionId, opcode, token, 0, 0, nullptr);
+    }
+
+    Bool SubmitDataCommand(Uint32 sessionId, Uint32 opcode, Uint64 token,
+                           Uint64 shmOffset, Uint64 shmSize, MobileGLShmHandle* shm) {
         if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
             s_lastError = "Client is not initialized.";
             return false;
@@ -73,15 +79,22 @@ namespace MobileGL::Client {
 
         flatbuffers::FlatBufferBuilder builder;
         const auto clear = MobileGL::Protocol::Wire::CreateGlClear(builder, 0);
-        const auto command =
-            MobileGL::Protocol::Wire::CreateCommand(builder, opcode, sessionId, token, clear);
-        const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command);
+        flatbuffers::Offset<MobileGL::Protocol::Wire::DataBlob> data;
+        if (shm != nullptr) {
+            data = MobileGL::Protocol::Wire::CreateDataBlob(builder, shmOffset, shmSize);
+        }
+        const auto command = MobileGL::Protocol::Wire::CreateCommand(
+            builder, opcode, sessionId, token, clear, data);
+        const auto message =
+            MobileGL::Protocol::Wire::CreateMessage(builder, command, shm == nullptr ? 0 : 1);
         builder.Finish(message);
 
         MobileGLCommandBatch batch{};
         batch.structSize = sizeof(MobileGLCommandBatch);
         batch.flatBufferData = builder.GetBufferPointer();
         batch.flatBufferSize = static_cast<Uint32>(builder.GetSize());
+        batch.shmHandleCount = shm == nullptr ? 0 : 1;
+        batch.shmHandles = shm;
         if (!s_ops->SubmitCommands(s_transport, &batch)) {
             s_lastError = s_ops->GetLastError(s_transport);
             return false;
@@ -112,8 +125,13 @@ namespace MobileGL::Client {
             s_lastError = "Response token mismatch.";
             return false;
         }
+        s_lastResponseByte = parsed->data_byte();
         s_lastError.clear();
         return parsed->status() == 0;
+    }
+
+    Uint32 GetLastResponseDataByte() {
+        return s_lastResponseByte;
     }
 
     Bool SendCommand(Uint32 sessionId, Uint32 opcode, Uint64 token) {

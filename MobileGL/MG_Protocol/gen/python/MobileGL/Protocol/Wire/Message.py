@@ -35,8 +35,15 @@ class Message(object):
             return obj
         return None
 
+    # Message
+    def ShmCount(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Uint32Flags, o + self._tab.Pos)
+        return 0
+
 def MessageStart(builder):
-    builder.StartObject(1)
+    builder.StartObject(2)
 
 def Start(builder):
     MessageStart(builder)
@@ -46,6 +53,12 @@ def MessageAddCommand(builder, command):
 
 def AddCommand(builder, command):
     MessageAddCommand(builder, command)
+
+def MessageAddShmCount(builder, shmCount):
+    builder.PrependUint32Slot(1, shmCount, 0)
+
+def AddShmCount(builder, shmCount):
+    MessageAddShmCount(builder, shmCount)
 
 def MessageEnd(builder):
     return builder.EndObject()

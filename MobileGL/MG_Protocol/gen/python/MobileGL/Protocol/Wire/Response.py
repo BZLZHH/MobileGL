@@ -38,8 +38,15 @@ class Response(object):
             return self._tab.Get(flatbuffers.number_types.Uint64Flags, o + self._tab.Pos)
         return 0
 
+    # Response
+    def DataByte(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Uint32Flags, o + self._tab.Pos)
+        return 0
+
 def ResponseStart(builder):
-    builder.StartObject(2)
+    builder.StartObject(3)
 
 def Start(builder):
     ResponseStart(builder)
@@ -55,6 +62,12 @@ def ResponseAddToken(builder, token):
 
 def AddToken(builder, token):
     ResponseAddToken(builder, token)
+
+def ResponseAddDataByte(builder, dataByte):
+    builder.PrependUint32Slot(2, dataByte, 0)
+
+def AddDataByte(builder, dataByte):
+    ResponseAddDataByte(builder, dataByte)
 
 def ResponseEnd(builder):
     return builder.EndObject()
