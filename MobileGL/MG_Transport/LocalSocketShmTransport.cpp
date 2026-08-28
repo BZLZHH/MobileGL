@@ -13,6 +13,7 @@
 #include <sys/mman.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <sys/uio.h>
 #include <unistd.h>
 #endif
 
@@ -269,6 +270,94 @@ namespace MobileGL::Transport {
                 *handle = MobileGLShmHandle{};
             }
 
+            Bool SendShmHandle(MobileGLShmHandle* handle) {
+                if (handle == nullptr || handle->platformHandle < 0 || m_socketFd < 0) {
+                    m_lastError = "SendShmHandle requires a valid handle and connected socket.";
+                    return false;
+                }
+#if defined(__linux__)
+                struct {
+                    uint64_t size;
+                } meta{handle->size};
+                char control[CMSG_SPACE(sizeof(int))]{};
+                iovec iov{&meta, sizeof(meta)};
+                msghdr message{};
+                message.msg_iov = &iov;
+                message.msg_iovlen = 1;
+                message.msg_control = control;
+                message.msg_controllen = sizeof(control);
+
+                cmsghdr* header = CMSG_FIRSTHDR(&message);
+                header->cmsg_level = SOL_SOCKET;
+                header->cmsg_type = SCM_RIGHTS;
+                header->cmsg_len = CMSG_LEN(sizeof(int));
+                const int fd = static_cast<int>(handle->platformHandle);
+                memcpy(CMSG_DATA(header), &fd, sizeof(fd));
+
+                if (sendmsg(m_socketFd, &message, 0) < 0) {
+                    m_lastError = "sendmsg(SCM_RIGHTS) failed.";
+                    return false;
+                }
+                m_lastError.clear();
+                return true;
+#else
+                m_lastError = "SendShmHandle is not implemented on this platform.";
+                return false;
+#endif
+            }
+
+            Bool RecvShmHandle(MobileGLShmHandle* out) {
+                if (out == nullptr || m_socketFd < 0) {
+                    m_lastError = "RecvShmHandle requires an output handle and connected socket.";
+                    return false;
+                }
+#if defined(__linux__)
+                struct {
+                    uint64_t size;
+                } meta{0};
+                char control[CMSG_SPACE(sizeof(int))]{};
+                iovec iov{&meta, sizeof(meta)};
+                msghdr message{};
+                message.msg_iov = &iov;
+                message.msg_iovlen = 1;
+                message.msg_control = control;
+                message.msg_controllen = sizeof(control);
+
+                const ssize_t received = recvmsg(m_socketFd, &message, 0);
+                if (received < 0 || message.msg_controllen < CMSG_LEN(sizeof(int))) {
+                    m_lastError = "recvmsg(SCM_RIGHTS) failed.";
+                    return false;
+                }
+                cmsghdr* header = CMSG_FIRSTHDR(&message);
+                if (header == nullptr || header->cmsg_type != SCM_RIGHTS) {
+                    m_lastError = "No SCM_RIGHTS descriptor received.";
+                    return false;
+                }
+                const int fd = *reinterpret_cast<const int*>(CMSG_DATA(header));
+                auto* address = mmap(nullptr, meta.size, PROT_READ | PROT_WRITE,
+                                     MAP_SHARED, fd, 0);
+                if (address == MAP_FAILED) {
+                    close(fd);
+                    m_lastError = "mmap of received shm fd failed.";
+                    return false;
+                }
+
+                *out = MobileGLShmHandle{};
+                out->structSize = sizeof(MobileGLShmHandle);
+                out->platformHandle = fd;
+                out->offset = 0;
+                out->size = meta.size;
+                out->capacity = meta.size;
+                out->mappedAddress = address;
+                m_lastError.clear();
+                return true;
+#else
+                (void)out;
+                m_lastError = "RecvShmHandle is not implemented on this platform.";
+                return false;
+#endif
+            }
+
             const char* GetLastError() const {
                 return m_lastError.c_str();
             }
@@ -355,6 +444,16 @@ namespace MobileGL::Transport {
             return nullptr;
         }
         return static_cast<LocalSocketShmTransport*>(server->Implementation)->Accept();
+    }
+
+    Bool SendShmHandle(MobileGLTransport* t, MobileGLShmHandle* handle) {
+        if (t == nullptr || t->Implementation == nullptr) return false;
+        return static_cast<LocalSocketShmTransport*>(t->Implementation)->SendShmHandle(handle);
+    }
+
+    Bool RecvShmHandle(MobileGLTransport* t, MobileGLShmHandle* out) {
+        if (t == nullptr || t->Implementation == nullptr) return false;
+        return static_cast<LocalSocketShmTransport*>(t->Implementation)->RecvShmHandle(out);
     }
 
     void DestroyLocalSocketShmTransport(MobileGLTransport* t) {

@@ -174,6 +174,51 @@ namespace MobileGL::Transport {
         DestroyLocalSocketShmTransport(server);
         unlink(endpoint);
     }
+
+    TEST(InProcessTransportTest, LocalSocketShmTransfersShmFd) {
+        const char* endpoint = "/tmp/mobilegl_transport_fd_test.sock";
+        unlink(endpoint);
+
+        MobileGLTransport* server = CreateLocalSocketShmServer(endpoint);
+        ASSERT_NE(server, nullptr);
+        MobileGLTransport* client = CreateLocalSocketShmTransport();
+        ASSERT_NE(client, nullptr);
+
+        const MobileGLTransportOps& ops = GetLocalSocketShmTransportOps();
+        MobileGLTransportConfig config{};
+        config.structSize = sizeof(MobileGLTransportConfig);
+        config.kind = MobileGLTransportKindLocalSocketShm;
+        config.endpoint = endpoint;
+        config.maxShmArenaSize = 1024 * 1024;
+        ASSERT_TRUE(ops.Start(client, &config));
+
+        MobileGLTransport* accepted = AcceptLocalSocketShmConnection(server);
+        ASSERT_NE(accepted, nullptr);
+
+        MobileGLShmHandle sender{};
+        ASSERT_TRUE(ops.OpenSharedMemory(client, &sender));
+        auto* senderBytes = static_cast<Uint8*>(sender.mappedAddress);
+        senderBytes[0] = 0xAB;
+
+        ASSERT_TRUE(SendShmHandle(client, &sender));
+
+        MobileGLShmHandle receiver{};
+        ASSERT_TRUE(RecvShmHandle(accepted, &receiver));
+        EXPECT_NE(receiver.mappedAddress, nullptr);
+        ASSERT_TRUE(receiver.mappedAddress != nullptr);
+        EXPECT_EQ(static_cast<const Uint8*>(receiver.mappedAddress)[0], 0xAB);
+
+        static_cast<Uint8*>(receiver.mappedAddress)[1] = 0xCD;
+        EXPECT_EQ(senderBytes[1], 0xCD);
+
+        ops.ReleaseSharedMemory(client, &sender);
+        ops.ReleaseSharedMemory(client, &receiver);
+
+        DestroyLocalSocketShmTransport(accepted);
+        DestroyLocalSocketShmTransport(client);
+        DestroyLocalSocketShmTransport(server);
+        unlink(endpoint);
+    }
 } // namespace MobileGL::Transport
 
 // End of File

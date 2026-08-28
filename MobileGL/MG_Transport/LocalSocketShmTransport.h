@@ -25,6 +25,12 @@ namespace MobileGL::Transport {
     // ordinary client-mode transports.
     MobileGLTransport* CreateLocalSocketShmServer(const char* endpoint);
     MobileGLTransport* AcceptLocalSocketShmConnection(MobileGLTransport* server);
+
+    // Shared-memory fd transfer over the control socket (SCM_RIGHTS on Unix).
+    // Sender passes a handle already created by OpenSharedMemory; the receiver
+    // gets the fd mapped into its own address space.
+    Bool SendShmHandle(MobileGLTransport* t, MobileGLShmHandle* handle);
+    Bool RecvShmHandle(MobileGLTransport* t, MobileGLShmHandle* out);
 } // namespace MobileGL::Transport
 
 // End of File

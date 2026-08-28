@@ -71,9 +71,10 @@
 
 - [x] `MobileGL/MG_Transport/LocalSocketShmTransport.h/.cpp` — v1 transport：AF_UNIX socket connect / bind+listen / accept + 长度前缀字节流收发
 - [x] **shm arena**：`OpenSharedMemory`（memfd_create + mmap）/ `ReleaseSharedMemory`；`InProcessTransportTest.LocalSocketShmAllocatesSharedMemory` 3/3 通过
+- [x] **shm fd 跨进程传递**：`SendShmHandle` / `RecvShmHandle`（SCM_RIGHTS + 控制消息携带 size）；`LocalSocketShmTransfersShmFd` 双向读写验证，InProcessTransportTest 4/4 通过
 - [x] `MobileGL/MG_Transport/InProcessTransport.h/.cpp` — 同进程 transport 实现（client/server 配对 + 批消息队列）
 - [x] `MobileGL/MG_Transport/TransportInternal.h` — 统一 `MobileGLTransport` 内部完成类型（避免 ODR 冲突）
-- [x] `MobileGL/MG_Test/Transport/InProcessTransportTest.cpp` — in-process + LocalSocketShm 往返 + shm arena 测试 3/3 通过
+- [x] `MobileGL/MG_Test/Transport/InProcessTransportTest.cpp` — in-process + LocalSocketShm 往返 + shm arena + fd 传递测试 4/4 通过
 - [x] `MobileGL/MG_Client` — Client 命令 API：`InitializeWithTransport` + `SendCommand(sessionId, opcode)`（提交/等待响应）
 - [x] `MobileGL/MG_Test/Transport/ClientServerEndToEndTest.cpp` — Client 命令 → InProcess → ServerCore → VTable → 响应，1/1 通过
 - [x] `InProcessTransport::WaitResponses` 改为等待语义（timeoutMs=0 无限等待）
