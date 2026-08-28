@@ -9,9 +9,9 @@
 
 - 配置：`cmake -S . -B build_agent -DMOBILEGL_BUILD_TEST=ON -DMOBILEGL_BUILD_CS_REFACTOR=ON` ✅
 - monolith（`MobileGL` / `MobileGL_s`）编译通过 ✅
-- C/S 目标编译通过：`FullServer.so`、`MobileGL_Client`、`MobileGL_UtilRuntime`、`BackendObject_DirectGLES.so`、`BackendObject_DirectVulkan.so`、`MobileGL_Transport` ✅
+- C/S 目标编译通过：`libMobileGL_FullServer.so`、`libMobileGL_Client.so`、`libMobileGL_UtilRuntime.so`、`BackendObject_DirectGLES.so`、`BackendObject_DirectVulkan.so`、`libMobileGL_Transport.a` ✅
 - 单元测试：`ContextRegistryTest` 5/5、`HandleRegistryTest` 5/5 通过 ✅
-- **目录重构后全量验证**：C/S 目标与全部相关测试重编译通过；`SanityTest` 82/82、`InProcessTransportTest` 1/1、`BigServerE2ETest` 1/1 通过；`FullServer` 插件生命周期 E2E 退出码 0
+- **目录重构后全量验证**：C/S 目标与全部相关测试重编译通过；`SanityTest` 82/82、`InProcessTransportTest` 1/1、`BigServerE2ETest` 1/1 通过；`libMobileGL_FullServer.so` 构建成功
 - 第二次构建（共享 Buffer 表迁移后）：`BufferState` 委托 group 级 `SharedBufferObjectTable`，跨 session 可见性测试通过 ✅
 
 ## Phase 0 — 契约定稿 ✅
@@ -29,7 +29,7 @@
 
 - [x] 根 CMake 增加 `MOBILEGL_BUILD_CS_REFACTOR`（默认 OFF，保留 monolith 对照）
 - [x] `MobileGL/MG_Client` — `MobileGL_Client` SHARED 骨架
-- [x] `MobileGL/MG_FullServer` — `FullServer` SHARED（`.so`，BigServer host 组件）
+- [x] `MobileGL/MG_FullServer` — `MobileGL_FullServer` SHARED（`libMobileGL_FullServer.so`，BigServer host 组件）
 - [x] `MobileGL/MG_UtilRuntime` — `MobileGL_UtilRuntime` SHARED 骨架（`mobilegl_util_api` 导出）
 - [x] `MobileGL/MG_Backend/CMakeLists.txt` — `BackendObject_DirectGLES` / `BackendObject_DirectVulkan` MODULE 骨架 + manifest
 - [ ] 把真实 `MG_Impl / MG_State / MG_Util` 源列表拆入 `FullServerCore`，并从 monolith 删除（等 Phase 2/3 完成后再切）
@@ -81,7 +81,7 @@
 - [x] `MobileGL/MG_FullServer/BackendPluginLoader.h/.cpp` — dlopen BackendObject + manifest 协商 + Create
 - [x] `MobileGL/MG_FullServer/BackendHost.h/.cpp` — Host vtable 注入
 - [x] `MobileGL/MG_FullServer/Main.cpp` — 启动流程接线（UtilRuntime→BackendPlugin→Create→Initialize→Shutdown）
-- [x] **插件生命周期 E2E 验证**：`FullServer <UtilRuntime.so> <BackendObject_DirectGLES.so>` 运行退出码 0
+- [x] **插件生命周期链路（组件级验证）**：`UtilRuntimeLoader` / `BackendPluginLoader` / `ServerCore` 在 `libMobileGL_FullServer.so` 内编译通过；`BigServerE2ETest` 覆盖 Create→Initialize→command dispatch→Shutdown
 - [x] **BigServer 全链路 E2E（in-process）**：Client 命令 → InProcessTransport → `FullServer::ServerCore` → Backend VTable → Response → Client；`BigServerE2ETest` 1/1 通过
 - [ ] BigServer 全链路 E2E（socket transport + FlatBuffers 解码）
 

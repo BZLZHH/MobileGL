@@ -6,37 +6,31 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 # End of Source File Header
 
-# FullServer is delivered as a SHARED library (.so): the BigServer host is a
-# component that a host process (Android app / desktop launcher) dlopens. The
-# old executable Main.cpp is not part of the library; a launcher target can be
-# added separately if a standalone process is wanted.
-add_library(FullServer SHARED
+# MobileGL_FullServer is delivered as a SHARED library (.so), following the
+# MobileGL_* library naming (libMobileGL_FullServer.so). The BigServer host is
+# a component that a host process (Android app / desktop launcher) dlopens.
+add_library(MobileGL_FullServer SHARED
     BackendHost.cpp
     BackendPluginLoader.cpp
     UtilRuntimeLoader.cpp
     ServerCore.cpp
 )
 
-target_link_libraries(FullServer PRIVATE
+target_link_libraries(MobileGL_FullServer PRIVATE
     MobileGL_Protocol
     MobileGL_BFA
     MobileGL_RuntimeApi
     MobileGL_Transport
 )
 
-target_include_directories(FullServer PRIVATE
+target_include_directories(MobileGL_FullServer PRIVATE
     ${CMAKE_SOURCE_DIR}/MobileGL
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/3rdparty/SPIRV-Reflect
 )
 
-set_target_properties(FullServer PROPERTIES
-    PREFIX ""
-    SUFFIX ".so"
-)
-
 if (UNIX AND NOT APPLE AND NOT ANDROID)
-    target_link_libraries(FullServer PRIVATE ${CMAKE_DL_LIBS})
+    target_link_libraries(MobileGL_FullServer PRIVATE ${CMAKE_DL_LIBS})
 endif()
 
 # End of File
