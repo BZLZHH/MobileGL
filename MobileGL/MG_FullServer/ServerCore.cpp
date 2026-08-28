@@ -179,6 +179,15 @@ namespace MobileGL::FullServer {
                                         data);
                 status = 0;
             }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glMemoryBarrier) &&
+                   m_vtable->MemoryBarrier != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else {
+                const auto* mb = command->memory_barrier();
+                m_vtable->MemoryBarrier(m_backend, sessionId, mb == nullptr ? 0 : mb->barriers());
+                status = 0;
+            }
         }
 
         for (auto& handle : receivedShm) {

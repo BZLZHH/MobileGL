@@ -32,6 +32,9 @@ struct DrawElementsBuilder;
 struct BufferSubData;
 struct BufferSubDataBuilder;
 
+struct MemoryBarrier;
+struct MemoryBarrierBuilder;
+
 struct DataBlob;
 struct DataBlobBuilder;
 
@@ -354,6 +357,48 @@ inline ::flatbuffers::Offset<BufferSubData> CreateBufferSubData(
   return builder_.Finish();
 }
 
+struct MemoryBarrier FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef MemoryBarrierBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_BARRIERS = 4
+  };
+  uint32_t barriers() const {
+    return GetField<uint32_t>(VT_BARRIERS, 0);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint32_t>(verifier, VT_BARRIERS, 4) &&
+           verifier.EndTable();
+  }
+};
+
+struct MemoryBarrierBuilder {
+  typedef MemoryBarrier Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_barriers(uint32_t barriers) {
+    fbb_.AddElement<uint32_t>(MemoryBarrier::VT_BARRIERS, barriers, 0);
+  }
+  explicit MemoryBarrierBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<MemoryBarrier> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<MemoryBarrier>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<MemoryBarrier> CreateMemoryBarrier(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint32_t barriers = 0) {
+  MemoryBarrierBuilder builder_(_fbb);
+  builder_.add_barriers(barriers);
+  return builder_.Finish();
+}
+
 struct DataBlob FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef DataBlobBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
@@ -417,7 +462,8 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_DRAW_ARRAYS = 14,
     VT_DRAW_ELEMENTS = 16,
     VT_BUFFER_SUB_DATA = 18,
-    VT_DATA = 20
+    VT_MEMORY_BARRIER = 20,
+    VT_DATA = 22
   };
   uint32_t opcode() const {
     return GetField<uint32_t>(VT_OPCODE, 0);
@@ -443,6 +489,9 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   const MobileGL::Protocol::Wire::BufferSubData *buffer_sub_data() const {
     return GetPointer<const MobileGL::Protocol::Wire::BufferSubData *>(VT_BUFFER_SUB_DATA);
   }
+  const MobileGL::Protocol::Wire::MemoryBarrier *memory_barrier() const {
+    return GetPointer<const MobileGL::Protocol::Wire::MemoryBarrier *>(VT_MEMORY_BARRIER);
+  }
   const MobileGL::Protocol::Wire::DataBlob *data() const {
     return GetPointer<const MobileGL::Protocol::Wire::DataBlob *>(VT_DATA);
   }
@@ -462,6 +511,8 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            verifier.VerifyTable(draw_elements()) &&
            VerifyOffset(verifier, VT_BUFFER_SUB_DATA) &&
            verifier.VerifyTable(buffer_sub_data()) &&
+           VerifyOffset(verifier, VT_MEMORY_BARRIER) &&
+           verifier.VerifyTable(memory_barrier()) &&
            VerifyOffset(verifier, VT_DATA) &&
            verifier.VerifyTable(data()) &&
            verifier.EndTable();
@@ -496,6 +547,9 @@ struct CommandBuilder {
   void add_buffer_sub_data(::flatbuffers::Offset<MobileGL::Protocol::Wire::BufferSubData> buffer_sub_data) {
     fbb_.AddOffset(Command::VT_BUFFER_SUB_DATA, buffer_sub_data);
   }
+  void add_memory_barrier(::flatbuffers::Offset<MobileGL::Protocol::Wire::MemoryBarrier> memory_barrier) {
+    fbb_.AddOffset(Command::VT_MEMORY_BARRIER, memory_barrier);
+  }
   void add_data(::flatbuffers::Offset<MobileGL::Protocol::Wire::DataBlob> data) {
     fbb_.AddOffset(Command::VT_DATA, data);
   }
@@ -520,11 +574,13 @@ inline ::flatbuffers::Offset<Command> CreateCommand(
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::DrawArrays> draw_arrays = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::DrawElements> draw_elements = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::BufferSubData> buffer_sub_data = 0,
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::MemoryBarrier> memory_barrier = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::DataBlob> data = 0) {
   CommandBuilder builder_(_fbb);
   builder_.add_token(token);
   builder_.add_session_id(session_id);
   builder_.add_data(data);
+  builder_.add_memory_barrier(memory_barrier);
   builder_.add_buffer_sub_data(buffer_sub_data);
   builder_.add_draw_elements(draw_elements);
   builder_.add_draw_arrays(draw_arrays);

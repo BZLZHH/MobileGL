@@ -48,6 +48,9 @@ namespace MobileGL::Client {
     Bool SendBufferSubData(Uint64 sessionId, uint64_t bufferHandle, uint64_t offset,
                            uint64_t size, MobileGLShmHandle* shm, Uint64 token);
 
+    // Sends a typed glMemoryBarrier command (awaits response).
+    Bool SendMemoryBarrier(Uint64 sessionId, uint32_t barriers, Uint64 token);
+
     // Submits a command without waiting for its response.
     Bool SubmitCommand(Uint32 sessionId, Uint32 opcode, Uint64 token);
 

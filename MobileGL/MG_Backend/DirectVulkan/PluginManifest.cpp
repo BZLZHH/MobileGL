@@ -49,6 +49,13 @@ namespace {
         (void)alpha;
     }
 
+    void MemoryBarrierBackend(MobileGLBackend* self, MobileGLSessionId session,
+                              uint32_t barriers) {
+        (void)self;
+        (void)session;
+        (void)barriers;
+    }
+
     void DrawElementsBackend(MobileGLBackend* self, MobileGLSessionId session,
                              uint32_t mode, int32_t count, uint32_t type, const void* indices) {
         (void)self;
@@ -135,7 +142,8 @@ namespace {
         .ClearColor = &ClearColorBackend,
         .DrawArrays = &DrawArraysBackend,
         .DrawElements = &DrawElementsBackend,
-        .BufferSubData = &BufferSubDataBackend
+        .BufferSubData = &BufferSubDataBackend,
+        .MemoryBarrier = &MemoryBarrierBackend
     };
 
     const MobileGLBackendVTable* GetBackendVTable() {

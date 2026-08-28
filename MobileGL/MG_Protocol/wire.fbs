@@ -41,6 +41,10 @@ table BufferSubData {
     size: ulong;
 }
 
+table MemoryBarrier {
+    barriers: uint;
+}
+
 table DataBlob {
     offset: ulong;
     size: ulong;
@@ -55,6 +59,7 @@ table Command {
     draw_arrays: DrawArrays;
     draw_elements: DrawElements;
     buffer_sub_data: BufferSubData;
+    memory_barrier: MemoryBarrier;
     data: DataBlob;
 }
 
