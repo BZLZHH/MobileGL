@@ -276,8 +276,19 @@ class Command(object):
             return obj
         return None
 
+    # Command
+    def DrawRangeElements(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(52))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from MobileGL.Protocol.Wire.DrawRangeElements import DrawRangeElements
+            obj = DrawRangeElements()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
 def CommandStart(builder):
-    builder.StartObject(24)
+    builder.StartObject(25)
 
 def Start(builder):
     CommandStart(builder)
@@ -425,6 +436,12 @@ def CommandAddDrawElementsInstanced(builder, drawElementsInstanced):
 
 def AddDrawElementsInstanced(builder, drawElementsInstanced):
     CommandAddDrawElementsInstanced(builder, drawElementsInstanced)
+
+def CommandAddDrawRangeElements(builder, drawRangeElements):
+    builder.PrependUOffsetTRelativeSlot(24, flatbuffers.number_types.UOffsetTFlags.py_type(drawRangeElements), 0)
+
+def AddDrawRangeElements(builder, drawRangeElements):
+    CommandAddDrawRangeElements(builder, drawRangeElements)
 
 def CommandEnd(builder):
     return builder.EndObject()

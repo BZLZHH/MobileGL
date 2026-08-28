@@ -631,6 +631,36 @@ namespace MobileGL::Client {
         return WaitResponseForToken(token, 0);
     }
 
+    Bool SendDrawRangeElements(Uint64 sessionId, uint32_t mode, uint32_t start, uint32_t end,
+                               int32_t count, uint32_t type, uint64_t shmOffset,
+                               MobileGLShmHandle* shm, Uint64 token) {
+        if (!s_initialized || s_transport == nullptr || s_ops == nullptr || shm == nullptr) {
+            s_lastError = "Client is not initialized or shm missing.";
+            return false;
+        }
+        flatbuffers::FlatBufferBuilder builder;
+        const auto dre = MobileGL::Protocol::Wire::CreateDrawRangeElements(
+            builder, mode, start, end, count, type, shmOffset);
+        const auto command = MobileGL::Protocol::Wire::CreateCommand(
+            builder,
+            static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glDrawRangeElements),
+            sessionId, token, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, dre);
+        const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 1);
+        builder.Finish(message);
+
+        MobileGLCommandBatch batch{};
+        batch.structSize = sizeof(MobileGLCommandBatch);
+        batch.flatBufferData = builder.GetBufferPointer();
+        batch.flatBufferSize = static_cast<Uint32>(builder.GetSize());
+        batch.shmHandleCount = 1;
+        batch.shmHandles = shm;
+        if (!s_ops->SubmitCommands(s_transport, &batch)) {
+            s_lastError = s_ops->GetLastError(s_transport);
+            return false;
+        }
+        return WaitResponseForToken(token, 0);
+    }
+
     Bool SubmitCommand(Uint32 sessionId, Uint32 opcode, Uint64 token) {
         return SubmitDataCommand(sessionId, opcode, token, 0, 0, nullptr);
     }

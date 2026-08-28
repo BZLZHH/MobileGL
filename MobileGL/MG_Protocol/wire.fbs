@@ -125,6 +125,15 @@ table DrawElementsInstanced {
     instance_count: int;
 }
 
+table DrawRangeElements {
+    mode: uint;
+    start: uint;
+    end: uint;
+    count: int;
+    type: uint;
+    indices_offset: ulong;
+}
+
 table DataBlob {
     offset: ulong;
     size: ulong;
@@ -155,6 +164,7 @@ table Command {
     wait_sync: WaitSync;
     draw_arrays_instanced: DrawArraysInstanced;
     draw_elements_instanced: DrawElementsInstanced;
+    draw_range_elements: DrawRangeElements;
 }
 
 table Message {

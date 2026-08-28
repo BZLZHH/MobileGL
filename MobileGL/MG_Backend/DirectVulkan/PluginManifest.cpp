@@ -167,6 +167,19 @@ namespace {
         (void)instanceCount;
     }
 
+    void DrawRangeElementsBackend(MobileGLBackend* self, MobileGLSessionId session,
+                                  uint32_t mode, uint32_t start, uint32_t end,
+                                  int32_t count, uint32_t type, const void* indices) {
+        (void)self;
+        (void)session;
+        (void)mode;
+        (void)start;
+        (void)end;
+        (void)count;
+        (void)type;
+        (void)indices;
+    }
+
     void BufferSubDataBackend(MobileGLBackend* self, MobileGLSessionId session,
                               MobileGLBackendHandle buffer, uint64_t offset, uint64_t size,
                               const void* data) {
@@ -263,6 +276,7 @@ namespace {
         .DrawArraysInstanced = &DrawArraysInstancedBackend,
         .DrawElements = &DrawElementsBackend,
         .DrawElementsInstanced = &DrawElementsInstancedBackend,
+        .DrawRangeElements = &DrawRangeElementsBackend,
         .BufferSubData = &BufferSubDataBackend,
         .MemoryBarrier = &MemoryBarrierBackend,
         .MemoryBarrierByRegion = &MemoryBarrierByRegionBackend,

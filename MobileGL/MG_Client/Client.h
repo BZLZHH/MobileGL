@@ -109,6 +109,11 @@ namespace MobileGL::Client {
                                    uint64_t shmOffset, int32_t instanceCount,
                                    MobileGLShmHandle* shm, Uint64 token);
 
+    // Sends a typed glDrawRangeElements command whose indices come from shared memory.
+    Bool SendDrawRangeElements(Uint64 sessionId, uint32_t mode, uint32_t start, uint32_t end,
+                               int32_t count, uint32_t type, uint64_t shmOffset,
+                               MobileGLShmHandle* shm, Uint64 token);
+
     // Submits a command without waiting for its response.
     Bool SubmitCommand(Uint32 sessionId, Uint32 opcode, Uint64 token);
 
