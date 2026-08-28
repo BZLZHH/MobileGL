@@ -31,6 +31,23 @@ from MobileGL.Protocol.Wire import Command, GlClear, Message, Response
 
 # MobileGLOpcode::glClear from generated_opcodes.h
 GLCLEAR_OPCODE = 115
+SESSION_ID = 5
+SESSION_CREATE = 1_000_000
+SESSION_DESTROY = 1_000_001
+
+
+def build_control_message(session: int, opcode: int, token: int) -> bytes:
+    builder = flatbuffers.Builder(0)
+    Command.CommandStart(builder)
+    Command.CommandAddOpcode(builder, opcode)
+    Command.CommandAddSessionId(builder, session)
+    Command.CommandAddToken(builder, token)
+    command_off = Command.CommandEnd(builder)
+    Message.MessageStart(builder)
+    Message.MessageAddCommand(builder, command_off)
+    message_off = Message.MessageEnd(builder)
+    builder.Finish(message_off)
+    return bytes(builder.Output())
 
 
 def build_clear_message(session: int, token: int) -> bytes:
@@ -49,6 +66,18 @@ def build_clear_message(session: int, token: int) -> bytes:
     message_off = Message.MessageEnd(builder)
     builder.Finish(message_off)
     return bytes(builder.Output())
+
+
+def roundtrip(sock: socket.socket, payload: bytes) -> Response.Response:
+    sock.sendall(struct.pack("<I", len(payload)) + payload)
+    header = b""
+    while len(header) < 4:
+        header += sock.recv(4 - len(header))
+    size = struct.unpack("<I", header)[0]
+    data = b""
+    while len(data) < size:
+        data += sock.recv(size - len(data))
+    return Response.Response.GetRootAs(data, 0)
 
 
 def main() -> int:
@@ -88,7 +117,7 @@ def main() -> int:
     result = {}
     def server():
         result["code"] = lib.mobilegl_fullserver_run_socket(handle, endpoint.encode(),
-                                                            args.iterations)
+                                                            args.iterations + 2)
 
     thread = threading.Thread(target=server)
     thread.start()
@@ -105,24 +134,26 @@ def main() -> int:
     sock.settimeout(30)
     sock.connect(endpoint)
 
+    # Session lifecycle: create before, destroy after the measured commands.
+    created = roundtrip(sock, build_control_message(SESSION_ID, SESSION_CREATE, 9000))
+    if created.Status() != 0:
+        print("session create failed", file=sys.stderr)
+        return 1
+
     latencies = []
     for i in range(args.iterations):
-        payload = build_clear_message(i, i)
+        payload = build_clear_message(SESSION_ID, i)
         started = time.perf_counter_ns()
-        sock.sendall(struct.pack("<I", len(payload)) + payload)
-
-        header = b""
-        while len(header) < 4:
-            header += sock.recv(4 - len(header))
-        size = struct.unpack("<I", header)[0]
-        data = b""
-        while len(data) < size:
-            data += sock.recv(size - len(data))
-        response = Response.Response.GetRootAs(data, 0)
+        response = roundtrip(sock, payload)
         if response.Status() != 0:
             print(f"command {i} failed with status {response.Status()}", file=sys.stderr)
             return 1
         latencies.append(time.perf_counter_ns() - started)
+
+    destroyed = roundtrip(sock, build_control_message(SESSION_ID, SESSION_DESTROY, 9001))
+    if destroyed.Status() != 0:
+        print("session destroy failed", file=sys.stderr)
+        return 1
 
     sock.close()
     thread.join()

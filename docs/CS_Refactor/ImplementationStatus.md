@@ -115,7 +115,7 @@
 ## Phase 6 — 正确性 / 性能 / 平台
 
 - [x] 多 Session / 多 Display / share group 回归：`ContextRegistryTest` 6/6 通过（含跨 session 对象可见性、不同 Display 分组隔离）
-- [x] **命令往返基准**：`scripts/bench_cs_e2e.py`（Python FlatBuffers → socket → FullServer.so → backend），100 次往返 avg 28.5µs / min 24.5µs / max 67.7µs（null backend）
+- [x] **命令往返基准**：`scripts/bench_cs_e2e.py`（Python FlatBuffers → socket → FullServer.so → backend），含 SessionCreate/Destroy 生命周期，100 次往返 avg 30.5µs / min 25.2µs / max 107.5µs（null backend）
 - [ ] 命令批处理、零拷贝 benchmark（shm payload 传输）
 - [ ] 平台 Surface：X11 → Win32 → Android Binder
 
