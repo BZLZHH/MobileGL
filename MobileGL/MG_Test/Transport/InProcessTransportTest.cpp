@@ -132,6 +132,48 @@ namespace MobileGL::Transport {
         DestroyLocalSocketShmTransport(server);
         unlink(endpoint);
     }
+
+    TEST(InProcessTransportTest, LocalSocketShmAllocatesSharedMemory) {
+        const char* endpoint = "/tmp/mobilegl_transport_shm_test.sock";
+        unlink(endpoint);
+
+        MobileGLTransport* server = CreateLocalSocketShmServer(endpoint);
+        ASSERT_NE(server, nullptr);
+
+        MobileGLTransport* client = CreateLocalSocketShmTransport();
+        ASSERT_NE(client, nullptr);
+        const MobileGLTransportOps& ops = GetLocalSocketShmTransportOps();
+
+        MobileGLTransportConfig config{};
+        config.structSize = sizeof(MobileGLTransportConfig);
+        config.kind = MobileGLTransportKindLocalSocketShm;
+        config.endpoint = endpoint;
+        config.maxShmArenaSize = 1024 * 1024;
+        config.timeoutMs = 0;
+        ASSERT_TRUE(ops.Start(client, &config));
+
+        MobileGLTransport* accepted = AcceptLocalSocketShmConnection(server);
+        ASSERT_NE(accepted, nullptr);
+
+        MobileGLShmHandle shm{};
+        ASSERT_TRUE(ops.OpenSharedMemory(client, &shm));
+        EXPECT_GT(shm.size, 0u);
+        EXPECT_GT(shm.capacity, 0u);
+        EXPECT_NE(shm.mappedAddress, nullptr);
+        EXPECT_GT(shm.platformHandle, 0);
+
+        auto* bytes = static_cast<Uint8*>(shm.mappedAddress);
+        bytes[0] = 0xAB;
+        EXPECT_EQ(bytes[0], 0xAB);
+
+        ops.ReleaseSharedMemory(client, &shm);
+        EXPECT_EQ(shm.mappedAddress, nullptr);
+
+        DestroyLocalSocketShmTransport(accepted);
+        DestroyLocalSocketShmTransport(client);
+        DestroyLocalSocketShmTransport(server);
+        unlink(endpoint);
+    }
 } // namespace MobileGL::Transport
 
 // End of File

@@ -10,6 +10,7 @@
 #include "MG_Transport/TransportInternal.h"
 
 #if defined(__linux__) || defined(__APPLE__) || defined(__ANDROID__)
+#include <sys/mman.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
@@ -82,6 +83,7 @@ namespace MobileGL::Transport {
                 }
 
                 m_socketFd = fd;
+                m_maxShmArenaSize = cfg->maxShmArenaSize;
                 m_lastError.clear();
                 return true;
 #endif
@@ -217,14 +219,54 @@ namespace MobileGL::Transport {
             }
 
             Bool OpenSharedMemory(MobileGLShmHandle* out) {
+                if (out == nullptr || m_socketFd < 0 || m_maxShmArenaSize == 0) {
+                    m_lastError = "OpenSharedMemory requires a connected transport and arena size.";
+                    return false;
+                }
+#if defined(__linux__)
+                const int fd = memfd_create("mobilegl_shm", MFD_CLOEXEC);
+                if (fd < 0 || ftruncate(fd, m_maxShmArenaSize) != 0) {
+                    if (fd >= 0) close(fd);
+                    m_lastError = "memfd_create/ftruncate failed.";
+                    return false;
+                }
+                auto* address = mmap(nullptr, m_maxShmArenaSize, PROT_READ | PROT_WRITE,
+                                     MAP_SHARED, fd, 0);
+                if (address == MAP_FAILED) {
+                    close(fd);
+                    m_lastError = "mmap failed.";
+                    return false;
+                }
+
+                *out = MobileGLShmHandle{};
+                out->structSize = sizeof(MobileGLShmHandle);
+                out->platformHandle = fd;
+                out->offset = 0;
+                out->size = m_maxShmArenaSize;
+                out->capacity = m_maxShmArenaSize;
+                out->mappedAddress = address;
+                m_lastError.clear();
+                return true;
+#else
                 (void)out;
-                // TODO(Phase 4): receive the server arena fd via SCM_RIGHTS.
-                m_lastError = "OpenSharedMemory not implemented yet.";
+                m_lastError = "OpenSharedMemory is not implemented on this platform.";
                 return false;
+#endif
             }
 
             void ReleaseSharedMemory(MobileGLShmHandle* handle) {
-                (void)handle;
+                if (handle == nullptr) {
+                    return;
+                }
+#if defined(__linux__)
+                if (handle->mappedAddress != nullptr) {
+                    munmap(handle->mappedAddress, handle->size);
+                }
+                if (handle->platformHandle >= 0) {
+                    close(static_cast<int>(handle->platformHandle));
+                }
+#endif
+                *handle = MobileGLShmHandle{};
             }
 
             const char* GetLastError() const {
@@ -234,6 +276,7 @@ namespace MobileGL::Transport {
         private:
             Int32 m_socketFd = -1;
             Int32 m_serverFd = -1;
+            Uint32 m_maxShmArenaSize = 0;
             String m_serverEndpoint;
             Vector<Uint8> m_received;
             String m_lastError;
