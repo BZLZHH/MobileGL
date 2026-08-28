@@ -9,6 +9,7 @@
 #include <Includes.h>
 #include <gtest/gtest.h>
 #include "MG_FullServer/ServerCore.h"
+#include "MG_Protocol/generated_opcodes.h"
 #include "MG_Protocol/transport.h"
 #include "MG_Transport/InProcessTransport.h"
 
@@ -58,7 +59,7 @@ namespace MobileGL::Transport {
         ASSERT_TRUE(core.Start());
 
         MobileGL::FullServer::CommandHeader command{};
-        command.Opcode = 1;
+        command.Opcode = static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glClear);
         command.SessionId = 42;
         MobileGLCommandBatch batch{};
         batch.structSize = sizeof(MobileGLCommandBatch);

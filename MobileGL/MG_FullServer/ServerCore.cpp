@@ -7,6 +7,7 @@
 // End of Source File Header
 
 #include "ServerCore.h"
+#include "MG_Protocol/generated_opcodes.h"
 
 namespace MobileGL::FullServer {
     ServerCore::ServerCore(const MobileGLTransportOps* ops, MobileGLTransport* transport,
@@ -45,8 +46,9 @@ namespace MobileGL::FullServer {
         memcpy(&header, in.flatBufferData, sizeof(CommandHeader));
 
         uint32_t status = 1;
-        // Opcode 1 = GlClear (minimal command set for the E2E smoke test).
-        if (header.Opcode == 1 && m_vtable->Clear != nullptr) {
+        // Dispatch by the generated opcode table (Phase 4).
+        if (header.Opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glClear) &&
+            m_vtable->Clear != nullptr) {
             m_vtable->Clear(m_backend, header.SessionId, 0);
             status = 0;
         }

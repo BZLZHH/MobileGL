@@ -88,6 +88,7 @@
 - [x] `MobileGL/MG_FullServer/Main.cpp` — 启动流程接线（UtilRuntime→BackendPlugin→Create→Initialize→Shutdown）
 - [x] **插件生命周期链路（组件级验证）**：`UtilRuntimeLoader` / `BackendPluginLoader` / `ServerCore` 在 `libMobileGL_FullServer.so` 内编译通过；`BigServerE2ETest` 覆盖 Create→Initialize→command dispatch→Shutdown
 - [x] **BigServer 全链路 E2E（in-process）**：Client 命令 → InProcessTransport → `FullServer::ServerCore` → Backend VTable → Response → Client；`BigServerE2ETest` 1/1 通过
+- [x] ServerCore 分发改为使用生成 opcode 表（`MobileGLOpcode::glClear`），BigServerE2E 通过
 - [ ] BigServer 全链路 E2E（socket transport + FlatBuffers 解码）
 
 ## Phase 6 — 正确性 / 性能 / 平台
