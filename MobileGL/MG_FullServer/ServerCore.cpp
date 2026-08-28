@@ -163,6 +163,22 @@ namespace MobileGL::FullServer {
                                        indices);
                 status = 0;
             }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glBufferSubData) &&
+                   m_vtable->BufferSubData != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else {
+                const auto* bs = command->buffer_sub_data();
+                const void* data = receivedShm.empty() || receivedShm[0].mappedAddress == nullptr
+                                       ? nullptr
+                                       : receivedShm[0].mappedAddress;
+                m_vtable->BufferSubData(m_backend, sessionId,
+                                        bs == nullptr ? 0 : bs->buffer_handle(),
+                                        bs == nullptr ? 0 : bs->offset(),
+                                        bs == nullptr ? 0 : bs->size(),
+                                        data);
+                status = 0;
+            }
         }
 
         for (auto& handle : receivedShm) {

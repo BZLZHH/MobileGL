@@ -35,6 +35,12 @@ table DrawElements {
     indices_offset: ulong;
 }
 
+table BufferSubData {
+    buffer_handle: ulong;
+    offset: ulong;
+    size: ulong;
+}
+
 table DataBlob {
     offset: ulong;
     size: ulong;
@@ -48,6 +54,7 @@ table Command {
     clear_color: ClearColor;
     draw_arrays: DrawArrays;
     draw_elements: DrawElements;
+    buffer_sub_data: BufferSubData;
     data: DataBlob;
 }
 

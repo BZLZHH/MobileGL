@@ -44,6 +44,10 @@ namespace MobileGL::Client {
     Bool SendDrawElements(Uint64 sessionId, uint32_t mode, int32_t count, uint32_t type,
                           uint64_t shmOffset, MobileGLShmHandle* shm, Uint64 token);
 
+    // Sends a typed glBufferSubData command whose data comes from shared memory.
+    Bool SendBufferSubData(Uint64 sessionId, uint64_t bufferHandle, uint64_t offset,
+                           uint64_t size, MobileGLShmHandle* shm, Uint64 token);
+
     // Submits a command without waiting for its response.
     Bool SubmitCommand(Uint32 sessionId, Uint32 opcode, Uint64 token);
 

@@ -68,6 +68,17 @@ namespace {
         (void)indices;
     }
 
+    void BufferSubDataBackend(MobileGLBackend* self, MobileGLSessionId session,
+                              MobileGLBackendHandle buffer, uint64_t offset, uint64_t size,
+                              const void* data) {
+        (void)self;
+        (void)session;
+        (void)buffer;
+        (void)offset;
+        (void)size;
+        (void)data;
+    }
+
     bool OnSessionCreatedBackend(MobileGLBackend* self, MobileGLSessionId session,
                                  const MobileGLBackendInitInfo* info) {
         (void)self;
@@ -123,7 +134,8 @@ namespace {
         .Clear = &ClearBackend,
         .ClearColor = &ClearColorBackend,
         .DrawArrays = &DrawArraysBackend,
-        .DrawElements = &DrawElementsBackend
+        .DrawElements = &DrawElementsBackend,
+        .BufferSubData = &BufferSubDataBackend
     };
 
     const MobileGLBackendVTable* GetBackendVTable() {
