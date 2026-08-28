@@ -14,8 +14,15 @@
 #include "ShaderPreprocessCache.h"
 
 namespace MobileGL::MG_State::GLState {
+    class SharedProgramObjectTable;
+
     class ProgramState {
     public:
+        ProgramState() = default;
+
+        void SetSharedObjectTable(const SharedPtr<SharedProgramObjectTable>& table) { m_sharedObjectTable = table; }
+        const SharedPtr<SharedProgramObjectTable>& GetSharedObjectTable() const { return m_sharedObjectTable; }
+
         // This function WILL actually create the program object.
         // To retrieve created program object, use GetProgramObject()
         Uint CreateProgram();
@@ -94,6 +101,7 @@ namespace MobileGL::MG_State::GLState {
         // no worker ever sees this one, which is why it carries no lock.
         SharedPtr<ShaderCompileAdoptionMap> m_shaderCompileAdoptionMap = MakeShared<ShaderCompileAdoptionMap>();
 
+        SharedPtr<SharedProgramObjectTable> m_sharedObjectTable;
         Vector<SharedPtr<ProgramObject>> m_programObjects;
         Vector<SharedPtr<ShaderObject>> m_shaderObjects;
 

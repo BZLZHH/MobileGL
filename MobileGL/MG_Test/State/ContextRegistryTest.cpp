@@ -94,6 +94,17 @@ namespace MobileGL::MG_State::GLState {
         const auto& seenVao = second->GetContext().GetVertexArrayObject(47);
         ASSERT_TRUE(seenVao);
         EXPECT_EQ(createdVao, seenVao);
+
+        // Program/shader name space is shared (one joint name generator), and
+        // the object tables are shared too.
+        const Uint programId = first->GetContext().CreateProgram();
+        ASSERT_NE(programId, 0u);
+        const auto& seenProgram = second->GetContext().GetProgramObject(programId);
+        ASSERT_TRUE(seenProgram);
+        const Uint shaderId = first->GetContext().CreateShader(ShaderStage::Vertex);
+        ASSERT_NE(shaderId, 0u);
+        const auto& seenShader = second->GetContext().GetShaderObject(shaderId);
+        ASSERT_TRUE(seenShader);
     }
 
     TEST(ContextRegistryTest, TracksCurrentSessionPerThread) {

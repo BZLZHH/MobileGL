@@ -70,6 +70,10 @@ namespace MobileGL::MG_State {
             m_vertexArrayState.SetSharedObjectTable(table);
         }
 
+        void GLContext::SetSharedProgramObjectTable(const SharedPtr<SharedProgramObjectTable>& table) {
+            m_programState.SetSharedObjectTable(table);
+        }
+
         Uint64 GLContext::GetObjectHandle(Uint32 objectKind, Uint32 glName) const {
             const auto kind = static_cast<MobileGLObjectKind>(objectKind);
             const Bool isSessionPrivate =

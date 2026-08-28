@@ -15,6 +15,7 @@
 #include "MG_State/GLState/RenderbufferState/RenderbufferState.h"
 #include "MG_State/GLState/FramebufferState/FramebufferState.h"
 #include "MG_State/GLState/VertexArrayState/VertexArrayState.h"
+#include "MG_State/GLState/ProgramState/ProgramState.h"
 #include <MG_Util/Miscellany/IndexGenerator.h>
 
 namespace MobileGL::MG_State::GLState {
@@ -202,6 +203,26 @@ namespace MobileGL::MG_State::GLState {
         IndexGenerator<Uint> m_indexGenerator;
     };
 
+    // Shared program/shader object table. Programs and shaders share one GL
+    // name space, so the table owns the joint name generator plus both object
+    // vectors. The current program and the per-context compile caches remain
+    // inside ProgramState.
+    class SharedProgramObjectTable {
+    public:
+        SharedProgramObjectTable() : m_programShaderNameGenerator(1024, 1) {}
+
+        Vector<SharedPtr<ProgramObject>>& GetProgramObjects() { return m_programObjects; }
+        const Vector<SharedPtr<ProgramObject>>& GetProgramObjects() const { return m_programObjects; }
+        Vector<SharedPtr<ShaderObject>>& GetShaderObjects() { return m_shaderObjects; }
+        const Vector<SharedPtr<ShaderObject>>& GetShaderObjects() const { return m_shaderObjects; }
+        IndexGenerator<Uint>& GetNameGenerator() { return m_programShaderNameGenerator; }
+
+    private:
+        Vector<SharedPtr<ProgramObject>> m_programObjects;
+        Vector<SharedPtr<ShaderObject>> m_shaderObjects;
+        IndexGenerator<Uint> m_programShaderNameGenerator;
+    };
+
     class SharedObjectTables {
     public:
         SharedObjectTables() = default;
@@ -248,6 +269,13 @@ namespace MobileGL::MG_State::GLState {
             return m_sharedVertexArrayObjects;
         }
 
+        SharedPtr<SharedProgramObjectTable>& GetSharedProgramObjects() {
+            return m_sharedProgramObjects;
+        }
+        const SharedPtr<SharedProgramObjectTable>& GetSharedProgramObjects() const {
+            return m_sharedProgramObjects;
+        }
+
         // Legacy per-context states; kept until every object access is
         // routed through the GetShared*Objects() accessors.
         BufferState& GetBufferState() { return m_bufferState; }
@@ -260,6 +288,7 @@ namespace MobileGL::MG_State::GLState {
         SharedPtr<SharedRenderbufferObjectTable> m_sharedRenderbufferObjects = MakeShared<SharedRenderbufferObjectTable>();
         SharedPtr<SharedFramebufferObjectTable> m_sharedFramebufferObjects = MakeShared<SharedFramebufferObjectTable>();
         SharedPtr<SharedVertexArrayObjectTable> m_sharedVertexArrayObjects = MakeShared<SharedVertexArrayObjectTable>();
+        SharedPtr<SharedProgramObjectTable> m_sharedProgramObjects = MakeShared<SharedProgramObjectTable>();
         BufferState m_bufferState;
     };
 } // namespace MobileGL::MG_State::GLState
