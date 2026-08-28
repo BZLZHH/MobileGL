@@ -8,6 +8,7 @@
 
 add_library(MobileGL_Transport STATIC
     LocalSocketShmTransport.cpp
+    InProcessTransport.cpp
 )
 
 target_link_libraries(MobileGL_Transport PUBLIC

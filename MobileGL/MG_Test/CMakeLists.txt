@@ -70,6 +70,7 @@ add_subdirectory(Buffer)
 # rest on. No GL context, no driver: it only needs the allocator.
 add_subdirectory(State)
 add_subdirectory(EGLState)
+add_subdirectory(Transport)
 add_subdirectory(Framebuffer)
 add_subdirectory(Texture)
 add_subdirectory(VertexArray)

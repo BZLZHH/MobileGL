@@ -63,6 +63,9 @@
 ## Phase 4 — 外部协议落地（进行中）
 
 - [x] `MobileGL/Transport/LocalSocketShmTransport.h/.cpp` — v1 transport 骨架（AF_UNIX socket + 共享内存接收接口）
+- [x] `MobileGL/Transport/InProcessTransport.h/.cpp` — 同进程 transport 实现（client/server 配对 + 批消息队列）
+- [x] `MobileGL/Transport/TransportInternal.h` — 统一 `MobileGLTransport` 内部完成类型（避免 ODR 冲突）
+- [x] `MobileGL/MG_Test/Transport/InProcessTransportTest.cpp` — client→server→client 字节往来测试 1/1 通过
 - [x] `MobileGL/Transport/CMakeLists.txt` — `MobileGL_Transport` static library
 - [x] `scripts/generate_protocol_fbs.py` → `MobileGL/Protocol/protocol_generated.fbs`（2750 个 `Gl*` payload 表）
 - [ ] FlatBuffers codegen 合并进 `protocol.fbs`（trampoline / dispatch / opcode / 分类表）

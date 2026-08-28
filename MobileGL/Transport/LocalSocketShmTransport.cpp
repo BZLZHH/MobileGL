@@ -7,19 +7,13 @@
 // End of Source File Header
 
 #include "LocalSocketShmTransport.h"
+#include "Transport/TransportInternal.h"
 
 #if defined(__linux__) || defined(__APPLE__) || defined(__ANDROID__)
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
 #endif
-
-// The header declares MobileGLTransport as an opaque C type. This is the only
-// C++ implementation TU that completes the type; all other code must keep
-// using the opaque pointer from protocol/transport.h.
-struct MobileGLTransport {
-    void* Implementation = nullptr;
-};
 
 namespace MobileGL::Transport {
     namespace {
