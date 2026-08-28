@@ -362,6 +362,25 @@ namespace MobileGL::FullServer {
                                               dai == nullptr ? 0 : dai->primcount());
                 status = 0;
             }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glDrawElementsInstanced) &&
+                   m_vtable->DrawElementsInstanced != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else {
+                const auto* dei = command->draw_elements_instanced();
+                const void* indices = nullptr;
+                if (!receivedShm.empty() && receivedShm[0].mappedAddress != nullptr) {
+                    const auto* base = static_cast<const Uint8*>(receivedShm[0].mappedAddress);
+                    indices = base + (dei == nullptr ? 0 : dei->indices_offset());
+                }
+                m_vtable->DrawElementsInstanced(m_backend, sessionId,
+                                                dei == nullptr ? 0 : dei->mode(),
+                                                dei == nullptr ? 0 : dei->count(),
+                                                dei == nullptr ? 0 : dei->type(),
+                                                indices,
+                                                dei == nullptr ? 0 : dei->instance_count());
+                status = 0;
+            }
         }
 
         for (auto& handle : receivedShm) {

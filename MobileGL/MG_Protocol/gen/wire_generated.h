@@ -74,6 +74,9 @@ struct WaitSyncBuilder;
 struct DrawArraysInstanced;
 struct DrawArraysInstancedBuilder;
 
+struct DrawElementsInstanced;
+struct DrawElementsInstancedBuilder;
+
 struct DataBlob;
 struct DataBlobBuilder;
 
@@ -1184,6 +1187,88 @@ inline ::flatbuffers::Offset<DrawArraysInstanced> CreateDrawArraysInstanced(
   return builder_.Finish();
 }
 
+struct DrawElementsInstanced FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef DrawElementsInstancedBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_MODE = 4,
+    VT_COUNT = 6,
+    VT_TYPE = 8,
+    VT_INDICES_OFFSET = 10,
+    VT_INSTANCE_COUNT = 12
+  };
+  uint32_t mode() const {
+    return GetField<uint32_t>(VT_MODE, 0);
+  }
+  int32_t count() const {
+    return GetField<int32_t>(VT_COUNT, 0);
+  }
+  uint32_t type() const {
+    return GetField<uint32_t>(VT_TYPE, 0);
+  }
+  uint64_t indices_offset() const {
+    return GetField<uint64_t>(VT_INDICES_OFFSET, 0);
+  }
+  int32_t instance_count() const {
+    return GetField<int32_t>(VT_INSTANCE_COUNT, 0);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint32_t>(verifier, VT_MODE, 4) &&
+           VerifyField<int32_t>(verifier, VT_COUNT, 4) &&
+           VerifyField<uint32_t>(verifier, VT_TYPE, 4) &&
+           VerifyField<uint64_t>(verifier, VT_INDICES_OFFSET, 8) &&
+           VerifyField<int32_t>(verifier, VT_INSTANCE_COUNT, 4) &&
+           verifier.EndTable();
+  }
+};
+
+struct DrawElementsInstancedBuilder {
+  typedef DrawElementsInstanced Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_mode(uint32_t mode) {
+    fbb_.AddElement<uint32_t>(DrawElementsInstanced::VT_MODE, mode, 0);
+  }
+  void add_count(int32_t count) {
+    fbb_.AddElement<int32_t>(DrawElementsInstanced::VT_COUNT, count, 0);
+  }
+  void add_type(uint32_t type) {
+    fbb_.AddElement<uint32_t>(DrawElementsInstanced::VT_TYPE, type, 0);
+  }
+  void add_indices_offset(uint64_t indices_offset) {
+    fbb_.AddElement<uint64_t>(DrawElementsInstanced::VT_INDICES_OFFSET, indices_offset, 0);
+  }
+  void add_instance_count(int32_t instance_count) {
+    fbb_.AddElement<int32_t>(DrawElementsInstanced::VT_INSTANCE_COUNT, instance_count, 0);
+  }
+  explicit DrawElementsInstancedBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<DrawElementsInstanced> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<DrawElementsInstanced>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<DrawElementsInstanced> CreateDrawElementsInstanced(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint32_t mode = 0,
+    int32_t count = 0,
+    uint32_t type = 0,
+    uint64_t indices_offset = 0,
+    int32_t instance_count = 0) {
+  DrawElementsInstancedBuilder builder_(_fbb);
+  builder_.add_indices_offset(indices_offset);
+  builder_.add_instance_count(instance_count);
+  builder_.add_type(type);
+  builder_.add_count(count);
+  builder_.add_mode(mode);
+  return builder_.Finish();
+}
+
 struct DataBlob FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef DataBlobBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
@@ -1261,7 +1346,8 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_FENCE_SYNC = 42,
     VT_DELETE_SYNC = 44,
     VT_WAIT_SYNC = 46,
-    VT_DRAW_ARRAYS_INSTANCED = 48
+    VT_DRAW_ARRAYS_INSTANCED = 48,
+    VT_DRAW_ELEMENTS_INSTANCED = 50
   };
   uint32_t opcode() const {
     return GetField<uint32_t>(VT_OPCODE, 0);
@@ -1332,6 +1418,9 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   const MobileGL::Protocol::Wire::DrawArraysInstanced *draw_arrays_instanced() const {
     return GetPointer<const MobileGL::Protocol::Wire::DrawArraysInstanced *>(VT_DRAW_ARRAYS_INSTANCED);
   }
+  const MobileGL::Protocol::Wire::DrawElementsInstanced *draw_elements_instanced() const {
+    return GetPointer<const MobileGL::Protocol::Wire::DrawElementsInstanced *>(VT_DRAW_ELEMENTS_INSTANCED);
+  }
   template <bool B = false>
   bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -1378,6 +1467,8 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            verifier.VerifyTable(wait_sync()) &&
            VerifyOffset(verifier, VT_DRAW_ARRAYS_INSTANCED) &&
            verifier.VerifyTable(draw_arrays_instanced()) &&
+           VerifyOffset(verifier, VT_DRAW_ELEMENTS_INSTANCED) &&
+           verifier.VerifyTable(draw_elements_instanced()) &&
            verifier.EndTable();
   }
 };
@@ -1455,6 +1546,9 @@ struct CommandBuilder {
   void add_draw_arrays_instanced(::flatbuffers::Offset<MobileGL::Protocol::Wire::DrawArraysInstanced> draw_arrays_instanced) {
     fbb_.AddOffset(Command::VT_DRAW_ARRAYS_INSTANCED, draw_arrays_instanced);
   }
+  void add_draw_elements_instanced(::flatbuffers::Offset<MobileGL::Protocol::Wire::DrawElementsInstanced> draw_elements_instanced) {
+    fbb_.AddOffset(Command::VT_DRAW_ELEMENTS_INSTANCED, draw_elements_instanced);
+  }
   explicit CommandBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -1490,10 +1584,12 @@ inline ::flatbuffers::Offset<Command> CreateCommand(
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::FenceSync> fence_sync = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::DeleteSync> delete_sync = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::WaitSync> wait_sync = 0,
-    ::flatbuffers::Offset<MobileGL::Protocol::Wire::DrawArraysInstanced> draw_arrays_instanced = 0) {
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::DrawArraysInstanced> draw_arrays_instanced = 0,
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::DrawElementsInstanced> draw_elements_instanced = 0) {
   CommandBuilder builder_(_fbb);
   builder_.add_token(token);
   builder_.add_session_id(session_id);
+  builder_.add_draw_elements_instanced(draw_elements_instanced);
   builder_.add_draw_arrays_instanced(draw_arrays_instanced);
   builder_.add_wait_sync(wait_sync);
   builder_.add_delete_sync(delete_sync);

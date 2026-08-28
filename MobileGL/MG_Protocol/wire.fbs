@@ -117,6 +117,14 @@ table DrawArraysInstanced {
     primcount: int;
 }
 
+table DrawElementsInstanced {
+    mode: uint;
+    count: int;
+    type: uint;
+    indices_offset: ulong;
+    instance_count: int;
+}
+
 table DataBlob {
     offset: ulong;
     size: ulong;
@@ -146,6 +154,7 @@ table Command {
     delete_sync: DeleteSync;
     wait_sync: WaitSync;
     draw_arrays_instanced: DrawArraysInstanced;
+    draw_elements_instanced: DrawElementsInstanced;
 }
 
 table Message {
