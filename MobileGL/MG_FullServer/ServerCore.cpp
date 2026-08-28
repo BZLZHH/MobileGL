@@ -53,6 +53,7 @@ namespace MobileGL::FullServer {
         const auto* command = message->command();
 
         uint32_t dataByte = 0;
+        uint64_t syncHandle = 0;
         Vector<MobileGLShmHandle> receivedShm;
         const uint32_t shmCount = message->shm_count();
         if (shmCount > 0) {
@@ -314,6 +315,18 @@ namespace MobileGL::FullServer {
                                                   dci == nullptr ? 0 : dci->indirect_offset());
                 status = 0;
             }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glFenceSync) &&
+                   m_vtable->FenceSync != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else {
+                const auto* fs = command->fence_sync();
+                void* sync = m_vtable->FenceSync(m_backend, sessionId,
+                                                 fs == nullptr ? 0 : fs->condition(),
+                                                 fs == nullptr ? 0 : fs->flags());
+                syncHandle = reinterpret_cast<uint64_t>(sync);
+                status = 0;
+            }
         }
 
         for (auto& handle : receivedShm) {
@@ -322,7 +335,8 @@ namespace MobileGL::FullServer {
 
         flatbuffers::FlatBufferBuilder responseBuilder;
         const auto response = MobileGL::Protocol::Wire::CreateResponse(responseBuilder, status,
-                                                                       command->token(), dataByte);
+                                                                       command->token(), dataByte,
+                                                                       syncHandle);
         responseBuilder.Finish(response);
 
         MobileGLCommandBatch out{};

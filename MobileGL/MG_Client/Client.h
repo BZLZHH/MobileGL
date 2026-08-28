@@ -89,6 +89,10 @@ namespace MobileGL::Client {
     // Sends a typed glDispatchComputeIndirect command (awaits response).
     Bool SendDispatchComputeIndirect(Uint64 sessionId, uint64_t indirectOffset, Uint64 token);
 
+    // Sends a glFenceSync command and returns the backend sync handle.
+    Bool SendFenceSync(Uint64 sessionId, uint32_t condition, uint32_t flags,
+                       uint64_t token, uint64_t* outSync);
+
     // Submits a command without waiting for its response.
     Bool SubmitCommand(Uint32 sessionId, Uint32 opcode, Uint64 token);
 
@@ -112,6 +116,9 @@ namespace MobileGL::Client {
     // Byte echoed back by the server's response data_byte field (payload
     // readback verification).
     Uint32 GetLastResponseDataByte();
+
+    // Sync handle echoed back by the server's response sync field.
+    Uint64 GetLastResponseSync();
 
     void Shutdown();
     const String& GetLastError();

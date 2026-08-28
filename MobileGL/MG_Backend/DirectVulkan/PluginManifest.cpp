@@ -218,6 +218,8 @@ namespace {
     // null until the real DirectVulkan adapter lands.
     bool SwapBuffersBackend(MobileGLBackend* self, MobileGLSessionId session,
                             MobileGLBackendHandle draw);
+    void* FenceSyncBackend(MobileGLBackend* self, MobileGLSessionId session,
+                           uint32_t condition, uint32_t flags);
     const MobileGLBackendVTable s_backendVTable = {
         .structSize = sizeof(MobileGLBackendVTable),
         .apiVersion = (MOBILEGL_BFA_ABI_MAJOR << 16) | MOBILEGL_BFA_ABI_MINOR,
@@ -246,7 +248,8 @@ namespace {
         .ResumeTransformFeedback = &ResumeTransformFeedbackBackend,
         .BindTransformFeedback = &BindTransformFeedbackBackend,
         .BlitFramebuffer = &BlitFramebufferBackend,
-        .SwapBuffers = &SwapBuffersBackend
+        .SwapBuffers = &SwapBuffersBackend,
+        .FenceSync = &FenceSyncBackend
     };
 
     bool SwapBuffersBackend(MobileGLBackend* self, MobileGLSessionId session,
@@ -255,6 +258,15 @@ namespace {
         (void)session;
         (void)draw;
         return true;
+    }
+
+    void* FenceSyncBackend(MobileGLBackend* self, MobileGLSessionId session,
+                           uint32_t condition, uint32_t flags) {
+        (void)self;
+        (void)session;
+        (void)condition;
+        (void)flags;
+        return reinterpret_cast<void*>(0x1234);
     }
 
     const MobileGLBackendVTable* GetBackendVTable() {

@@ -221,8 +221,19 @@ class Command(object):
             return obj
         return None
 
+    # Command
+    def FenceSync(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(42))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from MobileGL.Protocol.Wire.FenceSync import FenceSync
+            obj = FenceSync()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
 def CommandStart(builder):
-    builder.StartObject(19)
+    builder.StartObject(20)
 
 def Start(builder):
     CommandStart(builder)
@@ -340,6 +351,12 @@ def CommandAddDispatchComputeIndirect(builder, dispatchComputeIndirect):
 
 def AddDispatchComputeIndirect(builder, dispatchComputeIndirect):
     CommandAddDispatchComputeIndirect(builder, dispatchComputeIndirect)
+
+def CommandAddFenceSync(builder, fenceSync):
+    builder.PrependUOffsetTRelativeSlot(19, flatbuffers.number_types.UOffsetTFlags.py_type(fenceSync), 0)
+
+def AddFenceSync(builder, fenceSync):
+    CommandAddFenceSync(builder, fenceSync)
 
 def CommandEnd(builder):
     return builder.EndObject()

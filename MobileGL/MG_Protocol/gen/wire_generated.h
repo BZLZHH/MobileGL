@@ -62,6 +62,9 @@ struct SwapBuffersBuilder;
 struct DispatchComputeIndirect;
 struct DispatchComputeIndirectBuilder;
 
+struct FenceSync;
+struct FenceSyncBuilder;
+
 struct DataBlob;
 struct DataBlobBuilder;
 
@@ -944,6 +947,58 @@ inline ::flatbuffers::Offset<DispatchComputeIndirect> CreateDispatchComputeIndir
   return builder_.Finish();
 }
 
+struct FenceSync FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef FenceSyncBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_CONDITION = 4,
+    VT_FLAGS = 6
+  };
+  uint32_t condition() const {
+    return GetField<uint32_t>(VT_CONDITION, 0);
+  }
+  uint32_t flags() const {
+    return GetField<uint32_t>(VT_FLAGS, 0);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint32_t>(verifier, VT_CONDITION, 4) &&
+           VerifyField<uint32_t>(verifier, VT_FLAGS, 4) &&
+           verifier.EndTable();
+  }
+};
+
+struct FenceSyncBuilder {
+  typedef FenceSync Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_condition(uint32_t condition) {
+    fbb_.AddElement<uint32_t>(FenceSync::VT_CONDITION, condition, 0);
+  }
+  void add_flags(uint32_t flags) {
+    fbb_.AddElement<uint32_t>(FenceSync::VT_FLAGS, flags, 0);
+  }
+  explicit FenceSyncBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<FenceSync> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<FenceSync>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<FenceSync> CreateFenceSync(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint32_t condition = 0,
+    uint32_t flags = 0) {
+  FenceSyncBuilder builder_(_fbb);
+  builder_.add_flags(flags);
+  builder_.add_condition(condition);
+  return builder_.Finish();
+}
+
 struct DataBlob FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef DataBlobBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
@@ -1017,7 +1072,8 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_BLIT_FRAMEBUFFER = 34,
     VT_SWAP_BUFFERS = 36,
     VT_DATA = 38,
-    VT_DISPATCH_COMPUTE_INDIRECT = 40
+    VT_DISPATCH_COMPUTE_INDIRECT = 40,
+    VT_FENCE_SYNC = 42
   };
   uint32_t opcode() const {
     return GetField<uint32_t>(VT_OPCODE, 0);
@@ -1076,6 +1132,9 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   const MobileGL::Protocol::Wire::DispatchComputeIndirect *dispatch_compute_indirect() const {
     return GetPointer<const MobileGL::Protocol::Wire::DispatchComputeIndirect *>(VT_DISPATCH_COMPUTE_INDIRECT);
   }
+  const MobileGL::Protocol::Wire::FenceSync *fence_sync() const {
+    return GetPointer<const MobileGL::Protocol::Wire::FenceSync *>(VT_FENCE_SYNC);
+  }
   template <bool B = false>
   bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -1114,6 +1173,8 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            verifier.VerifyTable(data()) &&
            VerifyOffset(verifier, VT_DISPATCH_COMPUTE_INDIRECT) &&
            verifier.VerifyTable(dispatch_compute_indirect()) &&
+           VerifyOffset(verifier, VT_FENCE_SYNC) &&
+           verifier.VerifyTable(fence_sync()) &&
            verifier.EndTable();
   }
 };
@@ -1179,6 +1240,9 @@ struct CommandBuilder {
   void add_dispatch_compute_indirect(::flatbuffers::Offset<MobileGL::Protocol::Wire::DispatchComputeIndirect> dispatch_compute_indirect) {
     fbb_.AddOffset(Command::VT_DISPATCH_COMPUTE_INDIRECT, dispatch_compute_indirect);
   }
+  void add_fence_sync(::flatbuffers::Offset<MobileGL::Protocol::Wire::FenceSync> fence_sync) {
+    fbb_.AddOffset(Command::VT_FENCE_SYNC, fence_sync);
+  }
   explicit CommandBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -1210,10 +1274,12 @@ inline ::flatbuffers::Offset<Command> CreateCommand(
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::BlitFramebuffer> blit_framebuffer = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::SwapBuffers> swap_buffers = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::DataBlob> data = 0,
-    ::flatbuffers::Offset<MobileGL::Protocol::Wire::DispatchComputeIndirect> dispatch_compute_indirect = 0) {
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::DispatchComputeIndirect> dispatch_compute_indirect = 0,
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::FenceSync> fence_sync = 0) {
   CommandBuilder builder_(_fbb);
   builder_.add_token(token);
   builder_.add_session_id(session_id);
+  builder_.add_fence_sync(fence_sync);
   builder_.add_dispatch_compute_indirect(dispatch_compute_indirect);
   builder_.add_data(data);
   builder_.add_swap_buffers(swap_buffers);
@@ -1292,7 +1358,8 @@ struct Response FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_STATUS = 4,
     VT_TOKEN = 6,
-    VT_DATA_BYTE = 8
+    VT_DATA_BYTE = 8,
+    VT_SYNC = 10
   };
   uint32_t status() const {
     return GetField<uint32_t>(VT_STATUS, 0);
@@ -1303,12 +1370,16 @@ struct Response FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   uint32_t data_byte() const {
     return GetField<uint32_t>(VT_DATA_BYTE, 0);
   }
+  uint64_t sync() const {
+    return GetField<uint64_t>(VT_SYNC, 0);
+  }
   template <bool B = false>
   bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<uint32_t>(verifier, VT_STATUS, 4) &&
            VerifyField<uint64_t>(verifier, VT_TOKEN, 8) &&
            VerifyField<uint32_t>(verifier, VT_DATA_BYTE, 4) &&
+           VerifyField<uint64_t>(verifier, VT_SYNC, 8) &&
            verifier.EndTable();
   }
 };
@@ -1326,6 +1397,9 @@ struct ResponseBuilder {
   void add_data_byte(uint32_t data_byte) {
     fbb_.AddElement<uint32_t>(Response::VT_DATA_BYTE, data_byte, 0);
   }
+  void add_sync(uint64_t sync) {
+    fbb_.AddElement<uint64_t>(Response::VT_SYNC, sync, 0);
+  }
   explicit ResponseBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -1341,8 +1415,10 @@ inline ::flatbuffers::Offset<Response> CreateResponse(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     uint32_t status = 0,
     uint64_t token = 0,
-    uint32_t data_byte = 0) {
+    uint32_t data_byte = 0,
+    uint64_t sync = 0) {
   ResponseBuilder builder_(_fbb);
+  builder_.add_sync(sync);
   builder_.add_token(token);
   builder_.add_data_byte(data_byte);
   builder_.add_status(status);

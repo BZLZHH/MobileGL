@@ -22,6 +22,7 @@ namespace MobileGL::Client {
         MobileGLTransport* s_transport = nullptr;
         const MobileGLTransportOps* s_ops = nullptr;
         Uint32 s_lastResponseByte = 0;
+        Uint64 s_lastResponseSync = 0;
 
         Bool SendOpcodesOnly(Uint32 opcode, Uint64 sessionId, Uint64 token) {
             if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
@@ -490,6 +491,38 @@ namespace MobileGL::Client {
         return WaitResponseForToken(token, 0);
     }
 
+    Bool SendFenceSync(Uint64 sessionId, uint32_t condition, uint32_t flags,
+                       Uint64 token, uint64_t* outSync) {
+        if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
+            s_lastError = "Client is not initialized.";
+            return false;
+        }
+        flatbuffers::FlatBufferBuilder builder;
+        const auto fs = MobileGL::Protocol::Wire::CreateFenceSync(builder, condition, flags);
+        const auto command = MobileGL::Protocol::Wire::CreateCommand(
+            builder,
+            static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glFenceSync),
+            sessionId, token, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, fs);
+        const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 0);
+        builder.Finish(message);
+
+        MobileGLCommandBatch batch{};
+        batch.structSize = sizeof(MobileGLCommandBatch);
+        batch.flatBufferData = builder.GetBufferPointer();
+        batch.flatBufferSize = static_cast<Uint32>(builder.GetSize());
+        if (!s_ops->SubmitCommands(s_transport, &batch)) {
+            s_lastError = s_ops->GetLastError(s_transport);
+            return false;
+        }
+        if (!WaitResponseForToken(token, 0)) {
+            return false;
+        }
+        if (outSync != nullptr) {
+            *outSync = s_lastResponseSync;
+        }
+        return true;
+    }
+
     Bool SubmitCommand(Uint32 sessionId, Uint32 opcode, Uint64 token) {
         return SubmitDataCommand(sessionId, opcode, token, 0, 0, nullptr);
     }
@@ -571,8 +604,13 @@ namespace MobileGL::Client {
             return false;
         }
         s_lastResponseByte = parsed->data_byte();
+        s_lastResponseSync = parsed->sync();
         s_lastError.clear();
         return parsed->status() == 0;
+    }
+
+    Uint64 GetLastResponseSync() {
+        return s_lastResponseSync;
     }
 
     Uint32 GetLastResponseDataByte() {

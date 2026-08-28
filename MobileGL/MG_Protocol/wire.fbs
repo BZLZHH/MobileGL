@@ -95,6 +95,11 @@ table DispatchComputeIndirect {
     indirect_offset: ulong;
 }
 
+table FenceSync {
+    condition: uint;
+    flags: uint;
+}
+
 table DataBlob {
     offset: ulong;
     size: ulong;
@@ -120,6 +125,7 @@ table Command {
     swap_buffers: SwapBuffers;
     data: DataBlob;
     dispatch_compute_indirect: DispatchComputeIndirect;
+    fence_sync: FenceSync;
 }
 
 table Message {
@@ -131,6 +137,7 @@ table Response {
     status: uint;
     token: ulong;
     data_byte: uint;
+    sync: ulong;
 }
 
 root_type Message;
