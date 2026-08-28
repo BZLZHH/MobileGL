@@ -9,6 +9,7 @@
 #pragma once
 
 #include <Includes.h>
+#include "MG_Protocol/transport.h"
 
 namespace MobileGL::Client {
     // Thin client-side configuration. In v1 the client connects to one
@@ -22,6 +23,14 @@ namespace MobileGL::Client {
     // Opens the control connection + shared-memory arena. This is the only
     // state the client keeps; there is no GL state on this side.
     Bool Initialize(const ClientConfig& config);
+
+    // Test/embedded path: attach an already-created transport endpoint.
+    Bool InitializeWithTransport(MobileGLTransport* transport, const MobileGLTransportOps* ops);
+
+    // Sends one command (opcode from MG_Protocol/generated_opcodes.h) and waits
+    // for its response. Returns true when the response status is OK.
+    Bool SendCommand(Uint32 sessionId, Uint32 opcode);
+
     void Shutdown();
     const String& GetLastError();
 } // namespace MobileGL::Client

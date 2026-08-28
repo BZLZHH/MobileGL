@@ -60,22 +60,32 @@ namespace MobileGL::Transport {
                     m_lastError = "WaitResponses requires an output queue.";
                     return false;
                 }
-                std::lock_guard<std::mutex> lock(m_link->mutex);
-                auto& queue = m_isClient ? m_link->serverToClient : m_link->clientToServer;
-                if (queue.empty()) {
-                    m_lastError = "WaitResponses: no data available.";
-                    return false;
+                const auto deadline = std::chrono::steady_clock::now() +
+                                      std::chrono::milliseconds(timeoutMs);
+                for (;;) {
+                    {
+                        std::lock_guard<std::mutex> lock(m_link->mutex);
+                        auto& queue = m_isClient ? m_link->serverToClient : m_link->clientToServer;
+                        if (!queue.empty()) {
+                            m_received = Move(queue.front());
+                            queue.pop_front();
+                            *out = MobileGLResponseQueue{};
+                            out->structSize = sizeof(MobileGLResponseQueue);
+                            out->count = 1;
+                            out->flatBufferData = m_received.data();
+                            out->flatBufferSize = static_cast<uint32_t>(m_received.size());
+                            m_lastError.clear();
+                            return true;
+                        }
+                    }
+                    // timeoutMs == 0 means "wait indefinitely"; otherwise poll up
+                    // to the requested deadline.
+                    if (timeoutMs > 0 && std::chrono::steady_clock::now() >= deadline) {
+                        m_lastError = "WaitResponses: no data available.";
+                        return false;
+                    }
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
                 }
-                m_received = Move(queue.front());
-                queue.pop_front();
-
-                *out = MobileGLResponseQueue{};
-                out->structSize = sizeof(MobileGLResponseQueue);
-                out->count = 1;
-                out->flatBufferData = m_received.data();
-                out->flatBufferSize = static_cast<uint32_t>(m_received.size());
-                m_lastError.clear();
-                return true;
             }
 
             Bool OpenSharedMemory(MobileGLShmHandle* out) {

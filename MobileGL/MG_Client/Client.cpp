@@ -11,9 +11,22 @@
 
 namespace MobileGL::Client {
     namespace {
+        // Minimal command/response envelope; layout must match
+        // MobileGL::FullServer::CommandHeader / ResponseHeader.
+        struct ClientCommandHeader {
+            Uint32 Opcode;
+            Uint32 SessionId;
+        };
+
+        struct ClientResponseHeader {
+            Uint32 Status; // 0 = OK
+        };
+
         String s_lastError;
         Bool s_initialized = false;
+        Bool s_ownsTransport = false;
         MobileGLTransport* s_transport = nullptr;
+        const MobileGLTransportOps* s_ops = nullptr;
     } // namespace
 
     Bool Initialize(const ClientConfig& config) {
@@ -40,16 +53,68 @@ namespace MobileGL::Client {
             return false;
         }
 
+        s_ops = &ops;
+        s_ownsTransport = true;
         s_initialized = true;
         s_lastError.clear();
         return true;
     }
 
-    void Shutdown() {
-        if (s_transport != nullptr) {
-            Transport::DestroyLocalSocketShmTransport(s_transport);
-            s_transport = nullptr;
+    Bool InitializeWithTransport(MobileGLTransport* transport, const MobileGLTransportOps* ops) {
+        if (s_initialized || transport == nullptr || ops == nullptr) {
+            s_lastError = "Client already initialized or invalid transport.";
+            return false;
         }
+        s_transport = transport;
+        s_ops = ops;
+        s_ownsTransport = false;
+        s_initialized = true;
+        s_lastError.clear();
+        return true;
+    }
+
+    Bool SendCommand(Uint32 sessionId, Uint32 opcode) {
+        if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
+            s_lastError = "Client is not initialized.";
+            return false;
+        }
+
+        ClientCommandHeader command{};
+        command.Opcode = opcode;
+        command.SessionId = sessionId;
+
+        MobileGLCommandBatch batch{};
+        batch.structSize = sizeof(MobileGLCommandBatch);
+        batch.flatBufferData = &command;
+        batch.flatBufferSize = static_cast<Uint32>(sizeof(command));
+        if (!s_ops->SubmitCommands(s_transport, &batch)) {
+            s_lastError = s_ops->GetLastError(s_transport);
+            return false;
+        }
+
+        MobileGLResponseQueue response{};
+        if (!s_ops->WaitResponses(s_transport, &response, 0)) {
+            s_lastError = s_ops->GetLastError(s_transport);
+            return false;
+        }
+        if (response.flatBufferSize < sizeof(ClientResponseHeader)) {
+            s_lastError = "Short response.";
+            return false;
+        }
+
+        ClientResponseHeader header{};
+        memcpy(&header, response.flatBufferData, sizeof(header));
+        s_lastError.clear();
+        return header.Status == 0;
+    }
+
+    void Shutdown() {
+        if (s_transport != nullptr && s_ownsTransport) {
+            Transport::DestroyLocalSocketShmTransport(s_transport);
+        }
+        s_transport = nullptr;
+        s_ops = nullptr;
+        s_ownsTransport = false;
         s_initialized = false;
     }
 

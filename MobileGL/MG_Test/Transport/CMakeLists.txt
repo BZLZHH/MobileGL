@@ -77,4 +77,33 @@ endif()
 
 gtest_discover_tests(ProtocolOpcodeTest DISCOVERY_TIMEOUT 30 PROPERTIES LABELS unit)
 
+add_executable(
+        ClientServerEndToEndTest
+        ClientServerEndToEndTest.cpp
+        ${MGL_ROOT}/MobileGL/MG_FullServer/ServerCore.cpp
+)
+
+target_include_directories(ClientServerEndToEndTest PRIVATE
+        ${MGL_ROOT}/include
+        ${MGL_ROOT}/MobileGL
+        ${MGL_ROOT}/3rdparty/xxHash
+        ${MGL_ROOT}/3rdparty/Vulkan-Headers/include
+        ${MGL_ROOT}/3rdparty/SPIRV-Reflect
+)
+
+target_link_libraries(
+        ClientServerEndToEndTest PRIVATE
+        GTest::gtest_main
+        MobileGL_Client
+        MobileGL_Transport
+        MobileGL_BFA
+)
+
+if (MSVC)
+        target_compile_options(ClientServerEndToEndTest PRIVATE /Zc:preprocessor)
+endif()
+
+gtest_discover_tests(ClientServerEndToEndTest DISCOVERY_TIMEOUT 30 PROPERTIES LABELS unit)
+
+
 
