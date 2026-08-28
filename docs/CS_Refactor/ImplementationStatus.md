@@ -30,6 +30,8 @@
 - [x] 根 CMake 增加 `MOBILEGL_BUILD_CS_REFACTOR`（默认 OFF，保留 monolith 对照）
 - [x] `MobileGL/MG_Client` — `MobileGL_Client` SHARED 骨架
 - [x] `MobileGL/MG_FullServer` — `MobileGL_FullServer` SHARED（`libMobileGL_FullServer.so`，BigServer host 组件）
+- [x] `FullServerEntry.h/.cpp` — C ABI 宿主入口：`mobilegl_fullserver_create/start/attach_transport/service_once/destroy`
+- [x] **dlopen 验证**：Python ctypes 加载 `libMobileGL_FullServer.so` → create(UtilRuntime.so, BackendObject_DirectGLES.so) → start → destroy 成功
 - [x] `MobileGL/MG_UtilRuntime` — `MobileGL_UtilRuntime` SHARED 骨架（`mobilegl_util_api` 导出）
 - [x] `MobileGL/MG_Backend/CMakeLists.txt` — `BackendObject_DirectGLES` / `BackendObject_DirectVulkan` MODULE 骨架 + manifest
 - [x] 把真实 `MG_Impl / MG_State / MG_Util` 源列表拆入 `MobileGL_MG_FullServerCore`（STATIC，不含 MG_Backend），`MobileGL_FullServer.so` 链接它；monolith 仍保留作对照

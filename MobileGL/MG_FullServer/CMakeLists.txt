@@ -14,6 +14,7 @@ add_library(MobileGL_FullServer SHARED
     BackendPluginLoader.cpp
     UtilRuntimeLoader.cpp
     ServerCore.cpp
+    FullServerEntry.cpp
 )
 
 target_link_libraries(MobileGL_FullServer PRIVATE
