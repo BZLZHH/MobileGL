@@ -230,6 +230,14 @@ namespace MobileGL::FullServer {
                                                  btf == nullptr ? 0 : btf->primitive_mode());
                 status = 0;
             }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glEndTransformFeedback) &&
+                   m_vtable->EndTransformFeedback != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else {
+                m_vtable->EndTransformFeedback(m_backend, sessionId);
+                status = 0;
+            }
         }
 
         for (auto& handle : receivedShm) {

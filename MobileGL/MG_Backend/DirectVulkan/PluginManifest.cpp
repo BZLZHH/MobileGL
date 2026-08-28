@@ -87,6 +87,11 @@ namespace {
         (void)primitiveMode;
     }
 
+    void EndTransformFeedbackBackend(MobileGLBackend* self, MobileGLSessionId session) {
+        (void)self;
+        (void)session;
+    }
+
     void DrawElementsBackend(MobileGLBackend* self, MobileGLSessionId session,
                              uint32_t mode, int32_t count, uint32_t type, const void* indices) {
         (void)self;
@@ -178,7 +183,8 @@ namespace {
         .PatchParameteri = &PatchParameteriBackend,
         .GenerateMipmap = &GenerateMipmapBackend,
         .DispatchCompute = &DispatchComputeBackend,
-        .BeginTransformFeedback = &BeginTransformFeedbackBackend
+        .BeginTransformFeedback = &BeginTransformFeedbackBackend,
+        .EndTransformFeedback = &EndTransformFeedbackBackend
     };
 
     const MobileGLBackendVTable* GetBackendVTable() {

@@ -64,6 +64,9 @@ namespace MobileGL::Client {
     // Sends a typed glBeginTransformFeedback command (awaits response).
     Bool SendBeginTransformFeedback(Uint64 sessionId, uint32_t primitiveMode, Uint64 token);
 
+    // Sends an opcode-only glEndTransformFeedback command (awaits response).
+    Bool SendEndTransformFeedback(Uint64 sessionId, Uint64 token);
+
     // Submits a command without waiting for its response.
     Bool SubmitCommand(Uint32 sessionId, Uint32 opcode, Uint64 token);
 

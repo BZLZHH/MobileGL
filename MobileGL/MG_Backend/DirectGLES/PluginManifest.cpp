@@ -117,6 +117,11 @@ namespace {
         (void)primitiveMode;
     }
 
+    void EndTransformFeedbackBackend(MobileGLBackend* self, MobileGLSessionId session) {
+        (void)self;
+        (void)session;
+    }
+
     bool OnSessionCreatedBackend(MobileGLBackend* self, MobileGLSessionId session,
                                  const MobileGLBackendInitInfo* info) {
         (void)self;
@@ -178,7 +183,8 @@ namespace {
         .PatchParameteri = &PatchParameteriBackend,
         .GenerateMipmap = &GenerateMipmapBackend,
         .DispatchCompute = &DispatchComputeBackend,
-        .BeginTransformFeedback = &BeginTransformFeedbackBackend
+        .BeginTransformFeedback = &BeginTransformFeedbackBackend,
+        .EndTransformFeedback = &EndTransformFeedbackBackend
     };
 
     const MobileGLBackendVTable* GetBackendVTable() {
