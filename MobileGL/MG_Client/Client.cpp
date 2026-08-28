@@ -111,6 +111,20 @@ namespace MobileGL::Client {
         return SubmitCommand(static_cast<Uint32>(sessionId), opcode, token);
     }
 
+    Bool SubmitDisplayControl(Uint64 displayId, Bool create, Uint64 token) {
+        const uint32_t opcode = create
+            ? static_cast<uint32_t>(MobileGL::Protocol::MobileGLControlOpcode::DisplayCreate)
+            : static_cast<uint32_t>(MobileGL::Protocol::MobileGLControlOpcode::DisplayDestroy);
+        return SubmitCommand(static_cast<Uint32>(displayId), opcode, token);
+    }
+
+    Bool SubmitSharedGroupControl(Uint64 groupId, Bool create, Uint64 token) {
+        const uint32_t opcode = create
+            ? static_cast<uint32_t>(MobileGL::Protocol::MobileGLControlOpcode::SharedGroupCreate)
+            : static_cast<uint32_t>(MobileGL::Protocol::MobileGLControlOpcode::SharedGroupDestroy);
+        return SubmitCommand(static_cast<Uint32>(groupId), opcode, token);
+    }
+
     Bool WaitResponseForToken(Uint64 token, Uint32 timeoutMs) {
         if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
             s_lastError = "Client is not initialized.";

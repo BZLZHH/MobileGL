@@ -46,6 +46,8 @@ namespace MobileGL::FullServer {
         // Sessions created through SessionCreate control commands; commands for
         // unknown/destroyed sessions are rejected until re-created.
         UnorderedMap<MobileGLSessionId, Bool> m_liveSessions;
+        UnorderedMap<MobileGLDisplayId, Bool> m_liveDisplays;
+        UnorderedMap<MobileGLSharedGroupId, Bool> m_liveSharedGroups;
     };
 } // namespace MobileGL::FullServer
 

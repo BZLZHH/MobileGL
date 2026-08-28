@@ -43,6 +43,12 @@ namespace MobileGL::Client {
     // Submits a session lifecycle control command (SessionCreate/Destroy).
     Bool SubmitSessionControl(Uint64 sessionId, Bool create, Uint64 token);
 
+    // Submits a display lifecycle control command (DisplayCreate/Destroy).
+    Bool SubmitDisplayControl(Uint64 displayId, Bool create, Uint64 token);
+
+    // Submits a shared-group lifecycle control command.
+    Bool SubmitSharedGroupControl(Uint64 groupId, Bool create, Uint64 token);
+
     // Waits for the response whose echoed token equals `token`.
     Bool WaitResponseForToken(Uint64 token, Uint32 timeoutMs);
 

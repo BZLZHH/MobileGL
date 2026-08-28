@@ -16,6 +16,10 @@ namespace MobileGL::Protocol {
     enum class MobileGLControlOpcode : uint32_t {
         SessionCreate = 1'000'000,
         SessionDestroy = 1'000'001,
+        DisplayCreate = 1'000'002,
+        DisplayDestroy = 1'000'003,
+        SharedGroupCreate = 1'000'004,
+        SharedGroupDestroy = 1'000'005,
     };
 } // namespace MobileGL::Protocol
 

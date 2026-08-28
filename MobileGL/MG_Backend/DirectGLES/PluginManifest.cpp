@@ -52,6 +52,32 @@ namespace {
         (void)session;
     }
 
+    bool OnDisplayCreatedBackend(MobileGLBackend* self, MobileGLDisplayId display,
+                                 const void* nativeDisplay) {
+        (void)self;
+        (void)display;
+        (void)nativeDisplay;
+        return true;
+    }
+
+    void OnDisplayDestroyedBackend(MobileGLBackend* self, MobileGLDisplayId display) {
+        (void)self;
+        (void)display;
+    }
+
+    bool OnSharedGroupCreatedBackend(MobileGLBackend* self, MobileGLSharedGroupId group,
+                                     const void* shareInfo) {
+        (void)self;
+        (void)group;
+        (void)shareInfo;
+        return true;
+    }
+
+    void OnSharedGroupDestroyedBackend(MobileGLBackend* self, MobileGLSharedGroupId group) {
+        (void)self;
+        (void)group;
+    }
+
     // Skeleton vtable: lifecycle + Clear entries live, everything else null
     // until the real DirectGLES adapter lands.
     const MobileGLBackendVTable s_backendVTable = {
@@ -59,6 +85,10 @@ namespace {
         .apiVersion = (MOBILEGL_BFA_ABI_MAJOR << 16) | MOBILEGL_BFA_ABI_MINOR,
         .Initialize = &InitializeBackend,
         .Shutdown = &ShutdownBackend,
+        .OnDisplayCreated = &OnDisplayCreatedBackend,
+        .OnDisplayDestroyed = &OnDisplayDestroyedBackend,
+        .OnSharedGroupCreated = &OnSharedGroupCreatedBackend,
+        .OnSharedGroupDestroyed = &OnSharedGroupDestroyedBackend,
         .OnSessionCreated = &OnSessionCreatedBackend,
         .OnSessionDestroyed = &OnSessionDestroyedBackend,
         .Clear = &ClearBackend

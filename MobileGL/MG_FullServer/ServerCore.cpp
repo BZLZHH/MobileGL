@@ -84,6 +84,32 @@ namespace MobileGL::FullServer {
             m_vtable->OnSessionDestroyed(m_backend, sessionId);
             m_liveSessions.erase(sessionId);
             status = 0;
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLControlOpcode::DisplayCreate) &&
+                   m_vtable->OnDisplayCreated != nullptr) {
+            const auto displayId = static_cast<MobileGLDisplayId>(command->session_id());
+            status = m_vtable->OnDisplayCreated(m_backend, displayId, nullptr) ? 0 : 1;
+            if (status == 0) {
+                m_liveDisplays[displayId] = true;
+            }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLControlOpcode::DisplayDestroy) &&
+                   m_vtable->OnDisplayDestroyed != nullptr) {
+            const auto displayId = static_cast<MobileGLDisplayId>(command->session_id());
+            m_vtable->OnDisplayDestroyed(m_backend, displayId);
+            m_liveDisplays.erase(displayId);
+            status = 0;
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLControlOpcode::SharedGroupCreate) &&
+                   m_vtable->OnSharedGroupCreated != nullptr) {
+            const auto groupId = static_cast<MobileGLSharedGroupId>(command->session_id());
+            status = m_vtable->OnSharedGroupCreated(m_backend, groupId, nullptr) ? 0 : 1;
+            if (status == 0) {
+                m_liveSharedGroups[groupId] = true;
+            }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLControlOpcode::SharedGroupDestroy) &&
+                   m_vtable->OnSharedGroupDestroyed != nullptr) {
+            const auto groupId = static_cast<MobileGLSharedGroupId>(command->session_id());
+            m_vtable->OnSharedGroupDestroyed(m_backend, groupId);
+            m_liveSharedGroups.erase(groupId);
+            status = 0;
         } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glClear) &&
                    m_vtable->Clear != nullptr) {
             const uint32_t mask = command->clear() == nullptr ? 0 : command->clear()->mask();
