@@ -254,8 +254,19 @@ class Command(object):
             return obj
         return None
 
+    # Command
+    def DrawArraysInstanced(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(48))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from MobileGL.Protocol.Wire.DrawArraysInstanced import DrawArraysInstanced
+            obj = DrawArraysInstanced()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
 def CommandStart(builder):
-    builder.StartObject(22)
+    builder.StartObject(23)
 
 def Start(builder):
     CommandStart(builder)
@@ -391,6 +402,12 @@ def CommandAddWaitSync(builder, waitSync):
 
 def AddWaitSync(builder, waitSync):
     CommandAddWaitSync(builder, waitSync)
+
+def CommandAddDrawArraysInstanced(builder, drawArraysInstanced):
+    builder.PrependUOffsetTRelativeSlot(22, flatbuffers.number_types.UOffsetTFlags.py_type(drawArraysInstanced), 0)
+
+def AddDrawArraysInstanced(builder, drawArraysInstanced):
+    CommandAddDrawArraysInstanced(builder, drawArraysInstanced)
 
 def CommandEnd(builder):
     return builder.EndObject()

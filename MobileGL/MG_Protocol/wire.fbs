@@ -110,6 +110,13 @@ table WaitSync {
     timeout: ulong;
 }
 
+table DrawArraysInstanced {
+    mode: uint;
+    first: int;
+    count: int;
+    primcount: int;
+}
+
 table DataBlob {
     offset: ulong;
     size: ulong;
@@ -138,6 +145,7 @@ table Command {
     fence_sync: FenceSync;
     delete_sync: DeleteSync;
     wait_sync: WaitSync;
+    draw_arrays_instanced: DrawArraysInstanced;
 }
 
 table Message {

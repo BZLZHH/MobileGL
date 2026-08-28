@@ -349,6 +349,19 @@ namespace MobileGL::FullServer {
                                    ws == nullptr ? 0 : ws->timeout());
                 status = 0;
             }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glDrawArraysInstanced) &&
+                   m_vtable->DrawArraysInstanced != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else {
+                const auto* dai = command->draw_arrays_instanced();
+                m_vtable->DrawArraysInstanced(m_backend, sessionId,
+                                              dai == nullptr ? 0 : dai->mode(),
+                                              dai == nullptr ? 0 : dai->first(),
+                                              dai == nullptr ? 0 : dai->count(),
+                                              dai == nullptr ? 0 : dai->primcount());
+                status = 0;
+            }
         }
 
         for (auto& handle : receivedShm) {

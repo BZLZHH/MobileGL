@@ -100,6 +100,10 @@ namespace MobileGL::Client {
     Bool SendWaitSync(Uint64 sessionId, uint64_t sync, uint32_t flags, uint64_t timeout,
                       Uint64 token);
 
+    // Sends a typed glDrawArraysInstanced command (awaits response).
+    Bool SendDrawArraysInstanced(Uint64 sessionId, uint32_t mode, int32_t first, int32_t count,
+                                 int32_t primcount, Uint64 token);
+
     // Submits a command without waiting for its response.
     Bool SubmitCommand(Uint32 sessionId, Uint32 opcode, Uint64 token);
 

@@ -71,6 +71,9 @@ struct DeleteSyncBuilder;
 struct WaitSync;
 struct WaitSyncBuilder;
 
+struct DrawArraysInstanced;
+struct DrawArraysInstancedBuilder;
+
 struct DataBlob;
 struct DataBlobBuilder;
 
@@ -1109,6 +1112,78 @@ inline ::flatbuffers::Offset<WaitSync> CreateWaitSync(
   return builder_.Finish();
 }
 
+struct DrawArraysInstanced FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef DrawArraysInstancedBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_MODE = 4,
+    VT_FIRST = 6,
+    VT_COUNT = 8,
+    VT_PRIMCOUNT = 10
+  };
+  uint32_t mode() const {
+    return GetField<uint32_t>(VT_MODE, 0);
+  }
+  int32_t first() const {
+    return GetField<int32_t>(VT_FIRST, 0);
+  }
+  int32_t count() const {
+    return GetField<int32_t>(VT_COUNT, 0);
+  }
+  int32_t primcount() const {
+    return GetField<int32_t>(VT_PRIMCOUNT, 0);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint32_t>(verifier, VT_MODE, 4) &&
+           VerifyField<int32_t>(verifier, VT_FIRST, 4) &&
+           VerifyField<int32_t>(verifier, VT_COUNT, 4) &&
+           VerifyField<int32_t>(verifier, VT_PRIMCOUNT, 4) &&
+           verifier.EndTable();
+  }
+};
+
+struct DrawArraysInstancedBuilder {
+  typedef DrawArraysInstanced Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_mode(uint32_t mode) {
+    fbb_.AddElement<uint32_t>(DrawArraysInstanced::VT_MODE, mode, 0);
+  }
+  void add_first(int32_t first) {
+    fbb_.AddElement<int32_t>(DrawArraysInstanced::VT_FIRST, first, 0);
+  }
+  void add_count(int32_t count) {
+    fbb_.AddElement<int32_t>(DrawArraysInstanced::VT_COUNT, count, 0);
+  }
+  void add_primcount(int32_t primcount) {
+    fbb_.AddElement<int32_t>(DrawArraysInstanced::VT_PRIMCOUNT, primcount, 0);
+  }
+  explicit DrawArraysInstancedBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<DrawArraysInstanced> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<DrawArraysInstanced>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<DrawArraysInstanced> CreateDrawArraysInstanced(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint32_t mode = 0,
+    int32_t first = 0,
+    int32_t count = 0,
+    int32_t primcount = 0) {
+  DrawArraysInstancedBuilder builder_(_fbb);
+  builder_.add_primcount(primcount);
+  builder_.add_count(count);
+  builder_.add_first(first);
+  builder_.add_mode(mode);
+  return builder_.Finish();
+}
+
 struct DataBlob FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef DataBlobBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
@@ -1185,7 +1260,8 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_DISPATCH_COMPUTE_INDIRECT = 40,
     VT_FENCE_SYNC = 42,
     VT_DELETE_SYNC = 44,
-    VT_WAIT_SYNC = 46
+    VT_WAIT_SYNC = 46,
+    VT_DRAW_ARRAYS_INSTANCED = 48
   };
   uint32_t opcode() const {
     return GetField<uint32_t>(VT_OPCODE, 0);
@@ -1253,6 +1329,9 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   const MobileGL::Protocol::Wire::WaitSync *wait_sync() const {
     return GetPointer<const MobileGL::Protocol::Wire::WaitSync *>(VT_WAIT_SYNC);
   }
+  const MobileGL::Protocol::Wire::DrawArraysInstanced *draw_arrays_instanced() const {
+    return GetPointer<const MobileGL::Protocol::Wire::DrawArraysInstanced *>(VT_DRAW_ARRAYS_INSTANCED);
+  }
   template <bool B = false>
   bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -1297,6 +1376,8 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            verifier.VerifyTable(delete_sync()) &&
            VerifyOffset(verifier, VT_WAIT_SYNC) &&
            verifier.VerifyTable(wait_sync()) &&
+           VerifyOffset(verifier, VT_DRAW_ARRAYS_INSTANCED) &&
+           verifier.VerifyTable(draw_arrays_instanced()) &&
            verifier.EndTable();
   }
 };
@@ -1371,6 +1452,9 @@ struct CommandBuilder {
   void add_wait_sync(::flatbuffers::Offset<MobileGL::Protocol::Wire::WaitSync> wait_sync) {
     fbb_.AddOffset(Command::VT_WAIT_SYNC, wait_sync);
   }
+  void add_draw_arrays_instanced(::flatbuffers::Offset<MobileGL::Protocol::Wire::DrawArraysInstanced> draw_arrays_instanced) {
+    fbb_.AddOffset(Command::VT_DRAW_ARRAYS_INSTANCED, draw_arrays_instanced);
+  }
   explicit CommandBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -1405,10 +1489,12 @@ inline ::flatbuffers::Offset<Command> CreateCommand(
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::DispatchComputeIndirect> dispatch_compute_indirect = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::FenceSync> fence_sync = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::DeleteSync> delete_sync = 0,
-    ::flatbuffers::Offset<MobileGL::Protocol::Wire::WaitSync> wait_sync = 0) {
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::WaitSync> wait_sync = 0,
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::DrawArraysInstanced> draw_arrays_instanced = 0) {
   CommandBuilder builder_(_fbb);
   builder_.add_token(token);
   builder_.add_session_id(session_id);
+  builder_.add_draw_arrays_instanced(draw_arrays_instanced);
   builder_.add_wait_sync(wait_sync);
   builder_.add_delete_sync(delete_sync);
   builder_.add_fence_sync(fence_sync);
