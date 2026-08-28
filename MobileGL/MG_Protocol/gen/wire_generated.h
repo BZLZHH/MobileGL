@@ -56,6 +56,9 @@ struct BindTransformFeedbackBuilder;
 struct BlitFramebuffer;
 struct BlitFramebufferBuilder;
 
+struct SwapBuffers;
+struct SwapBuffersBuilder;
+
 struct DataBlob;
 struct DataBlobBuilder;
 
@@ -854,6 +857,48 @@ inline ::flatbuffers::Offset<BlitFramebuffer> CreateBlitFramebuffer(
   return builder_.Finish();
 }
 
+struct SwapBuffers FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef SwapBuffersBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_DRAW = 4
+  };
+  uint64_t draw() const {
+    return GetField<uint64_t>(VT_DRAW, 0);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint64_t>(verifier, VT_DRAW, 8) &&
+           verifier.EndTable();
+  }
+};
+
+struct SwapBuffersBuilder {
+  typedef SwapBuffers Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_draw(uint64_t draw) {
+    fbb_.AddElement<uint64_t>(SwapBuffers::VT_DRAW, draw, 0);
+  }
+  explicit SwapBuffersBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<SwapBuffers> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<SwapBuffers>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<SwapBuffers> CreateSwapBuffers(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint64_t draw = 0) {
+  SwapBuffersBuilder builder_(_fbb);
+  builder_.add_draw(draw);
+  return builder_.Finish();
+}
+
 struct DataBlob FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef DataBlobBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
@@ -925,7 +970,8 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_BEGIN_TRANSFORM_FEEDBACK = 30,
     VT_BIND_TRANSFORM_FEEDBACK = 32,
     VT_BLIT_FRAMEBUFFER = 34,
-    VT_DATA = 36
+    VT_SWAP_BUFFERS = 36,
+    VT_DATA = 38
   };
   uint32_t opcode() const {
     return GetField<uint32_t>(VT_OPCODE, 0);
@@ -975,6 +1021,9 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   const MobileGL::Protocol::Wire::BlitFramebuffer *blit_framebuffer() const {
     return GetPointer<const MobileGL::Protocol::Wire::BlitFramebuffer *>(VT_BLIT_FRAMEBUFFER);
   }
+  const MobileGL::Protocol::Wire::SwapBuffers *swap_buffers() const {
+    return GetPointer<const MobileGL::Protocol::Wire::SwapBuffers *>(VT_SWAP_BUFFERS);
+  }
   const MobileGL::Protocol::Wire::DataBlob *data() const {
     return GetPointer<const MobileGL::Protocol::Wire::DataBlob *>(VT_DATA);
   }
@@ -1010,6 +1059,8 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            verifier.VerifyTable(bind_transform_feedback()) &&
            VerifyOffset(verifier, VT_BLIT_FRAMEBUFFER) &&
            verifier.VerifyTable(blit_framebuffer()) &&
+           VerifyOffset(verifier, VT_SWAP_BUFFERS) &&
+           verifier.VerifyTable(swap_buffers()) &&
            VerifyOffset(verifier, VT_DATA) &&
            verifier.VerifyTable(data()) &&
            verifier.EndTable();
@@ -1068,6 +1119,9 @@ struct CommandBuilder {
   void add_blit_framebuffer(::flatbuffers::Offset<MobileGL::Protocol::Wire::BlitFramebuffer> blit_framebuffer) {
     fbb_.AddOffset(Command::VT_BLIT_FRAMEBUFFER, blit_framebuffer);
   }
+  void add_swap_buffers(::flatbuffers::Offset<MobileGL::Protocol::Wire::SwapBuffers> swap_buffers) {
+    fbb_.AddOffset(Command::VT_SWAP_BUFFERS, swap_buffers);
+  }
   void add_data(::flatbuffers::Offset<MobileGL::Protocol::Wire::DataBlob> data) {
     fbb_.AddOffset(Command::VT_DATA, data);
   }
@@ -1100,11 +1154,13 @@ inline ::flatbuffers::Offset<Command> CreateCommand(
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::BeginTransformFeedback> begin_transform_feedback = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::BindTransformFeedback> bind_transform_feedback = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::BlitFramebuffer> blit_framebuffer = 0,
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::SwapBuffers> swap_buffers = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::DataBlob> data = 0) {
   CommandBuilder builder_(_fbb);
   builder_.add_token(token);
   builder_.add_session_id(session_id);
   builder_.add_data(data);
+  builder_.add_swap_buffers(swap_buffers);
   builder_.add_blit_framebuffer(blit_framebuffer);
   builder_.add_bind_transform_feedback(bind_transform_feedback);
   builder_.add_begin_transform_feedback(begin_transform_feedback);

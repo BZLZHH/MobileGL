@@ -87,6 +87,10 @@ table BlitFramebuffer {
     filter: uint;
 }
 
+table SwapBuffers {
+    draw: ulong;
+}
+
 table DataBlob {
     offset: ulong;
     size: ulong;
@@ -109,6 +113,7 @@ table Command {
     begin_transform_feedback: BeginTransformFeedback;
     bind_transform_feedback: BindTransformFeedback;
     blit_framebuffer: BlitFramebuffer;
+    swap_buffers: SwapBuffers;
     data: DataBlob;
 }
 

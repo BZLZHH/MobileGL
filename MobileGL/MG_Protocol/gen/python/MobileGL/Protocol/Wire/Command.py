@@ -189,8 +189,19 @@ class Command(object):
         return None
 
     # Command
-    def Data(self):
+    def SwapBuffers(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(36))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from MobileGL.Protocol.Wire.SwapBuffers import SwapBuffers
+            obj = SwapBuffers()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # Command
+    def Data(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(38))
         if o != 0:
             x = self._tab.Indirect(o + self._tab.Pos)
             from MobileGL.Protocol.Wire.DataBlob import DataBlob
@@ -200,7 +211,7 @@ class Command(object):
         return None
 
 def CommandStart(builder):
-    builder.StartObject(17)
+    builder.StartObject(18)
 
 def Start(builder):
     CommandStart(builder)
@@ -301,8 +312,14 @@ def CommandAddBlitFramebuffer(builder, blitFramebuffer):
 def AddBlitFramebuffer(builder, blitFramebuffer):
     CommandAddBlitFramebuffer(builder, blitFramebuffer)
 
+def CommandAddSwapBuffers(builder, swapBuffers):
+    builder.PrependUOffsetTRelativeSlot(16, flatbuffers.number_types.UOffsetTFlags.py_type(swapBuffers), 0)
+
+def AddSwapBuffers(builder, swapBuffers):
+    CommandAddSwapBuffers(builder, swapBuffers)
+
 def CommandAddData(builder, data):
-    builder.PrependUOffsetTRelativeSlot(16, flatbuffers.number_types.UOffsetTFlags.py_type(data), 0)
+    builder.PrependUOffsetTRelativeSlot(17, flatbuffers.number_types.UOffsetTFlags.py_type(data), 0)
 
 def AddData(builder, data):
     CommandAddData(builder, data)

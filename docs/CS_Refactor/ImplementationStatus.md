@@ -113,8 +113,8 @@
 - [x] **DrawElements + shm indices（零拷贝 draw 数据路径）**：wire 增加 `DrawElements{mode,count,type,indices_offset}`；`Client::SendDrawElements` 携带 shm fd；`ServerCore` 接收并映射后把 indices 指针传给 BFA `DrawElements`；`ClientDrawElementsShmTest` 1/1 通过（offset=1 读到 0x2B）
 - [x] **BufferSubData + shm data（buffer 数据通路）**：wire 增加 `BufferSubData{buffer_handle,offset,size}`；`Client::SendBufferSubData` 携带 shm fd；`ServerCore` 把 shm 指针传给 BFA `BufferSubData`；`ClientBufferSubDataShmTest` 1/1 通过（handle/offset/size/首字节 0x44 精确回查）
 - [x] **PatchParameteri scalar 命令**：wire 增加 `PatchParameteri{pname,value}`；`Client::SendPatchParameteri` + `ServerCore` 解包调 BFA `PatchParameteri`；`ClientPatchParameteriTest` 1/1 通过（0x1234/-7 精确回查）
-- [x] **MemoryBarrierByRegion scalar 命令**：wire 增加 `MemoryBarrierByRegion{barriers}`；`Client::SendMemoryBarrierByRegion` + `ServerCore` 解包调 BFA；`ClientMemoryBarrierByRegionTest` 1/1 通过（0x5678 精确回查）
-- [x] DirectGLES / DirectVulkan null adapter 提供 `Initialize/Shutdown/Display/SharedGroup/Session/Clear/ClearColor/DrawArrays/DrawElements/BufferSubData/MemoryBarrier/MemoryBarrierByRegion/PatchParameteri/GenerateMipmap/DispatchCompute/Begin/End/Pause/Resume/BindTransformFeedback/BlitFramebuffer` 存根
+- [x] **SwapBuffers 命令**：wire 增加 `SwapBuffers{draw}`；`Client::SendSwapBuffers` + `ServerCore` 调 BFA `SwapBuffers`（bool 决定 status）；`ClientSwapBuffersTest` 1/1 通过（0xCAFE 精确回查）
+- [x] DirectGLES / DirectVulkan null adapter 提供 `Initialize/Shutdown/Display/SharedGroup/Session/Clear/ClearColor/DrawArrays/DrawElements/BufferSubData/MemoryBarrier/MemoryBarrierByRegion/PatchParameteri/GenerateMipmap/DispatchCompute/Begin/End/Pause/Resume/BindTransformFeedback/BlitFramebuffer/SwapBuffers` 存根
 - [x] **BigServer 全链路 E2E（in-process）**：Client 命令 → InProcessTransport → `FullServer::ServerCore` → Backend VTable → Response → Client；`BigServerE2ETest` 1/1 通过
 - [x] **BigServer 全链路 E2E（LocalSocketShm）**：client socket → server accept → `ServerCore` 分发 → 响应返回 client；`BigServerE2ETest` 2/2 通过
 - [x] ServerCore 分发改为使用生成 opcode 表（`MobileGLOpcode::glClear`），BigServerE2E 通过

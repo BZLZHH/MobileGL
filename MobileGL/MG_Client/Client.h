@@ -83,6 +83,9 @@ namespace MobileGL::Client {
                              int32_t srcY1, int32_t dstX0, int32_t dstY0, int32_t dstX1,
                              int32_t dstY1, uint32_t mask, uint32_t filter, Uint64 token);
 
+    // Sends an eglSwapBuffers command (awaits response).
+    Bool SendSwapBuffers(Uint64 sessionId, uint64_t draw, Uint64 token);
+
     // Submits a command without waiting for its response.
     Bool SubmitCommand(Uint32 sessionId, Uint32 opcode, Uint64 token);
 

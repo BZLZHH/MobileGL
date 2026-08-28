@@ -209,6 +209,8 @@ namespace {
 
     // Skeleton vtable: lifecycle + session + Clear entries live, everything else
     // null until the real DirectVulkan adapter lands.
+    bool SwapBuffersBackend(MobileGLBackend* self, MobileGLSessionId session,
+                            MobileGLBackendHandle draw);
     const MobileGLBackendVTable s_backendVTable = {
         .structSize = sizeof(MobileGLBackendVTable),
         .apiVersion = (MOBILEGL_BFA_ABI_MAJOR << 16) | MOBILEGL_BFA_ABI_MINOR,
@@ -235,8 +237,17 @@ namespace {
         .PauseTransformFeedback = &PauseTransformFeedbackBackend,
         .ResumeTransformFeedback = &ResumeTransformFeedbackBackend,
         .BindTransformFeedback = &BindTransformFeedbackBackend,
-        .BlitFramebuffer = &BlitFramebufferBackend
+        .BlitFramebuffer = &BlitFramebufferBackend,
+        .SwapBuffers = &SwapBuffersBackend
     };
+
+    bool SwapBuffersBackend(MobileGLBackend* self, MobileGLSessionId session,
+                            MobileGLBackendHandle draw) {
+        (void)self;
+        (void)session;
+        (void)draw;
+        return true;
+    }
 
     const MobileGLBackendVTable* GetBackendVTable() {
         return &s_backendVTable;

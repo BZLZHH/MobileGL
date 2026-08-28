@@ -295,6 +295,15 @@ namespace MobileGL::FullServer {
                                           blit == nullptr ? 0 : blit->filter());
                 status = 0;
             }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::eglSwapBuffers) &&
+                   m_vtable->SwapBuffers != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else {
+                const auto* swp = command->swap_buffers();
+                status = m_vtable->SwapBuffers(m_backend, sessionId,
+                                               swp == nullptr ? 0 : swp->draw()) ? 0 : 1;
+            }
         }
 
         for (auto& handle : receivedShm) {
