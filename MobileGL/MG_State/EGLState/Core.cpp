@@ -222,7 +222,7 @@ namespace MobileGL {
             void EGLContext::ReleaseThreadUnlocked(const std::thread::id& threadKey) {
                 GLState::GLContextRegistry::SetCurrent(
                     static_cast<Uint64>(std::hash<std::thread::id>{}(threadKey)), 0);
-                pGLContext = nullptr;
+                RestoreLegacyCurrentContext();
 
                 auto currentIt = m_threadCurrents.find(threadKey);
                 if (currentIt == m_threadCurrents.end()) {

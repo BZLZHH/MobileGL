@@ -45,6 +45,10 @@ namespace MobileGL::MG_State {
         pGLContext = nullptr;
     }
 
+    void RestoreLegacyCurrentContext() {
+        pGLContext = s_legacyContextStorage.get();
+    }
+
     Bool IsRelaxedSemanticsActive() {
         return MG_Config::Features.RelaxedSemantics ||
                !(pEGLContext && pEGLContext->IsCurrentContextOpenGLCoreProfile());

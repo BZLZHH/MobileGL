@@ -625,6 +625,9 @@ namespace MobileGL {
         void SetLegacyCurrentContext(UniquePtr<GLState::GLContext>&& context);
         UniquePtr<GLState::GLContext> TakeLegacyCurrentContext();
         void ResetLegacyCurrentContext();
+        // Puts pGLContext back to the legacy storage context (the fallback used
+        // when no EGL session is current), or null when the storage is empty.
+        void RestoreLegacyCurrentContext();
 
         // True when relaxed GL semantics apply. Strict core rules are enforced only when the
         // current EGL context explicitly requested a core profile (core bit in
