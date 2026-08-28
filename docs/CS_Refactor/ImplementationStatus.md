@@ -32,7 +32,7 @@
 - [x] `MobileGL/MG_Backend/CMakeLists.txt` — `BackendObject_DirectGLES` / `BackendObject_DirectVulkan` MODULE 骨架 + manifest
 - [ ] 把真实 `MG_Impl / MG_State / MG_Util` 源列表拆入 `FullServerCore`，并从 monolith 删除（等 Phase 2/3 完成后再切）
 
-## Phase 2 — FullServer 状态模型（进行中）
+## Phase 2 — FullServer 状态模型（共享对象表迁移完成；pGLContext 路由待做）
 
 - [x] `MobileGL/MG_State/GLState/ContextRegistry.h/.cpp` — `GLSharedGroup` / `GLContextSession` / `GLContextRegistry`
 - [x] `MobileGL/MG_State/GLState/SharedObjectTables.h` — group 级共享对象表容器（BufferState 起步）
