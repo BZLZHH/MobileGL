@@ -36,6 +36,10 @@ namespace MobileGL::Client {
     Bool SendClearColor(Uint64 sessionId, float red, float green, float blue, float alpha,
                         Uint64 token);
 
+    // Sends a typed glDrawArrays command (awaits response).
+    Bool SendDrawArrays(Uint64 sessionId, uint32_t mode, int32_t first, int32_t count,
+                        Uint64 token);
+
     // Submits a command without waiting for its response.
     Bool SubmitCommand(Uint32 sessionId, Uint32 opcode, Uint64 token);
 

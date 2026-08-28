@@ -132,6 +132,18 @@ namespace MobileGL::FullServer {
                                      color == nullptr ? 0 : color->alpha());
                 status = 0;
             }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glDrawArrays) &&
+                   m_vtable->DrawArrays != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else {
+                const auto* draw = command->draw_arrays();
+                m_vtable->DrawArrays(m_backend, sessionId,
+                                     draw == nullptr ? 0 : draw->mode(),
+                                     draw == nullptr ? 0 : draw->first(),
+                                     draw == nullptr ? 0 : draw->count());
+                status = 0;
+            }
         }
 
         flatbuffers::FlatBufferBuilder responseBuilder;

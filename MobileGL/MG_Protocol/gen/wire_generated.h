@@ -23,6 +23,9 @@ struct GlClearBuilder;
 struct ClearColor;
 struct ClearColorBuilder;
 
+struct DrawArrays;
+struct DrawArraysBuilder;
+
 struct DataBlob;
 struct DataBlobBuilder;
 
@@ -149,6 +152,68 @@ inline ::flatbuffers::Offset<ClearColor> CreateClearColor(
   return builder_.Finish();
 }
 
+struct DrawArrays FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef DrawArraysBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_MODE = 4,
+    VT_FIRST = 6,
+    VT_COUNT = 8
+  };
+  uint32_t mode() const {
+    return GetField<uint32_t>(VT_MODE, 0);
+  }
+  int32_t first() const {
+    return GetField<int32_t>(VT_FIRST, 0);
+  }
+  int32_t count() const {
+    return GetField<int32_t>(VT_COUNT, 0);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint32_t>(verifier, VT_MODE, 4) &&
+           VerifyField<int32_t>(verifier, VT_FIRST, 4) &&
+           VerifyField<int32_t>(verifier, VT_COUNT, 4) &&
+           verifier.EndTable();
+  }
+};
+
+struct DrawArraysBuilder {
+  typedef DrawArrays Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_mode(uint32_t mode) {
+    fbb_.AddElement<uint32_t>(DrawArrays::VT_MODE, mode, 0);
+  }
+  void add_first(int32_t first) {
+    fbb_.AddElement<int32_t>(DrawArrays::VT_FIRST, first, 0);
+  }
+  void add_count(int32_t count) {
+    fbb_.AddElement<int32_t>(DrawArrays::VT_COUNT, count, 0);
+  }
+  explicit DrawArraysBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<DrawArrays> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<DrawArrays>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<DrawArrays> CreateDrawArrays(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint32_t mode = 0,
+    int32_t first = 0,
+    int32_t count = 0) {
+  DrawArraysBuilder builder_(_fbb);
+  builder_.add_count(count);
+  builder_.add_first(first);
+  builder_.add_mode(mode);
+  return builder_.Finish();
+}
+
 struct DataBlob FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef DataBlobBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
@@ -209,7 +274,8 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_TOKEN = 8,
     VT_CLEAR = 10,
     VT_CLEAR_COLOR = 12,
-    VT_DATA = 14
+    VT_DRAW_ARRAYS = 14,
+    VT_DATA = 16
   };
   uint32_t opcode() const {
     return GetField<uint32_t>(VT_OPCODE, 0);
@@ -226,6 +292,9 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   const MobileGL::Protocol::Wire::ClearColor *clear_color() const {
     return GetPointer<const MobileGL::Protocol::Wire::ClearColor *>(VT_CLEAR_COLOR);
   }
+  const MobileGL::Protocol::Wire::DrawArrays *draw_arrays() const {
+    return GetPointer<const MobileGL::Protocol::Wire::DrawArrays *>(VT_DRAW_ARRAYS);
+  }
   const MobileGL::Protocol::Wire::DataBlob *data() const {
     return GetPointer<const MobileGL::Protocol::Wire::DataBlob *>(VT_DATA);
   }
@@ -239,6 +308,8 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            verifier.VerifyTable(clear()) &&
            VerifyOffset(verifier, VT_CLEAR_COLOR) &&
            verifier.VerifyTable(clear_color()) &&
+           VerifyOffset(verifier, VT_DRAW_ARRAYS) &&
+           verifier.VerifyTable(draw_arrays()) &&
            VerifyOffset(verifier, VT_DATA) &&
            verifier.VerifyTable(data()) &&
            verifier.EndTable();
@@ -264,6 +335,9 @@ struct CommandBuilder {
   void add_clear_color(::flatbuffers::Offset<MobileGL::Protocol::Wire::ClearColor> clear_color) {
     fbb_.AddOffset(Command::VT_CLEAR_COLOR, clear_color);
   }
+  void add_draw_arrays(::flatbuffers::Offset<MobileGL::Protocol::Wire::DrawArrays> draw_arrays) {
+    fbb_.AddOffset(Command::VT_DRAW_ARRAYS, draw_arrays);
+  }
   void add_data(::flatbuffers::Offset<MobileGL::Protocol::Wire::DataBlob> data) {
     fbb_.AddOffset(Command::VT_DATA, data);
   }
@@ -285,11 +359,13 @@ inline ::flatbuffers::Offset<Command> CreateCommand(
     uint64_t token = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::GlClear> clear = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::ClearColor> clear_color = 0,
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::DrawArrays> draw_arrays = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::DataBlob> data = 0) {
   CommandBuilder builder_(_fbb);
   builder_.add_token(token);
   builder_.add_session_id(session_id);
   builder_.add_data(data);
+  builder_.add_draw_arrays(draw_arrays);
   builder_.add_clear_color(clear_color);
   builder_.add_clear(clear);
   builder_.add_opcode(opcode);

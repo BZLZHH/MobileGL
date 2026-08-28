@@ -22,6 +22,12 @@ table ClearColor {
     alpha: float;
 }
 
+table DrawArrays {
+    mode: uint;
+    first: int;
+    count: int;
+}
+
 table DataBlob {
     offset: ulong;
     size: ulong;
@@ -33,6 +39,7 @@ table Command {
     token: ulong;
     clear: GlClear;
     clear_color: ClearColor;
+    draw_arrays: DrawArrays;
     data: DataBlob;
 }
 

@@ -247,6 +247,35 @@ endif()
 
 gtest_discover_tests(ClientClearColorTest DISCOVERY_TIMEOUT 30 PROPERTIES LABELS unit)
 
+add_executable(
+        ClientDrawArraysTest
+        ClientDrawArraysTest.cpp
+        ${MGL_ROOT}/MobileGL/MG_FullServer/ServerCore.cpp
+)
+
+target_include_directories(ClientDrawArraysTest PRIVATE
+        ${MGL_ROOT}/include
+        ${MGL_ROOT}/MobileGL
+        ${MGL_ROOT}/3rdparty/xxHash
+        ${MGL_ROOT}/3rdparty/Vulkan-Headers/include
+        ${MGL_ROOT}/3rdparty/SPIRV-Reflect
+)
+
+target_link_libraries(
+        ClientDrawArraysTest PRIVATE
+        GTest::gtest_main
+        MobileGL_Client
+        MobileGL_Transport
+        MobileGL_BFA
+)
+
+if (MSVC)
+        target_compile_options(ClientDrawArraysTest PRIVATE /Zc:preprocessor)
+endif()
+
+gtest_discover_tests(ClientDrawArraysTest DISCOVERY_TIMEOUT 30 PROPERTIES LABELS unit)
+
+
 
 
 add_executable(
