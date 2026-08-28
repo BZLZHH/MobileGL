@@ -35,6 +35,9 @@ struct BufferSubDataBuilder;
 struct MemoryBarrier;
 struct MemoryBarrierBuilder;
 
+struct MemoryBarrierByRegion;
+struct MemoryBarrierByRegionBuilder;
+
 struct PatchParameteri;
 struct PatchParameteriBuilder;
 
@@ -413,6 +416,48 @@ inline ::flatbuffers::Offset<MemoryBarrier> CreateMemoryBarrier(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     uint32_t barriers = 0) {
   MemoryBarrierBuilder builder_(_fbb);
+  builder_.add_barriers(barriers);
+  return builder_.Finish();
+}
+
+struct MemoryBarrierByRegion FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef MemoryBarrierByRegionBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_BARRIERS = 4
+  };
+  uint32_t barriers() const {
+    return GetField<uint32_t>(VT_BARRIERS, 0);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint32_t>(verifier, VT_BARRIERS, 4) &&
+           verifier.EndTable();
+  }
+};
+
+struct MemoryBarrierByRegionBuilder {
+  typedef MemoryBarrierByRegion Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_barriers(uint32_t barriers) {
+    fbb_.AddElement<uint32_t>(MemoryBarrierByRegion::VT_BARRIERS, barriers, 0);
+  }
+  explicit MemoryBarrierByRegionBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<MemoryBarrierByRegion> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<MemoryBarrierByRegion>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<MemoryBarrierByRegion> CreateMemoryBarrierByRegion(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint32_t barriers = 0) {
+  MemoryBarrierByRegionBuilder builder_(_fbb);
   builder_.add_barriers(barriers);
   return builder_.Finish();
 }
@@ -873,13 +918,14 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_DRAW_ELEMENTS = 16,
     VT_BUFFER_SUB_DATA = 18,
     VT_MEMORY_BARRIER = 20,
-    VT_PATCH_PARAMETERI = 22,
-    VT_GENERATE_MIPMAP = 24,
-    VT_DISPATCH_COMPUTE = 26,
-    VT_BEGIN_TRANSFORM_FEEDBACK = 28,
-    VT_BIND_TRANSFORM_FEEDBACK = 30,
-    VT_BLIT_FRAMEBUFFER = 32,
-    VT_DATA = 34
+    VT_MEMORY_BARRIER_BY_REGION = 22,
+    VT_PATCH_PARAMETERI = 24,
+    VT_GENERATE_MIPMAP = 26,
+    VT_DISPATCH_COMPUTE = 28,
+    VT_BEGIN_TRANSFORM_FEEDBACK = 30,
+    VT_BIND_TRANSFORM_FEEDBACK = 32,
+    VT_BLIT_FRAMEBUFFER = 34,
+    VT_DATA = 36
   };
   uint32_t opcode() const {
     return GetField<uint32_t>(VT_OPCODE, 0);
@@ -907,6 +953,9 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   }
   const MobileGL::Protocol::Wire::MemoryBarrier *memory_barrier() const {
     return GetPointer<const MobileGL::Protocol::Wire::MemoryBarrier *>(VT_MEMORY_BARRIER);
+  }
+  const MobileGL::Protocol::Wire::MemoryBarrierByRegion *memory_barrier_by_region() const {
+    return GetPointer<const MobileGL::Protocol::Wire::MemoryBarrierByRegion *>(VT_MEMORY_BARRIER_BY_REGION);
   }
   const MobileGL::Protocol::Wire::PatchParameteri *patch_parameteri() const {
     return GetPointer<const MobileGL::Protocol::Wire::PatchParameteri *>(VT_PATCH_PARAMETERI);
@@ -947,6 +996,8 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            verifier.VerifyTable(buffer_sub_data()) &&
            VerifyOffset(verifier, VT_MEMORY_BARRIER) &&
            verifier.VerifyTable(memory_barrier()) &&
+           VerifyOffset(verifier, VT_MEMORY_BARRIER_BY_REGION) &&
+           verifier.VerifyTable(memory_barrier_by_region()) &&
            VerifyOffset(verifier, VT_PATCH_PARAMETERI) &&
            verifier.VerifyTable(patch_parameteri()) &&
            VerifyOffset(verifier, VT_GENERATE_MIPMAP) &&
@@ -996,6 +1047,9 @@ struct CommandBuilder {
   void add_memory_barrier(::flatbuffers::Offset<MobileGL::Protocol::Wire::MemoryBarrier> memory_barrier) {
     fbb_.AddOffset(Command::VT_MEMORY_BARRIER, memory_barrier);
   }
+  void add_memory_barrier_by_region(::flatbuffers::Offset<MobileGL::Protocol::Wire::MemoryBarrierByRegion> memory_barrier_by_region) {
+    fbb_.AddOffset(Command::VT_MEMORY_BARRIER_BY_REGION, memory_barrier_by_region);
+  }
   void add_patch_parameteri(::flatbuffers::Offset<MobileGL::Protocol::Wire::PatchParameteri> patch_parameteri) {
     fbb_.AddOffset(Command::VT_PATCH_PARAMETERI, patch_parameteri);
   }
@@ -1039,6 +1093,7 @@ inline ::flatbuffers::Offset<Command> CreateCommand(
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::DrawElements> draw_elements = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::BufferSubData> buffer_sub_data = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::MemoryBarrier> memory_barrier = 0,
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::MemoryBarrierByRegion> memory_barrier_by_region = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::PatchParameteri> patch_parameteri = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::GenerateMipmap> generate_mipmap = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::DispatchCompute> dispatch_compute = 0,
@@ -1056,6 +1111,7 @@ inline ::flatbuffers::Offset<Command> CreateCommand(
   builder_.add_dispatch_compute(dispatch_compute);
   builder_.add_generate_mipmap(generate_mipmap);
   builder_.add_patch_parameteri(patch_parameteri);
+  builder_.add_memory_barrier_by_region(memory_barrier_by_region);
   builder_.add_memory_barrier(memory_barrier);
   builder_.add_buffer_sub_data(buffer_sub_data);
   builder_.add_draw_elements(draw_elements);

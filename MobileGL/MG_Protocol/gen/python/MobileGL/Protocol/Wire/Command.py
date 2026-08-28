@@ -112,8 +112,19 @@ class Command(object):
         return None
 
     # Command
-    def PatchParameteri(self):
+    def MemoryBarrierByRegion(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(22))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from MobileGL.Protocol.Wire.MemoryBarrierByRegion import MemoryBarrierByRegion
+            obj = MemoryBarrierByRegion()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # Command
+    def PatchParameteri(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(24))
         if o != 0:
             x = self._tab.Indirect(o + self._tab.Pos)
             from MobileGL.Protocol.Wire.PatchParameteri import PatchParameteri
@@ -124,7 +135,7 @@ class Command(object):
 
     # Command
     def GenerateMipmap(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(24))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(26))
         if o != 0:
             x = self._tab.Indirect(o + self._tab.Pos)
             from MobileGL.Protocol.Wire.GenerateMipmap import GenerateMipmap
@@ -135,7 +146,7 @@ class Command(object):
 
     # Command
     def DispatchCompute(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(26))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(28))
         if o != 0:
             x = self._tab.Indirect(o + self._tab.Pos)
             from MobileGL.Protocol.Wire.DispatchCompute import DispatchCompute
@@ -146,7 +157,7 @@ class Command(object):
 
     # Command
     def BeginTransformFeedback(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(28))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(30))
         if o != 0:
             x = self._tab.Indirect(o + self._tab.Pos)
             from MobileGL.Protocol.Wire.BeginTransformFeedback import BeginTransformFeedback
@@ -157,7 +168,7 @@ class Command(object):
 
     # Command
     def BindTransformFeedback(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(30))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(32))
         if o != 0:
             x = self._tab.Indirect(o + self._tab.Pos)
             from MobileGL.Protocol.Wire.BindTransformFeedback import BindTransformFeedback
@@ -168,7 +179,7 @@ class Command(object):
 
     # Command
     def BlitFramebuffer(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(32))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(34))
         if o != 0:
             x = self._tab.Indirect(o + self._tab.Pos)
             from MobileGL.Protocol.Wire.BlitFramebuffer import BlitFramebuffer
@@ -179,7 +190,7 @@ class Command(object):
 
     # Command
     def Data(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(34))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(36))
         if o != 0:
             x = self._tab.Indirect(o + self._tab.Pos)
             from MobileGL.Protocol.Wire.DataBlob import DataBlob
@@ -189,7 +200,7 @@ class Command(object):
         return None
 
 def CommandStart(builder):
-    builder.StartObject(16)
+    builder.StartObject(17)
 
 def Start(builder):
     CommandStart(builder)
@@ -248,44 +259,50 @@ def CommandAddMemoryBarrier(builder, memoryBarrier):
 def AddMemoryBarrier(builder, memoryBarrier):
     CommandAddMemoryBarrier(builder, memoryBarrier)
 
+def CommandAddMemoryBarrierByRegion(builder, memoryBarrierByRegion):
+    builder.PrependUOffsetTRelativeSlot(9, flatbuffers.number_types.UOffsetTFlags.py_type(memoryBarrierByRegion), 0)
+
+def AddMemoryBarrierByRegion(builder, memoryBarrierByRegion):
+    CommandAddMemoryBarrierByRegion(builder, memoryBarrierByRegion)
+
 def CommandAddPatchParameteri(builder, patchParameteri):
-    builder.PrependUOffsetTRelativeSlot(9, flatbuffers.number_types.UOffsetTFlags.py_type(patchParameteri), 0)
+    builder.PrependUOffsetTRelativeSlot(10, flatbuffers.number_types.UOffsetTFlags.py_type(patchParameteri), 0)
 
 def AddPatchParameteri(builder, patchParameteri):
     CommandAddPatchParameteri(builder, patchParameteri)
 
 def CommandAddGenerateMipmap(builder, generateMipmap):
-    builder.PrependUOffsetTRelativeSlot(10, flatbuffers.number_types.UOffsetTFlags.py_type(generateMipmap), 0)
+    builder.PrependUOffsetTRelativeSlot(11, flatbuffers.number_types.UOffsetTFlags.py_type(generateMipmap), 0)
 
 def AddGenerateMipmap(builder, generateMipmap):
     CommandAddGenerateMipmap(builder, generateMipmap)
 
 def CommandAddDispatchCompute(builder, dispatchCompute):
-    builder.PrependUOffsetTRelativeSlot(11, flatbuffers.number_types.UOffsetTFlags.py_type(dispatchCompute), 0)
+    builder.PrependUOffsetTRelativeSlot(12, flatbuffers.number_types.UOffsetTFlags.py_type(dispatchCompute), 0)
 
 def AddDispatchCompute(builder, dispatchCompute):
     CommandAddDispatchCompute(builder, dispatchCompute)
 
 def CommandAddBeginTransformFeedback(builder, beginTransformFeedback):
-    builder.PrependUOffsetTRelativeSlot(12, flatbuffers.number_types.UOffsetTFlags.py_type(beginTransformFeedback), 0)
+    builder.PrependUOffsetTRelativeSlot(13, flatbuffers.number_types.UOffsetTFlags.py_type(beginTransformFeedback), 0)
 
 def AddBeginTransformFeedback(builder, beginTransformFeedback):
     CommandAddBeginTransformFeedback(builder, beginTransformFeedback)
 
 def CommandAddBindTransformFeedback(builder, bindTransformFeedback):
-    builder.PrependUOffsetTRelativeSlot(13, flatbuffers.number_types.UOffsetTFlags.py_type(bindTransformFeedback), 0)
+    builder.PrependUOffsetTRelativeSlot(14, flatbuffers.number_types.UOffsetTFlags.py_type(bindTransformFeedback), 0)
 
 def AddBindTransformFeedback(builder, bindTransformFeedback):
     CommandAddBindTransformFeedback(builder, bindTransformFeedback)
 
 def CommandAddBlitFramebuffer(builder, blitFramebuffer):
-    builder.PrependUOffsetTRelativeSlot(14, flatbuffers.number_types.UOffsetTFlags.py_type(blitFramebuffer), 0)
+    builder.PrependUOffsetTRelativeSlot(15, flatbuffers.number_types.UOffsetTFlags.py_type(blitFramebuffer), 0)
 
 def AddBlitFramebuffer(builder, blitFramebuffer):
     CommandAddBlitFramebuffer(builder, blitFramebuffer)
 
 def CommandAddData(builder, data):
-    builder.PrependUOffsetTRelativeSlot(15, flatbuffers.number_types.UOffsetTFlags.py_type(data), 0)
+    builder.PrependUOffsetTRelativeSlot(16, flatbuffers.number_types.UOffsetTFlags.py_type(data), 0)
 
 def AddData(builder, data):
     CommandAddData(builder, data)

@@ -86,6 +86,13 @@ namespace {
         (void)barriers;
     }
 
+    void MemoryBarrierByRegionBackend(MobileGLBackend* self, MobileGLSessionId session,
+                                      uint32_t barriers) {
+        (void)self;
+        (void)session;
+        (void)barriers;
+    }
+
     void PatchParameteriBackend(MobileGLBackend* self, MobileGLSessionId session,
                                uint32_t pname, int32_t value) {
         (void)self;
@@ -219,6 +226,7 @@ namespace {
         .DrawElements = &DrawElementsBackend,
         .BufferSubData = &BufferSubDataBackend,
         .MemoryBarrier = &MemoryBarrierBackend,
+        .MemoryBarrierByRegion = &MemoryBarrierByRegionBackend,
         .PatchParameteri = &PatchParameteriBackend,
         .GenerateMipmap = &GenerateMipmapBackend,
         .DispatchCompute = &DispatchComputeBackend,

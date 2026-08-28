@@ -234,7 +234,7 @@ namespace MobileGL::Client {
         const auto command = MobileGL::Protocol::Wire::CreateCommand(
             builder,
             static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glPatchParameteri),
-            sessionId, token, 0, 0, 0, 0, 0, 0, pp, 0);
+            sessionId, token, 0, 0, 0, 0, 0, 0, 0, pp, 0);
         const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 0);
         builder.Finish(message);
 
@@ -259,7 +259,7 @@ namespace MobileGL::Client {
         const auto command = MobileGL::Protocol::Wire::CreateCommand(
             builder,
             static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glGenerateMipmap),
-            sessionId, token, 0, 0, 0, 0, 0, 0, 0, gm, 0);
+            sessionId, token, 0, 0, 0, 0, 0, 0, 0, 0, gm, 0);
         const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 0);
         builder.Finish(message);
 
@@ -286,7 +286,7 @@ namespace MobileGL::Client {
         const auto command = MobileGL::Protocol::Wire::CreateCommand(
             builder,
             static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glDispatchCompute),
-            sessionId, token, 0, 0, 0, 0, 0, 0, 0, 0, dc, 0);
+            sessionId, token, 0, 0, 0, 0, 0, 0, 0, 0, 0, dc, 0);
         const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 0);
         builder.Finish(message);
 
@@ -311,7 +311,7 @@ namespace MobileGL::Client {
         const auto command = MobileGL::Protocol::Wire::CreateCommand(
             builder,
             static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glBeginTransformFeedback),
-            sessionId, token, 0, 0, 0, 0, 0, 0, 0, 0, 0, btf, 0);
+            sessionId, token, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, btf, 0);
         const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 0);
         builder.Finish(message);
 
@@ -370,7 +370,7 @@ namespace MobileGL::Client {
         const auto command = MobileGL::Protocol::Wire::CreateCommand(
             builder,
             static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glBindTransformFeedback),
-            sessionId, token, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, btf, 0);
+            sessionId, token, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, btf, 0);
         const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 0);
         builder.Finish(message);
 
@@ -400,7 +400,32 @@ namespace MobileGL::Client {
         const auto command = MobileGL::Protocol::Wire::CreateCommand(
             builder,
             static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glBlitFramebuffer),
-            sessionId, token, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, blit, 0);
+            sessionId, token, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, blit, 0);
+        const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 0);
+        builder.Finish(message);
+
+        MobileGLCommandBatch batch{};
+        batch.structSize = sizeof(MobileGLCommandBatch);
+        batch.flatBufferData = builder.GetBufferPointer();
+        batch.flatBufferSize = static_cast<Uint32>(builder.GetSize());
+        if (!s_ops->SubmitCommands(s_transport, &batch)) {
+            s_lastError = s_ops->GetLastError(s_transport);
+            return false;
+        }
+        return WaitResponseForToken(token, 0);
+    }
+
+    Bool SendMemoryBarrierByRegion(Uint64 sessionId, uint32_t barriers, Uint64 token) {
+        if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
+            s_lastError = "Client is not initialized.";
+            return false;
+        }
+        flatbuffers::FlatBufferBuilder builder;
+        const auto mb = MobileGL::Protocol::Wire::CreateMemoryBarrierByRegion(builder, barriers);
+        const auto command = MobileGL::Protocol::Wire::CreateCommand(
+            builder,
+            static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glMemoryBarrierByRegion),
+            sessionId, token, 0, 0, 0, 0, 0, 0, mb, 0, 0, 0, 0, 0, 0);
         const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 0);
         builder.Finish(message);
 
@@ -433,7 +458,7 @@ namespace MobileGL::Client {
             data = MobileGL::Protocol::Wire::CreateDataBlob(builder, shmOffset, shmSize);
         }
         const auto command = MobileGL::Protocol::Wire::CreateCommand(
-            builder, opcode, sessionId, token, clear, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, data);
+            builder, opcode, sessionId, token, clear, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, data);
         const auto message =
             MobileGL::Protocol::Wire::CreateMessage(builder, command, shm == nullptr ? 0 : 1);
         builder.Finish(message);

@@ -45,6 +45,10 @@ table MemoryBarrier {
     barriers: uint;
 }
 
+table MemoryBarrierByRegion {
+    barriers: uint;
+}
+
 table PatchParameteri {
     pname: uint;
     value: int;
@@ -98,6 +102,7 @@ table Command {
     draw_elements: DrawElements;
     buffer_sub_data: BufferSubData;
     memory_barrier: MemoryBarrier;
+    memory_barrier_by_region: MemoryBarrierByRegion;
     patch_parameteri: PatchParameteri;
     generate_mipmap: GenerateMipmap;
     dispatch_compute: DispatchCompute;

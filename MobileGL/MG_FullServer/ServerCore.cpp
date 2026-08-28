@@ -188,6 +188,16 @@ namespace MobileGL::FullServer {
                 m_vtable->MemoryBarrier(m_backend, sessionId, mb == nullptr ? 0 : mb->barriers());
                 status = 0;
             }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glMemoryBarrierByRegion) &&
+                   m_vtable->MemoryBarrierByRegion != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else {
+                const auto* mb = command->memory_barrier_by_region();
+                m_vtable->MemoryBarrierByRegion(m_backend, sessionId,
+                                                mb == nullptr ? 0 : mb->barriers());
+                status = 0;
+            }
         } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glPatchParameteri) &&
                    m_vtable->PatchParameteri != nullptr) {
             if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
