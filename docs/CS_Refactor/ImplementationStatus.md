@@ -50,7 +50,7 @@
 - [x] **TransformFeedback 共享对象表迁移**：`SharedTransformFeedbackObjectTable`（对象 map + name generator）由 `SharedObjectTables` 持有；bound index / live capture state / buffer binding points 仍 per-context
 - [x] **ProgramPipeline 共享对象表迁移**：`SharedProgramPipelineObjectTable`（pipeline map + name generator）由 `SharedObjectTables` 持有；bound pipeline index 仍 per-context
 - [x] `MobileGL/MG_Test/State/ContextRegistryTest.cpp` / `HandleRegistryTest.cpp` — 单元测试（Buffer/Texture/Sampler/Renderbuffer/Framebuffer/VAO/Program/Shader/TransformFeedback/ProgramPipeline 跨 session 可见性验证）
-- [ ] 共享对象表真正替换 GLContext 内的 per-context *State（TransformFeedback/Query/Sync/... 继续迁移）
+- [ ] Query/Sync 明确 session-private 状态层落地（HandleRegistry 已按此分类）
 - [ ] `pGLContext` 切换为按 `(sessionId, clientThreadId)` 取 current（Huge: 数百处访问点）
 
 ## Phase 3 — BFA 落地（进行中）
