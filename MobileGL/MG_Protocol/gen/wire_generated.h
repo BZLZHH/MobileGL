@@ -44,6 +44,9 @@ struct GenerateMipmapBuilder;
 struct DispatchCompute;
 struct DispatchComputeBuilder;
 
+struct BeginTransformFeedback;
+struct BeginTransformFeedbackBuilder;
+
 struct DataBlob;
 struct DataBlobBuilder;
 
@@ -564,6 +567,48 @@ inline ::flatbuffers::Offset<DispatchCompute> CreateDispatchCompute(
   return builder_.Finish();
 }
 
+struct BeginTransformFeedback FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef BeginTransformFeedbackBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_PRIMITIVE_MODE = 4
+  };
+  uint32_t primitive_mode() const {
+    return GetField<uint32_t>(VT_PRIMITIVE_MODE, 0);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint32_t>(verifier, VT_PRIMITIVE_MODE, 4) &&
+           verifier.EndTable();
+  }
+};
+
+struct BeginTransformFeedbackBuilder {
+  typedef BeginTransformFeedback Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_primitive_mode(uint32_t primitive_mode) {
+    fbb_.AddElement<uint32_t>(BeginTransformFeedback::VT_PRIMITIVE_MODE, primitive_mode, 0);
+  }
+  explicit BeginTransformFeedbackBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<BeginTransformFeedback> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<BeginTransformFeedback>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<BeginTransformFeedback> CreateBeginTransformFeedback(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint32_t primitive_mode = 0) {
+  BeginTransformFeedbackBuilder builder_(_fbb);
+  builder_.add_primitive_mode(primitive_mode);
+  return builder_.Finish();
+}
+
 struct DataBlob FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef DataBlobBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
@@ -631,7 +676,8 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_PATCH_PARAMETERI = 22,
     VT_GENERATE_MIPMAP = 24,
     VT_DISPATCH_COMPUTE = 26,
-    VT_DATA = 28
+    VT_BEGIN_TRANSFORM_FEEDBACK = 28,
+    VT_DATA = 30
   };
   uint32_t opcode() const {
     return GetField<uint32_t>(VT_OPCODE, 0);
@@ -669,6 +715,9 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   const MobileGL::Protocol::Wire::DispatchCompute *dispatch_compute() const {
     return GetPointer<const MobileGL::Protocol::Wire::DispatchCompute *>(VT_DISPATCH_COMPUTE);
   }
+  const MobileGL::Protocol::Wire::BeginTransformFeedback *begin_transform_feedback() const {
+    return GetPointer<const MobileGL::Protocol::Wire::BeginTransformFeedback *>(VT_BEGIN_TRANSFORM_FEEDBACK);
+  }
   const MobileGL::Protocol::Wire::DataBlob *data() const {
     return GetPointer<const MobileGL::Protocol::Wire::DataBlob *>(VT_DATA);
   }
@@ -696,6 +745,8 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            verifier.VerifyTable(generate_mipmap()) &&
            VerifyOffset(verifier, VT_DISPATCH_COMPUTE) &&
            verifier.VerifyTable(dispatch_compute()) &&
+           VerifyOffset(verifier, VT_BEGIN_TRANSFORM_FEEDBACK) &&
+           verifier.VerifyTable(begin_transform_feedback()) &&
            VerifyOffset(verifier, VT_DATA) &&
            verifier.VerifyTable(data()) &&
            verifier.EndTable();
@@ -742,6 +793,9 @@ struct CommandBuilder {
   void add_dispatch_compute(::flatbuffers::Offset<MobileGL::Protocol::Wire::DispatchCompute> dispatch_compute) {
     fbb_.AddOffset(Command::VT_DISPATCH_COMPUTE, dispatch_compute);
   }
+  void add_begin_transform_feedback(::flatbuffers::Offset<MobileGL::Protocol::Wire::BeginTransformFeedback> begin_transform_feedback) {
+    fbb_.AddOffset(Command::VT_BEGIN_TRANSFORM_FEEDBACK, begin_transform_feedback);
+  }
   void add_data(::flatbuffers::Offset<MobileGL::Protocol::Wire::DataBlob> data) {
     fbb_.AddOffset(Command::VT_DATA, data);
   }
@@ -770,11 +824,13 @@ inline ::flatbuffers::Offset<Command> CreateCommand(
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::PatchParameteri> patch_parameteri = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::GenerateMipmap> generate_mipmap = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::DispatchCompute> dispatch_compute = 0,
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::BeginTransformFeedback> begin_transform_feedback = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::DataBlob> data = 0) {
   CommandBuilder builder_(_fbb);
   builder_.add_token(token);
   builder_.add_session_id(session_id);
   builder_.add_data(data);
+  builder_.add_begin_transform_feedback(begin_transform_feedback);
   builder_.add_dispatch_compute(dispatch_compute);
   builder_.add_generate_mipmap(generate_mipmap);
   builder_.add_patch_parameteri(patch_parameteri);

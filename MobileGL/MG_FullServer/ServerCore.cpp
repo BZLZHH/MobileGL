@@ -220,6 +220,16 @@ namespace MobileGL::FullServer {
                                           dc == nullptr ? 0 : dc->num_groups_z());
                 status = 0;
             }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glBeginTransformFeedback) &&
+                   m_vtable->BeginTransformFeedback != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else {
+                const auto* btf = command->begin_transform_feedback();
+                m_vtable->BeginTransformFeedback(m_backend, sessionId,
+                                                 btf == nullptr ? 0 : btf->primitive_mode());
+                status = 0;
+            }
         }
 
         for (auto& handle : receivedShm) {

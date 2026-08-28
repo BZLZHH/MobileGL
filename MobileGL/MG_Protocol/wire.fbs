@@ -60,6 +60,10 @@ table DispatchCompute {
     num_groups_z: uint;
 }
 
+table BeginTransformFeedback {
+    primitive_mode: uint;
+}
+
 table DataBlob {
     offset: ulong;
     size: ulong;
@@ -78,6 +82,7 @@ table Command {
     patch_parameteri: PatchParameteri;
     generate_mipmap: GenerateMipmap;
     dispatch_compute: DispatchCompute;
+    begin_transform_feedback: BeginTransformFeedback;
     data: DataBlob;
 }
 

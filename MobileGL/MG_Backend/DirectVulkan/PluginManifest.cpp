@@ -80,6 +80,13 @@ namespace {
         (void)z;
     }
 
+    void BeginTransformFeedbackBackend(MobileGLBackend* self, MobileGLSessionId session,
+                                       uint32_t primitiveMode) {
+        (void)self;
+        (void)session;
+        (void)primitiveMode;
+    }
+
     void DrawElementsBackend(MobileGLBackend* self, MobileGLSessionId session,
                              uint32_t mode, int32_t count, uint32_t type, const void* indices) {
         (void)self;
@@ -170,7 +177,8 @@ namespace {
         .MemoryBarrier = &MemoryBarrierBackend,
         .PatchParameteri = &PatchParameteriBackend,
         .GenerateMipmap = &GenerateMipmapBackend,
-        .DispatchCompute = &DispatchComputeBackend
+        .DispatchCompute = &DispatchComputeBackend,
+        .BeginTransformFeedback = &BeginTransformFeedbackBackend
     };
 
     const MobileGLBackendVTable* GetBackendVTable() {
