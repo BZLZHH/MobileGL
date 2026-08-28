@@ -75,7 +75,8 @@
 - [x] `MobileGL/MG_Transport/InProcessTransport.h/.cpp` — 同进程 transport 实现（client/server 配对 + 批消息队列）
 - [x] `MobileGL/MG_Transport/TransportInternal.h` — 统一 `MobileGLTransport` 内部完成类型（避免 ODR 冲突）
 - [x] `MobileGL/MG_Test/Transport/InProcessTransportTest.cpp` — in-process + LocalSocketShm 往返 + shm arena + fd 传递测试 4/4 通过
-- [x] `MobileGL/MG_Client` — Client 命令 API：`InitializeWithTransport` + `SendCommand(sessionId, opcode)`（提交/等待响应）
+- [x] `MobileGL/MG_Client` — Client 命令 API：`InitializeWithTransport` + `SendCommand(sessionId, opcode)`（提交/等待响应）+ 异步 `SubmitCommand` / `WaitResponseForToken`
+- [x] `MobileGL/MG_Test/Transport/ClientAsyncBatchTest.cpp` — 8 条命令先全部提交、再按 token 收响应，1/1 通过
 - [x] `MobileGL/MG_Test/Transport/ClientServerEndToEndTest.cpp` — Client 命令 → InProcess → ServerCore → VTable → 响应，1/1 通过
 - [x] `InProcessTransport::WaitResponses` 改为等待语义（timeoutMs=0 无限等待）
 - [x] `MobileGL/MG_Transport/CMakeLists.txt` — `MobileGL_Transport` static library
@@ -89,7 +90,7 @@
 - [ ] 完整 source-list 合并进 `protocol.fbs`（trampoline / dispatch / 分类表）
 - [ ] 异步命令流 + 同步查询 / barrier
 - [x] **Token 透传**：`Command.token` / `Response.token`；`Client::SendCommand` 校验回显 token；Python 跨进程 E2E 仍 status=0
-- [ ] map/unmap/readback/字符串返回数据通路
+- [ ] map/unmap/readback/字符串返回数据通路（shm fd 已能跨进程传递，待接 payload）
 - [ ] Token 透传模型 + 会话生命周期
 
 ## Phase 5 — Plugin 化集成（进行中）

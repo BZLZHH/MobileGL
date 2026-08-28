@@ -65,7 +65,7 @@ namespace MobileGL::Client {
         return true;
     }
 
-    Bool SendCommand(Uint32 sessionId, Uint32 opcode, Uint64 token) {
+    Bool SubmitCommand(Uint32 sessionId, Uint32 opcode, Uint64 token) {
         if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
             s_lastError = "Client is not initialized.";
             return false;
@@ -86,9 +86,18 @@ namespace MobileGL::Client {
             s_lastError = s_ops->GetLastError(s_transport);
             return false;
         }
+        s_lastError.clear();
+        return true;
+    }
+
+    Bool WaitResponseForToken(Uint64 token, Uint32 timeoutMs) {
+        if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
+            s_lastError = "Client is not initialized.";
+            return false;
+        }
 
         MobileGLResponseQueue response{};
-        if (!s_ops->WaitResponses(s_transport, &response, 0)) {
+        if (!s_ops->WaitResponses(s_transport, &response, timeoutMs)) {
             s_lastError = s_ops->GetLastError(s_transport);
             return false;
         }
@@ -105,6 +114,13 @@ namespace MobileGL::Client {
         }
         s_lastError.clear();
         return parsed->status() == 0;
+    }
+
+    Bool SendCommand(Uint32 sessionId, Uint32 opcode, Uint64 token) {
+        if (!SubmitCommand(sessionId, opcode, token)) {
+            return false;
+        }
+        return WaitResponseForToken(token, 0);
     }
 
     void Shutdown() {

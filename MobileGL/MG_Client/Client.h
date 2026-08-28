@@ -32,6 +32,12 @@ namespace MobileGL::Client {
     // echoed token matches `token`.
     Bool SendCommand(Uint32 sessionId, Uint32 opcode, Uint64 token = 0);
 
+    // Submits a command without waiting for its response.
+    Bool SubmitCommand(Uint32 sessionId, Uint32 opcode, Uint64 token);
+
+    // Waits for the response whose echoed token equals `token`.
+    Bool WaitResponseForToken(Uint64 token, Uint32 timeoutMs);
+
     void Shutdown();
     const String& GetLastError();
 } // namespace MobileGL::Client
