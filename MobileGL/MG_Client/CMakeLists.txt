@@ -18,6 +18,7 @@ target_link_libraries(MobileGL_Client PRIVATE
 target_include_directories(MobileGL_Client PRIVATE
     ${CMAKE_SOURCE_DIR}/MobileGL
     ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/3rdparty/FlatBuffers/include
 )
 
 # End of File

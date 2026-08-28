@@ -29,6 +29,7 @@ target_include_directories(MobileGL_FullServer PRIVATE
     ${CMAKE_SOURCE_DIR}/MobileGL
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/3rdparty/SPIRV-Reflect
+    ${CMAKE_SOURCE_DIR}/3rdparty/FlatBuffers/include
 )
 
 if (UNIX AND NOT APPLE AND NOT ANDROID)

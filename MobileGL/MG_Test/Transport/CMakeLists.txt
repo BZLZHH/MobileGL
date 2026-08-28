@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 
+include_directories(${MGL_ROOT}/3rdparty/FlatBuffers/include)
+
 add_executable(
         InProcessTransportTest
         InProcessTransportTest.cpp

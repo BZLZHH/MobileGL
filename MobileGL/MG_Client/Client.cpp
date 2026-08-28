@@ -7,21 +7,13 @@
 // End of Source File Header
 
 #include "Client.h"
+#include "MG_Protocol/gen/wire_generated.h"
 #include "MG_Transport/LocalSocketShmTransport.h"
+
+#include <flatbuffers/flatbuffers.h>
 
 namespace MobileGL::Client {
     namespace {
-        // Minimal command/response envelope; layout must match
-        // MobileGL::FullServer::CommandHeader / ResponseHeader.
-        struct ClientCommandHeader {
-            Uint32 Opcode;
-            Uint32 SessionId;
-        };
-
-        struct ClientResponseHeader {
-            Uint32 Status; // 0 = OK
-        };
-
         String s_lastError;
         Bool s_initialized = false;
         Bool s_ownsTransport = false;
@@ -79,14 +71,17 @@ namespace MobileGL::Client {
             return false;
         }
 
-        ClientCommandHeader command{};
-        command.Opcode = opcode;
-        command.SessionId = sessionId;
+        flatbuffers::FlatBufferBuilder builder;
+        const auto clear = MobileGL::Protocol::Wire::CreateGlClear(builder, 0);
+        const auto command =
+            MobileGL::Protocol::Wire::CreateCommand(builder, opcode, sessionId, clear);
+        const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command);
+        builder.Finish(message);
 
         MobileGLCommandBatch batch{};
         batch.structSize = sizeof(MobileGLCommandBatch);
-        batch.flatBufferData = &command;
-        batch.flatBufferSize = static_cast<Uint32>(sizeof(command));
+        batch.flatBufferData = builder.GetBufferPointer();
+        batch.flatBufferSize = static_cast<Uint32>(builder.GetSize());
         if (!s_ops->SubmitCommands(s_transport, &batch)) {
             s_lastError = s_ops->GetLastError(s_transport);
             return false;
@@ -97,15 +92,15 @@ namespace MobileGL::Client {
             s_lastError = s_ops->GetLastError(s_transport);
             return false;
         }
-        if (response.flatBufferSize < sizeof(ClientResponseHeader)) {
-            s_lastError = "Short response.";
+
+        const auto* parsed =
+            flatbuffers::GetRoot<MobileGL::Protocol::Wire::Response>(response.flatBufferData);
+        if (parsed == nullptr) {
+            s_lastError = "Invalid response.";
             return false;
         }
-
-        ClientResponseHeader header{};
-        memcpy(&header, response.flatBufferData, sizeof(header));
         s_lastError.clear();
-        return header.Status == 0;
+        return parsed->status() == 0;
     }
 
     void Shutdown() {

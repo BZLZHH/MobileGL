@@ -79,7 +79,11 @@
 - [x] `scripts/generate_protocol_fbs.py` → `MobileGL/MG_Protocol/protocol_generated.fbs`（2750 个 `Gl*` payload 表）
 - [x] `scripts/generate_opcode_table.py` → `MobileGL/MG_Protocol/generated_opcodes.h`（1396 个 GL/EGL opcode + 名称表）
 - [x] `MobileGL/MG_Test/Transport/ProtocolOpcodeTest.cpp` — 生成表计数与名称查询 1/1 通过
-- [ ] FlatBuffers codegen 合并进 `protocol.fbs`（trampoline / dispatch / 分类表）
+- [x] `MobileGL/MG_Protocol/wire.fbs` — 最小 wire schema + flatc 生成 `gen/wire_generated.h`（8KB）
+- [x] `3rdparty/FlatBuffers/include` — vendored flatbuffers 头（flatc v25.12.19 兼容）
+- [x] **Client/ServerCore 改用 FlatBuffers 实际编解码**：`Client::SendCommand` 构建 `Message`；`ServerCore` 解析 `Message` 并按 opcode 分发、构建 `Response`
+- [x] FlatBuffers 迁移后回归：`BigServerE2ETest` 2/2、`ClientServerEndToEndTest` 1/1、`InProcessTransportTest` 2/2、`ProtocolOpcodeTest` 1/1 全部通过
+- [ ] 完整 source-list 合并进 `protocol.fbs`（trampoline / dispatch / 分类表）
 - [ ] 异步命令流 + 同步查询 / barrier
 - [ ] map/unmap/readback/字符串返回数据通路
 - [ ] Token 透传模型 + 会话生命周期

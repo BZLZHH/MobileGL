@@ -1,0 +1,32 @@
+// MobileGL - MobileGL/MG_Protocol/wire.fbs
+// Copyright (c) 2025-2026 MobileGL-Dev
+// Licensed under the GNU Lesser General Public License v3.0:
+//   https://www.gnu.org/licenses/gpl-3.0.txt
+//   https://www.gnu.org/licenses/lgpl-3.0.txt
+// SPDX-License-Identifier: LGPL-3.0-only
+//
+// Minimal wire schema used by the current Client <-> FullServer transport.
+// The full API surface lives in protocol.fbs + protocol_generated.fbs and is
+// merged into this schema by the Phase 4 codegen as APIs land.
+
+namespace MobileGL.Protocol.Wire;
+
+table GlClear {
+    mask: uint;
+}
+
+table Command {
+    opcode: uint;
+    session_id: ulong;
+    clear: GlClear;
+}
+
+table Message {
+    command: Command;
+}
+
+table Response {
+    status: uint;
+}
+
+root_type Message;

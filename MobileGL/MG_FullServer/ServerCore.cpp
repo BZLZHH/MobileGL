@@ -7,7 +7,10 @@
 // End of Source File Header
 
 #include "ServerCore.h"
+#include "MG_Protocol/gen/wire_generated.h"
 #include "MG_Protocol/generated_opcodes.h"
+
+#include <flatbuffers/flatbuffers.h>
 
 namespace MobileGL::FullServer {
     ServerCore::ServerCore(const MobileGLTransportOps* ops, MobileGLTransport* transport,
@@ -38,26 +41,33 @@ namespace MobileGL::FullServer {
         if (!m_ops->WaitResponses(m_transport, &in, 0)) {
             return false;
         }
-        if (in.count == 0 || in.flatBufferData == nullptr || in.flatBufferSize < sizeof(CommandHeader)) {
+        if (in.count == 0 || in.flatBufferData == nullptr) {
             return false;
         }
 
-        CommandHeader header{};
-        memcpy(&header, in.flatBufferData, sizeof(CommandHeader));
+        const auto* message = MobileGL::Protocol::Wire::GetMessage(in.flatBufferData);
+        if (message == nullptr || message->command() == nullptr) {
+            return false;
+        }
+        const auto* command = message->command();
 
         uint32_t status = 1;
         // Dispatch by the generated opcode table (Phase 4).
-        if (header.Opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glClear) &&
+        if (command->opcode() == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glClear) &&
             m_vtable->Clear != nullptr) {
-            m_vtable->Clear(m_backend, header.SessionId, 0);
+            const uint32_t mask = command->clear() == nullptr ? 0 : command->clear()->mask();
+            m_vtable->Clear(m_backend, static_cast<MobileGLSessionId>(command->session_id()), mask);
             status = 0;
         }
 
-        ResponseHeader response{status};
+        flatbuffers::FlatBufferBuilder responseBuilder;
+        const auto response = MobileGL::Protocol::Wire::CreateResponse(responseBuilder, status);
+        responseBuilder.Finish(response);
+
         MobileGLCommandBatch out{};
         out.structSize = sizeof(MobileGLCommandBatch);
-        out.flatBufferData = &response;
-        out.flatBufferSize = static_cast<uint32_t>(sizeof(response));
+        out.flatBufferData = responseBuilder.GetBufferPointer();
+        out.flatBufferSize = static_cast<Uint32>(responseBuilder.GetSize());
         return m_ops->SubmitCommands(m_transport, &out);
     }
 
