@@ -12,7 +12,7 @@
 - C/S 目标编译通过：`libMobileGL_FullServer.so`（链接 `libMobileGL_MG_FullServerCore.a`）、`libMobileGL_Client.so`、`libMobileGL_UtilRuntime.so`、`BackendObject_DirectGLES.so`、`BackendObject_DirectVulkan.so`、`libMobileGL_Transport.a` ✅
 - 单元测试：`ContextRegistryTest` 5/5、`HandleRegistryTest` 5/5 通过 ✅
 - **目录重构后全量验证**：C/S 目标与全部相关测试重编译通过；`SanityTest` 82/82、`InProcessTransportTest` 1/1、`BigServerE2ETest` 1/1 通过；`libMobileGL_FullServer.so` 构建成功
-- **全量 ctest（unit）**：1405/1405 通过（3 skipped）✅（含 ClientSessionLifecycle / ClientShmPayload / dispatch 元数据等新测试）
+- **全量 ctest（unit）**：1406/1406 通过（3 skipped）✅（含 ClientHierarchyLifecycle / ClientSessionLifecycle / ClientShmPayload / dispatch 元数据等新测试）
 - 第二次构建（共享 Buffer 表迁移后）：`BufferState` 委托 group 级 `SharedBufferObjectTable`，跨 session 可见性测试通过 ✅
 
 ## Phase 0 — 契约定稿 ✅
