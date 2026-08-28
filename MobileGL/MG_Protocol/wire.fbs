@@ -28,6 +28,13 @@ table DrawArrays {
     count: int;
 }
 
+table DrawElements {
+    mode: uint;
+    count: int;
+    type: uint;
+    indices_offset: ulong;
+}
+
 table DataBlob {
     offset: ulong;
     size: ulong;
@@ -40,6 +47,7 @@ table Command {
     clear: GlClear;
     clear_color: ClearColor;
     draw_arrays: DrawArrays;
+    draw_elements: DrawElements;
     data: DataBlob;
 }
 

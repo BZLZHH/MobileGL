@@ -58,6 +58,16 @@ namespace {
         (void)count;
     }
 
+    void DrawElementsBackend(MobileGLBackend* self, MobileGLSessionId session,
+                             uint32_t mode, int32_t count, uint32_t type, const void* indices) {
+        (void)self;
+        (void)session;
+        (void)mode;
+        (void)count;
+        (void)type;
+        (void)indices;
+    }
+
     bool OnSessionCreatedBackend(MobileGLBackend* self, MobileGLSessionId session,
                                  const MobileGLBackendInitInfo* info) {
         (void)self;
@@ -112,7 +122,8 @@ namespace {
         .OnSessionDestroyed = &OnSessionDestroyedBackend,
         .Clear = &ClearBackend,
         .ClearColor = &ClearColorBackend,
-        .DrawArrays = &DrawArraysBackend
+        .DrawArrays = &DrawArraysBackend,
+        .DrawElements = &DrawElementsBackend
     };
 
     const MobileGLBackendVTable* GetBackendVTable() {

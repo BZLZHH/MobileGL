@@ -53,6 +53,7 @@ namespace MobileGL::FullServer {
         const auto* command = message->command();
 
         uint32_t dataByte = 0;
+        Vector<MobileGLShmHandle> receivedShm;
         const uint32_t shmCount = message->shm_count();
         if (shmCount > 0) {
             if (m_ops->ReceiveShmHandle == nullptr) {
@@ -66,7 +67,7 @@ namespace MobileGL::FullServer {
                 if (command->data() != nullptr && handle.mappedAddress != nullptr) {
                     dataByte = *static_cast<const Uint8*>(handle.mappedAddress);
                 }
-                m_ops->ReleaseSharedMemory(m_transport, &handle);
+                receivedShm.push_back(handle);
             }
         }
 
@@ -144,6 +145,28 @@ namespace MobileGL::FullServer {
                                      draw == nullptr ? 0 : draw->count());
                 status = 0;
             }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glDrawElements) &&
+                   m_vtable->DrawElements != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else {
+                const auto* draw = command->draw_elements();
+                const void* indices = nullptr;
+                if (!receivedShm.empty() && receivedShm[0].mappedAddress != nullptr) {
+                    const auto* base = static_cast<const Uint8*>(receivedShm[0].mappedAddress);
+                    indices = base + (draw == nullptr ? 0 : draw->indices_offset());
+                }
+                m_vtable->DrawElements(m_backend, sessionId,
+                                       draw == nullptr ? 0 : draw->mode(),
+                                       draw == nullptr ? 0 : draw->count(),
+                                       draw == nullptr ? 0 : draw->type(),
+                                       indices);
+                status = 0;
+            }
+        }
+
+        for (auto& handle : receivedShm) {
+            m_ops->ReleaseSharedMemory(m_transport, &handle);
         }
 
         flatbuffers::FlatBufferBuilder responseBuilder;
