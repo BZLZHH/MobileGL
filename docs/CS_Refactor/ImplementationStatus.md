@@ -31,7 +31,8 @@
 - [x] 根 CMake 增加 `MOBILEGL_BUILD_CS_REFACTOR`（默认 OFF，保留 monolith 对照）
 - [x] `MobileGL/MG_Client` — `MobileGL_Client` SHARED 骨架
 - [x] `MobileGL/MG_FullServer` — `MobileGL_FullServer` SHARED（`libMobileGL_FullServer.so`，BigServer host 组件）
-- [x] `FullServerEntry.h/.cpp` — C ABI 宿主入口：`mobilegl_fullserver_create/start/attach_transport/service_once/destroy`
+- [x] `FullServerEntry.h/.cpp` — C ABI 宿主入口：`mobilegl_fullserver_create/start/attach_transport/service_once/run_socket/destroy`
+- [x] **跨进程 E2E（Python 客户端）**：Python + flatbuffers 构建 `Message` → ABC socket → `libMobileGL_FullServer.so` `run_socket` → null backend `Clear` → `Response{status=0}` 返回；验证成功
 - [x] **dlopen 验证**：Python ctypes 加载 `libMobileGL_FullServer.so` → create(UtilRuntime.so, BackendObject_DirectGLES.so) → start → destroy 成功
 - [x] `MobileGL/MG_UtilRuntime` — `MobileGL_UtilRuntime` SHARED 骨架（`mobilegl_util_api` 导出）
 - [x] `MobileGL/MG_Backend/CMakeLists.txt` — `BackendObject_DirectGLES` / `BackendObject_DirectVulkan` MODULE 骨架 + manifest
@@ -95,6 +96,7 @@
 - [x] `MobileGL/MG_FullServer/BackendHost.h/.cpp` — Host vtable 注入
 - [x] `MobileGL/MG_FullServer/Main.cpp` — 启动流程接线（UtilRuntime→BackendPlugin→Create→Initialize→Shutdown）
 - [x] **插件生命周期链路（组件级验证）**：`UtilRuntimeLoader` / `BackendPluginLoader` / `ServerCore` 在 `libMobileGL_FullServer.so` 内编译通过；`BigServerE2ETest` 覆盖 Create→Initialize→command dispatch→Shutdown
+- [x] DirectGLES / DirectVulkan null adapter 提供 `Initialize/Shutdown/Clear` 存根（`mobilegl_fullserver_run_socket` 可返回 status=0）
 - [x] **BigServer 全链路 E2E（in-process）**：Client 命令 → InProcessTransport → `FullServer::ServerCore` → Backend VTable → Response → Client；`BigServerE2ETest` 1/1 通过
 - [x] **BigServer 全链路 E2E（LocalSocketShm）**：client socket → server accept → `ServerCore` 分发 → 响应返回 client；`BigServerE2ETest` 2/2 通过
 - [x] ServerCore 分发改为使用生成 opcode 表（`MobileGLOpcode::glClear`），BigServerE2E 通过

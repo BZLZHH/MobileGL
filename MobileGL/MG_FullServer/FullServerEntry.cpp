@@ -11,6 +11,7 @@
 #include "BackendPluginLoader.h"
 #include "ServerCore.h"
 #include "UtilRuntimeLoader.h"
+#include "MG_Transport/LocalSocketShmTransport.h"
 
 namespace MobileGL::FullServer {
     struct FullServerInstance {
@@ -91,6 +92,51 @@ extern "C" int mobilegl_fullserver_service_once(MobileGLFullServerHandle handle)
         return -1;
     }
     return instance->core->ServiceOnce() ? 0 : -1;
+}
+
+extern "C" int mobilegl_fullserver_run_socket(MobileGLFullServerHandle handle,
+                                              const char* endpoint,
+                                              uint32_t maxCommands) {
+    auto* instance = static_cast<MobileGL::FullServer::FullServerInstance*>(handle);
+    if (instance == nullptr || endpoint == nullptr || maxCommands == 0) {
+        return -1;
+    }
+
+    MobileGLTransport* server = MobileGL::Transport::CreateLocalSocketShmServer(endpoint);
+    if (server == nullptr) {
+        return -1;
+    }
+    MobileGLTransport* accepted = MobileGL::Transport::AcceptLocalSocketShmConnection(server);
+    if (accepted == nullptr) {
+        MobileGL::Transport::DestroyLocalSocketShmTransport(server);
+        return -1;
+    }
+
+    const MobileGLTransportOps& ops = MobileGL::Transport::GetLocalSocketShmTransportOps();
+    instance->core = new MobileGL::FullServer::ServerCore(&ops, accepted, instance->backendObject,
+                                                          instance->vtable);
+    if (!instance->core->Start()) {
+        delete instance->core;
+        instance->core = nullptr;
+        MobileGL::Transport::DestroyLocalSocketShmTransport(accepted);
+        MobileGL::Transport::DestroyLocalSocketShmTransport(server);
+        return -1;
+    }
+
+    int result = 0;
+    for (uint32_t i = 0; i < maxCommands; ++i) {
+        if (!instance->core->ServiceOnce()) {
+            result = -1;
+            break;
+        }
+    }
+
+    instance->core->Shutdown();
+    delete instance->core;
+    instance->core = nullptr;
+    MobileGL::Transport::DestroyLocalSocketShmTransport(accepted);
+    MobileGL::Transport::DestroyLocalSocketShmTransport(server);
+    return result;
 }
 
 extern "C" void mobilegl_fullserver_destroy(MobileGLFullServerHandle handle) {

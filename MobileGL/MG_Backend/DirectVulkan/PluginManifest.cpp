@@ -33,13 +33,20 @@ namespace {
         (void)self;
     }
 
-    // Skeleton vtable: lifecycle entries live, everything else null until the
-    // real DirectVulkan adapter lands.
+    void ClearBackend(MobileGLBackend* self, MobileGLSessionId session, uint32_t mask) {
+        (void)self;
+        (void)session;
+        (void)mask;
+    }
+
+    // Skeleton vtable: lifecycle + Clear entries live, everything else null
+    // until the real DirectVulkan adapter lands.
     const MobileGLBackendVTable s_backendVTable = {
-        sizeof(MobileGLBackendVTable),
-        (MOBILEGL_BFA_ABI_MAJOR << 16) | MOBILEGL_BFA_ABI_MINOR,
-        &InitializeBackend,
-        &ShutdownBackend
+        .structSize = sizeof(MobileGLBackendVTable),
+        .apiVersion = (MOBILEGL_BFA_ABI_MAJOR << 16) | MOBILEGL_BFA_ABI_MINOR,
+        .Initialize = &InitializeBackend,
+        .Shutdown = &ShutdownBackend,
+        .Clear = &ClearBackend
     };
 
     const MobileGLBackendVTable* GetBackendVTable() {

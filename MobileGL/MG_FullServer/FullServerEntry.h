@@ -37,6 +37,13 @@ int mobilegl_fullserver_attach_transport(MobileGLFullServerHandle handle,
 // Services one batch of commands from the attached transport.
 int mobilegl_fullserver_service_once(MobileGLFullServerHandle handle);
 
+// Convenience host loop: listen on a LocalSocketShm endpoint, accept one
+// connection, service up to maxCommands commands, then release the endpoint.
+// Returns 0 when all requested commands were serviced.
+int mobilegl_fullserver_run_socket(MobileGLFullServerHandle handle,
+                                   const char* endpoint,
+                                   uint32_t maxCommands);
+
 // Shuts down and frees the handle.
 void mobilegl_fullserver_destroy(MobileGLFullServerHandle handle);
 
