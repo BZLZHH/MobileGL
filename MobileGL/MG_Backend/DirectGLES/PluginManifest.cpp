@@ -9,19 +9,37 @@
 #include <Includes.h>
 #include "Protocol/bfa.h"
 
-// Phase 5 wires the real DirectGLES backend behind the BFA vtable. Until then
-// the manifest exists so FullServer can perform ABI negotiation and return a
-// structured "not available" error instead of a crash.
+// bfa.h declares MobileGLBackend as an opaque C type; this plugin TU is the
+// first (and only) place that completes it for the DirectGLES adapter.
+struct MobileGLBackend {
+    const MobileGLBackendVTable* VTable;
+};
+
+// Phase 5 wires the real DirectGLES backend behind the BFA vtable. The null
+// adapter below lets FullServer negotiate ABI, create a backend and run the
+// lifecycle without a GPU; the real DirectGLES sources replace it in Phase 5.
 namespace {
     uint32_t GetAbiVersion() {
         return (MOBILEGL_BFA_ABI_MAJOR << 16) | MOBILEGL_BFA_ABI_MINOR;
     }
 
-    // Skeleton vtable: structSize/apiVersion only, all entry points null until
-    // Phase 5 fills them with the DirectGLES adapter.
+    bool InitializeBackend(MobileGLBackend* self, const MobileGLBackendInitInfo* info) {
+        (void)self;
+        (void)info;
+        return true;
+    }
+
+    void ShutdownBackend(MobileGLBackend* self) {
+        (void)self;
+    }
+
+    // Skeleton vtable: lifecycle entries live, everything else null until the
+    // real DirectGLES adapter lands.
     const MobileGLBackendVTable s_backendVTable = {
         sizeof(MobileGLBackendVTable),
-        (MOBILEGL_BFA_ABI_MAJOR << 16) | MOBILEGL_BFA_ABI_MINOR
+        (MOBILEGL_BFA_ABI_MAJOR << 16) | MOBILEGL_BFA_ABI_MINOR,
+        &InitializeBackend,
+        &ShutdownBackend
     };
 
     const MobileGLBackendVTable* GetBackendVTable() {
@@ -34,8 +52,7 @@ namespace {
         (void)host;
         (void)utilApi;
         (void)initInfo;
-        // TODO: Phase 5 instantiates the DirectGLES backend adapter.
-        return nullptr;
+        return new MobileGLBackend{&s_backendVTable};
     }
 
     const MobileGLBackendManifest s_manifest = {

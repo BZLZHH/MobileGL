@@ -75,7 +75,8 @@
 - [x] `MobileGL/FullServer/UtilRuntimeLoader.h/.cpp` — dlopen `MobileGL_UtilRuntime.so` + ABI 握手
 - [x] `MobileGL/FullServer/BackendPluginLoader.h/.cpp` — dlopen BackendObject + manifest 协商 + Create
 - [x] `MobileGL/FullServer/BackendHost.h/.cpp` — Host vtable 注入
-- [x] `MobileGL/FullServer/Main.cpp` — 启动流程接线（UtilRuntime→BackendPlugin→Create）
+- [x] `MobileGL/FullServer/Main.cpp` — 启动流程接线（UtilRuntime→BackendPlugin→Create→Initialize→Shutdown）
+- [x] **插件生命周期 E2E 验证**：`FullServer <UtilRuntime.so> <BackendObject_DirectGLES.so>` 运行退出码 0
 - [ ] BigServer 全链路 E2E（transport server 循环）
 
 ## Phase 6 — 正确性 / 性能 / 平台

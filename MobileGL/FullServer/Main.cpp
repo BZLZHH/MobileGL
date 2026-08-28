@@ -38,9 +38,19 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    const MobileGLBackendVTable* vtable = backendLoader.GetManifest()->GetBackendVTable();
+    if (vtable == nullptr) {
+        return 1;
+    }
+    if (vtable->Initialize != nullptr && !vtable->Initialize(backend, &initInfo)) {
+        return 1;
+    }
+
     // TODO(Phase 4/5): start the transport server and route sessions into this
     // backend; v1 supports headless/pbuffer on the same device.
-    (void)backend;
+    if (vtable->Shutdown != nullptr) {
+        vtable->Shutdown(backend);
+    }
     return 0;
 }
 
