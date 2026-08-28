@@ -89,7 +89,8 @@
 - [x] `3rdparty/FlatBuffers/include` — vendored flatbuffers 头（flatc v25.12.19 兼容）
 - [x] **Client/ServerCore 改用 FlatBuffers 实际编解码**：`Client::SendCommand` 构建 `Message`；`ServerCore` 解析 `Message` 并按 opcode 分发、构建 `Response`
 - [x] FlatBuffers 迁移后回归：`BigServerE2ETest` 2/2、`ClientServerEndToEndTest` 1/1、`InProcessTransportTest` 2/2、`ProtocolOpcodeTest` 1/1 全部通过
-- [ ] 完整 source-list 合并进 `protocol.fbs`（trampoline / dispatch / 分类表）
+- [x] **完整 API merge 流水线**：`scripts/merge_protocol_fbs.py` 将 2750 个生成 payload 表并入 `protocol.fbs` 的插入点，产出 `protocol_full.fbs`（无重复、flatc 校验通过；`GeneratedPayload` union 因 >255 成员改为 opcode 分发）
+- [ ] 完整 source-list 运行时分发（trampoline / dispatch / 分类表）
 - [x] **异步命令提交 + 按 token 等待**（`Client::SubmitCommand` / `WaitResponseForToken`；`ClientAsyncBatchTest` 1/1 通过）
 - [x] **Token 透传**：`Command.token` / `Response.token`；`Client::SendCommand` 校验回显 token；Python 跨进程 E2E 仍 status=0
 - [x] **shm payload 回读**：`ClientShmPayloadTest` 已验证（0xAB 写入 → fd → server 读回 → data_byte=0xAB）
