@@ -343,8 +343,19 @@ class Command(object):
         return None
 
     # Command
-    def ReadPixels(self):
+    def TextureSubImage(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(64))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from MobileGL.Protocol.Wire.TextureSubImage import TextureSubImage
+            obj = TextureSubImage()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # Command
+    def ReadPixels(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(66))
         if o != 0:
             x = self._tab.Indirect(o + self._tab.Pos)
             from MobileGL.Protocol.Wire.ReadPixels import ReadPixels
@@ -354,7 +365,7 @@ class Command(object):
         return None
 
 def CommandStart(builder):
-    builder.StartObject(31)
+    builder.StartObject(32)
 
 def Start(builder):
     CommandStart(builder)
@@ -539,8 +550,14 @@ def CommandAddTextureRespecify(builder, textureRespecify):
 def AddTextureRespecify(builder, textureRespecify):
     CommandAddTextureRespecify(builder, textureRespecify)
 
+def CommandAddTextureSubImage(builder, textureSubImage):
+    builder.PrependUOffsetTRelativeSlot(30, flatbuffers.number_types.UOffsetTFlags.py_type(textureSubImage), 0)
+
+def AddTextureSubImage(builder, textureSubImage):
+    CommandAddTextureSubImage(builder, textureSubImage)
+
 def CommandAddReadPixels(builder, readPixels):
-    builder.PrependUOffsetTRelativeSlot(30, flatbuffers.number_types.UOffsetTFlags.py_type(readPixels), 0)
+    builder.PrependUOffsetTRelativeSlot(31, flatbuffers.number_types.UOffsetTFlags.py_type(readPixels), 0)
 
 def AddReadPixels(builder, readPixels):
     CommandAddReadPixels(builder, readPixels)

@@ -135,6 +135,12 @@ namespace MobileGL::Client {
                               uint32_t height, uint32_t depth, uint64_t dataSize,
                               MobileGLShmHandle* shm, Uint64 token);
 
+    // Sends a typed TextureSubImage upload; pixel data comes from shared memory.
+    Bool SendTextureSubImage(Uint64 sessionId, uint64_t texture, uint32_t level,
+                             uint32_t format, uint32_t type, uint32_t width,
+                             uint32_t height, uint32_t depth, uint64_t dataSize,
+                             MobileGLShmHandle* shm, Uint64 token);
+
     // Sends a typed glReadPixels query; server returns pixels via shared memory.
     Bool SendReadPixels(Uint64 sessionId, int32_t x, int32_t y, int32_t width,
                         int32_t height, uint32_t format, uint32_t type,

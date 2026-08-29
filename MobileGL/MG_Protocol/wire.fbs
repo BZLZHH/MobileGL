@@ -166,6 +166,17 @@ table TextureRespecify {
     data_size: ulong;
 }
 
+table TextureSubImage {
+    texture: ulong;
+    level: uint;
+    format: uint;
+    type: uint;
+    width: uint;
+    height: uint;
+    depth: uint;
+    data_size: ulong;
+}
+
 table ReadPixels {
     x: int;
     y: int;
@@ -211,6 +222,7 @@ table Command {
     draw_elements_indirect: DrawElementsIndirect;
     get_string: GetString;
     texture_respecify: TextureRespecify;
+    texture_sub_image: TextureSubImage;
     read_pixels: ReadPixels;
 }
 

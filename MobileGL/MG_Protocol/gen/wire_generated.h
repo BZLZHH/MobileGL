@@ -95,6 +95,9 @@ struct GetStringBuilder;
 struct TextureRespecify;
 struct TextureRespecifyBuilder;
 
+struct TextureSubImage;
+struct TextureSubImageBuilder;
+
 struct ReadPixels;
 struct ReadPixelsBuilder;
 
@@ -1712,6 +1715,118 @@ inline ::flatbuffers::Offset<TextureRespecify> CreateTextureRespecify(
   return builder_.Finish();
 }
 
+struct TextureSubImage FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef TextureSubImageBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_TEXTURE = 4,
+    VT_LEVEL = 6,
+    VT_FORMAT = 8,
+    VT_TYPE = 10,
+    VT_WIDTH = 12,
+    VT_HEIGHT = 14,
+    VT_DEPTH = 16,
+    VT_DATA_SIZE = 18
+  };
+  uint64_t texture() const {
+    return GetField<uint64_t>(VT_TEXTURE, 0);
+  }
+  uint32_t level() const {
+    return GetField<uint32_t>(VT_LEVEL, 0);
+  }
+  uint32_t format() const {
+    return GetField<uint32_t>(VT_FORMAT, 0);
+  }
+  uint32_t type() const {
+    return GetField<uint32_t>(VT_TYPE, 0);
+  }
+  uint32_t width() const {
+    return GetField<uint32_t>(VT_WIDTH, 0);
+  }
+  uint32_t height() const {
+    return GetField<uint32_t>(VT_HEIGHT, 0);
+  }
+  uint32_t depth() const {
+    return GetField<uint32_t>(VT_DEPTH, 0);
+  }
+  uint64_t data_size() const {
+    return GetField<uint64_t>(VT_DATA_SIZE, 0);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint64_t>(verifier, VT_TEXTURE, 8) &&
+           VerifyField<uint32_t>(verifier, VT_LEVEL, 4) &&
+           VerifyField<uint32_t>(verifier, VT_FORMAT, 4) &&
+           VerifyField<uint32_t>(verifier, VT_TYPE, 4) &&
+           VerifyField<uint32_t>(verifier, VT_WIDTH, 4) &&
+           VerifyField<uint32_t>(verifier, VT_HEIGHT, 4) &&
+           VerifyField<uint32_t>(verifier, VT_DEPTH, 4) &&
+           VerifyField<uint64_t>(verifier, VT_DATA_SIZE, 8) &&
+           verifier.EndTable();
+  }
+};
+
+struct TextureSubImageBuilder {
+  typedef TextureSubImage Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_texture(uint64_t texture) {
+    fbb_.AddElement<uint64_t>(TextureSubImage::VT_TEXTURE, texture, 0);
+  }
+  void add_level(uint32_t level) {
+    fbb_.AddElement<uint32_t>(TextureSubImage::VT_LEVEL, level, 0);
+  }
+  void add_format(uint32_t format) {
+    fbb_.AddElement<uint32_t>(TextureSubImage::VT_FORMAT, format, 0);
+  }
+  void add_type(uint32_t type) {
+    fbb_.AddElement<uint32_t>(TextureSubImage::VT_TYPE, type, 0);
+  }
+  void add_width(uint32_t width) {
+    fbb_.AddElement<uint32_t>(TextureSubImage::VT_WIDTH, width, 0);
+  }
+  void add_height(uint32_t height) {
+    fbb_.AddElement<uint32_t>(TextureSubImage::VT_HEIGHT, height, 0);
+  }
+  void add_depth(uint32_t depth) {
+    fbb_.AddElement<uint32_t>(TextureSubImage::VT_DEPTH, depth, 0);
+  }
+  void add_data_size(uint64_t data_size) {
+    fbb_.AddElement<uint64_t>(TextureSubImage::VT_DATA_SIZE, data_size, 0);
+  }
+  explicit TextureSubImageBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<TextureSubImage> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<TextureSubImage>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<TextureSubImage> CreateTextureSubImage(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint64_t texture = 0,
+    uint32_t level = 0,
+    uint32_t format = 0,
+    uint32_t type = 0,
+    uint32_t width = 0,
+    uint32_t height = 0,
+    uint32_t depth = 0,
+    uint64_t data_size = 0) {
+  TextureSubImageBuilder builder_(_fbb);
+  builder_.add_data_size(data_size);
+  builder_.add_texture(texture);
+  builder_.add_depth(depth);
+  builder_.add_height(height);
+  builder_.add_width(width);
+  builder_.add_type(type);
+  builder_.add_format(format);
+  builder_.add_level(level);
+  return builder_.Finish();
+}
+
 struct ReadPixels FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef ReadPixelsBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
@@ -1889,7 +2004,8 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_DRAW_ELEMENTS_INDIRECT = 58,
     VT_GET_STRING = 60,
     VT_TEXTURE_RESPECIFY = 62,
-    VT_READ_PIXELS = 64
+    VT_TEXTURE_SUB_IMAGE = 64,
+    VT_READ_PIXELS = 66
   };
   uint32_t opcode() const {
     return GetField<uint32_t>(VT_OPCODE, 0);
@@ -1981,6 +2097,9 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   const MobileGL::Protocol::Wire::TextureRespecify *texture_respecify() const {
     return GetPointer<const MobileGL::Protocol::Wire::TextureRespecify *>(VT_TEXTURE_RESPECIFY);
   }
+  const MobileGL::Protocol::Wire::TextureSubImage *texture_sub_image() const {
+    return GetPointer<const MobileGL::Protocol::Wire::TextureSubImage *>(VT_TEXTURE_SUB_IMAGE);
+  }
   const MobileGL::Protocol::Wire::ReadPixels *read_pixels() const {
     return GetPointer<const MobileGL::Protocol::Wire::ReadPixels *>(VT_READ_PIXELS);
   }
@@ -2044,6 +2163,8 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            verifier.VerifyTable(get_string()) &&
            VerifyOffset(verifier, VT_TEXTURE_RESPECIFY) &&
            verifier.VerifyTable(texture_respecify()) &&
+           VerifyOffset(verifier, VT_TEXTURE_SUB_IMAGE) &&
+           verifier.VerifyTable(texture_sub_image()) &&
            VerifyOffset(verifier, VT_READ_PIXELS) &&
            verifier.VerifyTable(read_pixels()) &&
            verifier.EndTable();
@@ -2144,6 +2265,9 @@ struct CommandBuilder {
   void add_texture_respecify(::flatbuffers::Offset<MobileGL::Protocol::Wire::TextureRespecify> texture_respecify) {
     fbb_.AddOffset(Command::VT_TEXTURE_RESPECIFY, texture_respecify);
   }
+  void add_texture_sub_image(::flatbuffers::Offset<MobileGL::Protocol::Wire::TextureSubImage> texture_sub_image) {
+    fbb_.AddOffset(Command::VT_TEXTURE_SUB_IMAGE, texture_sub_image);
+  }
   void add_read_pixels(::flatbuffers::Offset<MobileGL::Protocol::Wire::ReadPixels> read_pixels) {
     fbb_.AddOffset(Command::VT_READ_PIXELS, read_pixels);
   }
@@ -2190,11 +2314,13 @@ inline ::flatbuffers::Offset<Command> CreateCommand(
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::DrawElementsIndirect> draw_elements_indirect = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::GetString> get_string = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::TextureRespecify> texture_respecify = 0,
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::TextureSubImage> texture_sub_image = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::ReadPixels> read_pixels = 0) {
   CommandBuilder builder_(_fbb);
   builder_.add_token(token);
   builder_.add_session_id(session_id);
   builder_.add_read_pixels(read_pixels);
+  builder_.add_texture_sub_image(texture_sub_image);
   builder_.add_texture_respecify(texture_respecify);
   builder_.add_get_string(get_string);
   builder_.add_draw_elements_indirect(draw_elements_indirect);

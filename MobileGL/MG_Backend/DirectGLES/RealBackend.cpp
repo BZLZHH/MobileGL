@@ -168,6 +168,8 @@ namespace {
         MOBILEGL_LOAD_GLES(glReadPixels);
         MOBILEGL_LOAD_GLES(glTexImage2D);
         MOBILEGL_LOAD_GLES(glTexImage3D);
+        MOBILEGL_LOAD_GLES(glTexSubImage2D);
+        MOBILEGL_LOAD_GLES(glTexSubImage3D);
         MOBILEGL_LOAD_GLES(glGenTextures);
         MOBILEGL_LOAD_GLES(glBindTexture);
         MOBILEGL_LOAD_GLES(glBeginTransformFeedback);
@@ -832,6 +834,39 @@ namespace {
         }
     }
 
+    void TextureSubImageBackend(MobileGLBackend* backend, MobileGLSessionId session, MobileGLBackendHandle texture,
+                                const MobileGLTextureUpload* upload) {
+        const std::lock_guard<std::recursive_mutex> lock(backend->Mutex);
+        if (!EnsureCurrent(backend, session) || upload == nullptr) {
+            return;
+        }
+        const GLuint name = GetOrCreateTexture(backend, texture);
+        if (name == 0) {
+            return;
+        }
+        if (upload->depth > 1) {
+            if (backend->Gl.glTexSubImage3D == nullptr) {
+                return;
+            }
+            backend->Gl.glBindTexture(GL_TEXTURE_3D, name);
+            backend->Gl.glTexSubImage3D(GL_TEXTURE_3D, static_cast<GLint>(upload->level), 0, 0, 0,
+                                        static_cast<GLsizei>(upload->width), static_cast<GLsizei>(upload->height),
+                                        static_cast<GLsizei>(upload->depth), static_cast<GLenum>(upload->format),
+                                        static_cast<GLenum>(upload->type), upload->data);
+            backend->Gl.glBindTexture(GL_TEXTURE_3D, 0);
+        } else {
+            if (backend->Gl.glTexSubImage2D == nullptr) {
+                return;
+            }
+            backend->Gl.glBindTexture(GL_TEXTURE_2D, name);
+            backend->Gl.glTexSubImage2D(GL_TEXTURE_2D, static_cast<GLint>(upload->level), 0, 0,
+                                        static_cast<GLsizei>(upload->width), static_cast<GLsizei>(upload->height),
+                                        static_cast<GLenum>(upload->format), static_cast<GLenum>(upload->type),
+                                        upload->data);
+            backend->Gl.glBindTexture(GL_TEXTURE_2D, 0);
+        }
+    }
+
     void BufferRespecifyBackend(MobileGLBackend* backend, MobileGLSessionId session, MobileGLBackendHandle buffer,
                                 uint64_t size, uint32_t usage, const MobileGLBufferOps* ops) {
         const std::lock_guard<std::recursive_mutex> lock(backend->Mutex);
@@ -1118,6 +1153,7 @@ namespace {
         .BufferRespecify = &BufferRespecifyBackend,
         .BufferSubData = &BufferSubDataBackend,
         .TextureRespecify = &TextureRespecifyBackend,
+        .TextureSubImage = &TextureSubImageBackend,
         .FenceSync = &FenceSyncBackend,
         .ClientWaitSync = &ClientWaitSyncBackend,
         .WaitSync = &WaitSyncBackend,

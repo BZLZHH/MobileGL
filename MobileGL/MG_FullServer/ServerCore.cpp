@@ -509,6 +509,29 @@ namespace MobileGL::FullServer {
                                            tr == nullptr ? 0 : tr->texture(), &upload, 1);
                 status = 0;
             }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glTexSubImage2D) &&
+                   m_vtable->TextureSubImage != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else {
+                const auto* ts = command->texture_sub_image();
+                const void* data = receivedShm.empty() || receivedShm[0].mappedAddress == nullptr
+                                       ? nullptr
+                                       : receivedShm[0].mappedAddress;
+                MobileGLTextureUpload upload{};
+                upload.level = ts == nullptr ? 0 : ts->level();
+                upload.layer = 0;
+                upload.format = ts == nullptr ? 0 : ts->format();
+                upload.type = ts == nullptr ? 0 : ts->type();
+                upload.width = ts == nullptr ? 0 : ts->width();
+                upload.height = ts == nullptr ? 0 : ts->height();
+                upload.depth = ts == nullptr ? 1 : ts->depth();
+                upload.data = data;
+                upload.dataSize = ts == nullptr ? 0 : ts->data_size();
+                m_vtable->TextureSubImage(m_backend, sessionId,
+                                          ts == nullptr ? 0 : ts->texture(), &upload);
+                status = 0;
+            }
         } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glReadPixels) &&
                    m_vtable->ReadPixels != nullptr) {
             if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {

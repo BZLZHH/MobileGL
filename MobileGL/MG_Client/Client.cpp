@@ -822,6 +822,39 @@ namespace MobileGL::Client {
         return WaitResponseForToken(token, 0);
     }
 
+    Bool SendTextureSubImage(Uint64 sessionId, uint64_t texture, uint32_t level, uint32_t format,
+                             uint32_t type, uint32_t width, uint32_t height, uint32_t depth,
+                             uint64_t dataSize, MobileGLShmHandle* shm, Uint64 token) {
+        if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
+            s_lastError = "Client is not initialized.";
+            return false;
+        }
+        flatbuffers::FlatBufferBuilder builder;
+        const auto ts = MobileGL::Protocol::Wire::CreateTextureSubImage(
+            builder, texture, level, format, type, width, height, depth, dataSize);
+        MobileGL::Protocol::Wire::CommandBuilder commandBuilder(builder);
+        commandBuilder.add_opcode(static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glTexSubImage2D));
+        commandBuilder.add_session_id(sessionId);
+        commandBuilder.add_token(token);
+        commandBuilder.add_texture_sub_image(ts);
+        const auto command = commandBuilder.Finish();
+        const auto message =
+            MobileGL::Protocol::Wire::CreateMessage(builder, command, shm == nullptr ? 0 : 1);
+        builder.Finish(message);
+
+        MobileGLCommandBatch batch{};
+        batch.structSize = sizeof(MobileGLCommandBatch);
+        batch.flatBufferData = builder.GetBufferPointer();
+        batch.flatBufferSize = static_cast<Uint32>(builder.GetSize());
+        batch.shmHandleCount = shm == nullptr ? 0 : 1;
+        batch.shmHandles = shm;
+        if (!s_ops->SubmitCommands(s_transport, &batch)) {
+            s_lastError = s_ops->GetLastError(s_transport);
+            return false;
+        }
+        return WaitResponseForToken(token, 0);
+    }
+
     Bool SendReadPixels(Uint64 sessionId, int32_t x, int32_t y, int32_t width, int32_t height,
                         uint32_t format, uint32_t type, void* outPixels, Uint64 outSize,
                         Uint64 token) {
