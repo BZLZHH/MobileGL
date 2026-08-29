@@ -2,7 +2,7 @@
 
 > 更新：Phase 0-2 完成；Phase 3 DirectGLES 真实 BFA 插件已接入（EGL/GLES 自包含，24+ 类命令真实 entry point）；Phase 4 覆盖 24 类原始命令 + BufferRespecify/Indirect/GetString/TextureRespecify/ReadPixels（含服务端→客户端 shm 回读）；Phase 5 插件链路已通；Phase 6 真实 EGL/GLES 平台初验（NVIDIA 驱动）。
 > 分支：`Feat/cs-refactor`（从 `dev@81b17c0` 创建）
-> 最新 HEAD：`a235f3c1 [Feat] (MG_Protocol, MG_Client, MG_FullServer, DirectGLES): Add BufferRespecify, indirect draws, GetString and TextureRespecify C/S commands.`（ReadPixels 提交前）
+> 最新 HEAD：`b185530c [Feat] (MG_Transport, MG_Protocol, MG_Client, MG_FullServer, DirectGLES): Add server-to-client shm ReadPixels path.`（ReadPixels 提交后，工作区干净）
 > 首次提交：`9be8bcff [Feat] (All): Add C/S refactor Phase 0-5 scaffolding and state/handle registry.`
 > 源码目录约定：新 C/S 模块统一使用项目原有的 `MG_*` 前缀（`MG_Protocol` / `MG_Client` / `MG_FullServer` / `MG_Transport` / `MG_UtilRuntime`），保持 `MobileGL/` 下模块分层一致。
 
