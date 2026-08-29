@@ -51,6 +51,13 @@ namespace MobileGL::FullServer {
         auto* context = MobileGL::MG_State::GLState::GLContextRegistry::GetCurrentGLContext(threadId);
         return context == nullptr ? 0 : context->GetSessionId();
     }
+
+    MobileGLBackendHandle CurrentFrontendHandle(uint32_t objectKind, uint64_t glName) {
+        const auto threadId =
+            static_cast<Uint64>(std::hash<std::thread::id>{}(std::this_thread::get_id()));
+        auto* context = MobileGL::MG_State::GLState::GLContextRegistry::GetCurrentGLContext(threadId);
+        return context == nullptr ? glName : context->GetObjectHandle(objectKind, glName);
+    }
 } // namespace MobileGL::FullServer
 
 extern "C" MobileGLFullServerHandle mobilegl_fullserver_create(const char* utilRuntimePath,
@@ -102,6 +109,13 @@ extern "C" int mobilegl_fullserver_start(MobileGLFullServerHandle handle) {
                                                          nullptr);
     MobileGL::FullServer::BfaFrontendShim::Get().m_state.SessionProvider =
         &MobileGL::FullServer::CurrentFrontendSession;
+    MobileGL::FullServer::BfaFrontendShim::Get().m_state.HandleProvider =
+        &MobileGL::FullServer::CurrentFrontendHandle;
+    MobileGL::FullServer::BfaFrontendShim::Get().m_state.FramebufferNameProvider =
+        [](const MobileGL::SharedPtr<MobileGL::MG_State::GLState::FramebufferObject>& framebuffer)
+        -> MobileGL::Uint {
+            return framebuffer != nullptr ? framebuffer->GetExternalIndex() : 0;
+        };
     return 0;
 }
 

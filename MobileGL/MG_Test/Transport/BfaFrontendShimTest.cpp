@@ -175,6 +175,17 @@ namespace {
         g_session = session;
         return true;
     }
+
+    void C_ClearNamedFramebufferfv(MobileGLBackend* backend, MobileGLSessionId session,
+                                   uint64_t framebuffer, uint32_t buffer, int32_t drawBuffer,
+                                   const float* value) {
+        (void)backend;
+        (void)value;
+        g_session = session;
+        g_mask = static_cast<uint32_t>(framebuffer);
+        g_mode = buffer;
+        g_first = drawBuffer;
+    }
 } // namespace
 
 namespace MobileGL::Transport {
@@ -213,11 +224,15 @@ namespace MobileGL::Transport {
         vtable.ClearBufferfv = &C_ClearBufferfv;
         vtable.CopyTexImage2D = &C_CopyTexImage2D;
         vtable.BindImageTexture = &C_BindImageTexture;
+        vtable.ClearNamedFramebufferfv = &C_ClearNamedFramebufferfv;
 
         MobileGL::MG_Backend::GlobalBackendFunctionsTable table{};
         MobileGL::FullServer::BfaFrontendShim& shim = MobileGL::FullServer::BfaFrontendShim::Get();
         shim.Install(&backend, &vtable, &table);
         shim.SetCurrentSession(42);
+        shim.m_state.HandleProvider = [](uint32_t /*kind*/, uint64_t glName) {
+            return glName + 1000;
+        };
 
         ASSERT_NE(table.GL.Clear, nullptr);
         table.GL.Clear(0x11);
@@ -269,6 +284,9 @@ namespace MobileGL::Transport {
         table.GL.BindImageTexture(3, 0x333, 0, 0, 0, 0, 0);
         EXPECT_EQ(g_mask, 3u);
         EXPECT_EQ(g_mode, 0x333u);
+
+        ASSERT_NE(table.GL.ClearNamedFramebufferfv, nullptr);
+        ASSERT_NE(table.GL.BlitNamedFramebuffer, nullptr);
 
         shim.Clear();
     }

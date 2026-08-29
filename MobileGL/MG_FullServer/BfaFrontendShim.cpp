@@ -8,6 +8,7 @@
 
 #include "BfaFrontendShim.h"
 #include "MG_Backend/BackendObjects.h"
+#include "MG_State/GLState/FramebufferState/FramebufferObject.h"
 
 namespace MobileGL::FullServer {
     namespace {
@@ -25,6 +26,18 @@ namespace MobileGL::FullServer {
                 return state.Session;
             }
             return state.SessionProvider != nullptr ? state.SessionProvider() : 0;
+        }
+
+        MobileGLBackendHandle Handle(uint32_t objectKind, uint64_t glName) {
+            auto& state = BfaFrontendShim::Get().m_state;
+            return state.HandleProvider != nullptr ? state.HandleProvider(objectKind, glName)
+                                                   : glName;
+        }
+
+        Uint FramebufferName(const SharedPtr<MG_State::GLState::FramebufferObject>& framebuffer) {
+            auto& state = BfaFrontendShim::Get().m_state;
+            return state.FramebufferNameProvider != nullptr ? state.FramebufferNameProvider(framebuffer)
+                                                            : 0;
         }
 
         void ThunkClear(GLbitfield mask) {
@@ -384,6 +397,69 @@ namespace MobileGL::FullServer {
                 VTable()->SetSwapInterval(Backend(), Session(), interval);
             }
         }
+
+        void ThunkClearNamedFramebufferfv(
+            const SharedPtr<MG_State::GLState::FramebufferObject>& framebuffer,
+            GLenum buffer, GLint drawbuffer, const GLfloat* value) {
+            if (VTable() != nullptr && VTable()->ClearNamedFramebufferfv != nullptr && framebuffer != nullptr) {
+                VTable()->ClearNamedFramebufferfv(
+                    Backend(), Session(),
+                    Handle(MobileGLObjectKindFramebuffer, FramebufferName(framebuffer)),
+                    buffer, drawbuffer, value);
+            }
+        }
+
+        void ThunkClearNamedFramebufferfi(
+            const SharedPtr<MG_State::GLState::FramebufferObject>& framebuffer,
+            GLenum buffer, GLint drawbuffer, GLfloat depth, GLint stencil) {
+            if (VTable() != nullptr && VTable()->ClearNamedFramebufferfi != nullptr && framebuffer != nullptr) {
+                VTable()->ClearNamedFramebufferfi(
+                    Backend(), Session(),
+                    Handle(MobileGLObjectKindFramebuffer, FramebufferName(framebuffer)),
+                    buffer, drawbuffer, depth, stencil);
+            }
+        }
+
+        void ThunkClearNamedFramebufferiv(
+            const SharedPtr<MG_State::GLState::FramebufferObject>& framebuffer,
+            GLenum buffer, GLint drawbuffer, const GLint* value) {
+            if (VTable() != nullptr && VTable()->ClearNamedFramebufferiv != nullptr && framebuffer != nullptr) {
+                VTable()->ClearNamedFramebufferiv(
+                    Backend(), Session(),
+                    Handle(MobileGLObjectKindFramebuffer, FramebufferName(framebuffer)),
+                    buffer, drawbuffer, value);
+            }
+        }
+
+        void ThunkClearNamedFramebufferuiv(
+            const SharedPtr<MG_State::GLState::FramebufferObject>& framebuffer,
+            GLenum buffer, GLint drawbuffer, const GLuint* value) {
+            if (VTable() != nullptr && VTable()->ClearNamedFramebufferuiv != nullptr && framebuffer != nullptr) {
+                VTable()->ClearNamedFramebufferuiv(
+                    Backend(), Session(),
+                    Handle(MobileGLObjectKindFramebuffer, FramebufferName(framebuffer)),
+                    buffer, drawbuffer, value);
+            }
+        }
+
+        void ThunkBlitNamedFramebuffer(
+            const SharedPtr<MG_State::GLState::FramebufferObject>& readFramebuffer,
+            const SharedPtr<MG_State::GLState::FramebufferObject>& drawFramebuffer,
+            GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
+            GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1,
+            GLbitfield mask, GLenum filter) {
+            if (VTable() != nullptr && VTable()->BlitFramebuffer != nullptr) {
+                VTable()->BlitFramebuffer(
+                    Backend(), Session(),
+                    readFramebuffer != nullptr
+                        ? Handle(MobileGLObjectKindFramebuffer, FramebufferName(readFramebuffer))
+                        : 0,
+                    drawFramebuffer != nullptr
+                        ? Handle(MobileGLObjectKindFramebuffer, FramebufferName(drawFramebuffer))
+                        : 0,
+                    srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
+            }
+        }
     } // namespace
 
     BfaFrontendShim& BfaFrontendShim::Get() {
@@ -417,6 +493,11 @@ namespace MobileGL::FullServer {
         m_state.Table->GL.ClearBufferiv = &ThunkClearBufferiv;
         m_state.Table->GL.ClearBufferuiv = &ThunkClearBufferuiv;
         m_state.Table->GL.ClearBufferfi = &ThunkClearBufferfi;
+        m_state.Table->GL.ClearNamedFramebufferfv = &ThunkClearNamedFramebufferfv;
+        m_state.Table->GL.ClearNamedFramebufferiv = &ThunkClearNamedFramebufferiv;
+        m_state.Table->GL.ClearNamedFramebufferuiv = &ThunkClearNamedFramebufferuiv;
+        m_state.Table->GL.ClearNamedFramebufferfi = &ThunkClearNamedFramebufferfi;
+        m_state.Table->GL.BlitNamedFramebuffer = &ThunkBlitNamedFramebuffer;
         m_state.Table->GL.BlitFramebuffer = &ThunkBlitFramebuffer;
         m_state.Table->GL.CopyTexImage2D = &ThunkCopyTexImage2D;
         m_state.Table->GL.CopyTexSubImage2D = &ThunkCopyTexSubImage2D;

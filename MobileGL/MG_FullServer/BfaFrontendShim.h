@@ -9,6 +9,7 @@
 #pragma once
 #include <Includes.h>
 #include "MG_Protocol/bfa.h"
+#include "MG_State/GLState/FramebufferState/FramebufferObject.h"
 
 namespace MobileGL::MG_Backend {
     struct GlobalBackendFunctionsTable;
@@ -44,6 +45,13 @@ namespace MobileGL::FullServer {
             // frontend's current GL context (used when ServerCore has not
             // reported a session yet). Set by FullServerEntry.
             MobileGLSessionId (*SessionProvider)() = nullptr;
+            // Maps a frontend GL name to a BFA object handle (e.g. via
+            // GLContext::GetObjectHandle). null = pass the name through.
+            MobileGLBackendHandle (*HandleProvider)(uint32_t objectKind, uint64_t glName) = nullptr;
+            // Extracts the GL name from a frontend framebuffer object; supplied
+            // by FullServerEntry so the shim itself has no core dependency.
+            Uint (*FramebufferNameProvider)(
+                const SharedPtr<MG_State::GLState::FramebufferObject>& framebuffer) = nullptr;
         };
 
         State m_state{};
