@@ -15,54 +15,18 @@
 
 namespace MobileGL::MG_Impl::GLImpl {
     namespace {
-        // Frontend query object (GL_ARB_timer_query): wraps an optional backend
-        // timer-query handle. A null backend handle (backend has no timer-query
-        // support, timer queries are disabled by config, or the backend could
-        // not create a query at call time) keeps a graceful fallback: the query
-        // result is immediately available and reads as zero.
-        struct QueryObject {
-            GLuint id = 0;
-            GLenum target = 0; // 0 = gen'd but never used with BeginQuery/QueryCounter
-            // glCreateQueries makes the object outright; glGenQueries only reserves the name,
-            // and the object appears when the name is first used (GL 4.6 core 4.2.1).
-            Bool created = false;
-            MG_Backend::BackendQueryHandle backendHandle = nullptr;
-            Bool active = false;
-            Bool ended = false;
-            Bool resultCached = false;
-            Uint64 cachedResult = 0;
-            // The transform feedback primitive counter matching this query's target, at
-            // BeginQuery time.
-            Uint64 counterSnapshot = 0;
-            // Capture-draw counters at BeginQuery time: how many capture draws the CPU
-            // accounting had reproduced exactly, and how many of those it could not (a
-            // geometry stage amplifies). Their deltas decide whether the CPU result may
-            // stand in for the backend's.
-            Uint64 accountedCaptureDrawSnapshot = 0;
-            Uint64 geometryCaptureDrawSnapshot = 0;
-        };
+        using QueryObject = MobileGL::MG_State::GLState::SessionPrivateState::QueryObject;
+
+        MobileGL::MG_State::GLState::SessionPrivateState& SessionQueryState() {
+            return MG_State::pGLContext->GetSessionState();
+        }
 
         // Query calls may arrive from any thread (launchers migrate the context
-        // across JVM threads), so the live-object registry is mutex-guarded,
-        // like the sync-object registry in GL_Sync.cpp. Entries left at process
-        // shutdown are simply dropped; their backend handles die with the
-        // backend.
-        std::mutex g_queryObjectsMutex;
-        UnorderedMap<GLuint, QueryObject*> g_liveQueryObjects;
-        // Monotonically increasing id allocator; ids are valid query objects
-        // immediately after GenQueries.
-        GLuint g_nextQueryId = 1;
-        // Id of the query currently active on GL_TIME_ELAPSED (0 = none).
-        GLuint g_activeTimeElapsedQueryId = 0;
-        // Ids of the queries active on the transform feedback targets (0 = none).
-        GLuint g_activePrimitivesWrittenQueryId = 0;
-        GLuint g_activePrimitivesGeneratedQueryId = 0;
-        // Id of the query active on GL_SAMPLES_PASSED (0 = none).
-        GLuint g_activeSamplesPassedQueryId = 0;
-        // Ids of the queries active on the GL_ARB_pipeline_statistics_query targets, one slot per
-        // target (0 = none). A map rather than a field per target: the eleven behave identically
-        // and none of them has any state beyond "which object is counting".
-        UnorderedMap<GLenum, GLuint> g_activePipelineStatisticsQueryIds;
+        // across JVM threads); SessionPrivateState owns the registry and the
+        // active-slot ids, so each GLContext session is fully isolated.
+        QueryObject* FindQueryObjectLocked(GLuint id) {
+            return SessionQueryState().FindQuery(id);
+        }
 
         // Whether MobileGL puts GL_ARB_tessellation_shader in its extension string. Read from the
         // ADVERTISED list rather than from a capability bit for the same reason
@@ -153,14 +117,7 @@ namespace MobileGL::MG_Impl::GLImpl {
             return true;
         }
 
-        // Callers must hold g_queryObjectsMutex.
-        QueryObject* FindQueryObjectLocked(GLuint id) {
-            const auto it = g_liveQueryObjects.find(id);
-            return it != g_liveQueryObjects.end() ? it->second : nullptr;
-        }
-
-        // Callers must hold g_queryObjectsMutex. Releases the backend handle
-        // (if any) and clears any cached result, so the object can be reused.
+        // Callers must hold the session state's registry.
         void ResetQueryObjectLocked(QueryObject* queryObject) {
             if (queryObject->backendHandle) {
                 if (const auto deleteBackendQuery = MG_Backend::gBackendFunctionsTable.GL.DeleteBackendQuery) {
@@ -174,7 +131,7 @@ namespace MobileGL::MG_Impl::GLImpl {
             queryObject->cachedResult = 0;
         }
 
-        // Callers must hold g_queryObjectsMutex.
+        // Session state owns its registry; callers hold no extra scope lock.
         void EndTimeElapsedQueryLocked(QueryObject* queryObject) {
             const auto endTimeElapsedQuery = MG_Backend::gBackendFunctionsTable.GL.EndTimeElapsedQuery;
             if (endTimeElapsedQuery && queryObject->backendHandle) {
@@ -182,7 +139,7 @@ namespace MobileGL::MG_Impl::GLImpl {
             }
             queryObject->active = false;
             queryObject->ended = true;
-            g_activeTimeElapsedQueryId = 0;
+            SessionQueryState().activeTimeElapsedQueryId = 0;
         }
 
         // The CPU accounting counter a transform feedback query target reads: what the capture
@@ -233,7 +190,7 @@ namespace MobileGL::MG_Impl::GLImpl {
         Bool GetQueryObjectValue(GLuint id, GLenum pname, const char* function, Uint64& outValue,
                                  Bool* outValueProduced = nullptr) {
             if (outValueProduced) *outValueProduced = true;
-            const std::lock_guard<std::mutex> lock(g_queryObjectsMutex);
+            // Session state owns its own registry and active slots; no extra scope lock.
             auto* queryObject = FindQueryObjectLocked(id);
             if (!queryObject) {
                 RecordQueryError(ErrorCode::InvalidOperation, function, "Query object does not exist.");
@@ -356,12 +313,11 @@ namespace MobileGL::MG_Impl::GLImpl {
         if (!ids) {
             return;
         }
-        const std::lock_guard<std::mutex> lock(g_queryObjectsMutex);
+        // Session state owns its own registry and active slots; no extra scope lock.
+        auto& state = SessionQueryState();
         for (GLsizei i = 0; i < n; ++i) {
-            const GLuint id = g_nextQueryId++;
-            auto* queryObject = new QueryObject;
-            queryObject->id = id;
-            g_liveQueryObjects[id] = queryObject;
+            const GLuint id = state.NextQueryId();
+            (void)state.AllocateQuery(id);
             ids[i] = id;
         }
     }
@@ -389,14 +345,13 @@ namespace MobileGL::MG_Impl::GLImpl {
         if (!ids) {
             return;
         }
-        const std::lock_guard<std::mutex> lock(g_queryObjectsMutex);
+        // Session state owns its own registry and active slots; no extra scope lock.
+        auto& state = SessionQueryState();
         for (GLsizei i = 0; i < n; ++i) {
-            const GLuint id = g_nextQueryId++;
-            auto* queryObject = new QueryObject;
-            queryObject->id = id;
-            queryObject->target = target;
-            queryObject->created = true;
-            g_liveQueryObjects[id] = queryObject;
+            const GLuint id = state.NextQueryId();
+            auto& queryObject = state.AllocateQuery(id);
+            queryObject.target = target;
+            queryObject.created = true;
             ids[i] = id;
         }
     }
@@ -409,13 +364,13 @@ namespace MobileGL::MG_Impl::GLImpl {
         if (!ids) {
             return;
         }
-        const std::lock_guard<std::mutex> lock(g_queryObjectsMutex);
+        // Session state owns its own registry and active slots; no extra scope lock.
+        auto& state = SessionQueryState();
         for (GLsizei i = 0; i < n; ++i) {
-            const auto it = g_liveQueryObjects.find(ids[i]);
-            if (it == g_liveQueryObjects.end()) {
+            QueryObject* queryObject = state.FindQuery(ids[i]);
+            if (queryObject == nullptr) {
                 continue; // unknown ids are silently ignored
             }
-            QueryObject* queryObject = it->second;
             if (queryObject->active) {
                 // Implicitly end before deletion, releasing the matching active slot.
                 if (queryObject->target == GL_SAMPLES_PASSED || queryObject->target == GL_ANY_SAMPLES_PASSED ||
@@ -425,16 +380,16 @@ namespace MobileGL::MG_Impl::GLImpl {
                         endOcclusionQuery(queryObject->backendHandle);
                     }
                     queryObject->active = false;
-                    g_activeSamplesPassedQueryId = 0;
+                    state.activeSamplesPassedQueryId = 0;
                 } else if (IsPipelineStatisticsQueryTarget(queryObject->target)) {
                     queryObject->active = false;
-                    g_activePipelineStatisticsQueryIds[queryObject->target] = 0;
+                    state.activePipelineStatisticsQueryIds[queryObject->target] = 0;
                 } else if (queryObject->target == GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN ||
                            queryObject->target == GL_PRIMITIVES_GENERATED) {
                     queryObject->active = false;
                     (queryObject->target == GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN
-                         ? g_activePrimitivesWrittenQueryId
-                         : g_activePrimitivesGeneratedQueryId) = 0;
+                         ? state.activePrimitivesWrittenQueryId
+                         : state.activePrimitivesGeneratedQueryId) = 0;
                 } else {
                     EndTimeElapsedQueryLocked(queryObject);
                 }
@@ -445,8 +400,7 @@ namespace MobileGL::MG_Impl::GLImpl {
                 }
                 queryObject->backendHandle = nullptr;
             }
-            g_liveQueryObjects.erase(it);
-            delete queryObject;
+            state.EraseQuery(ids[i]);
         }
     }
 
@@ -454,7 +408,7 @@ namespace MobileGL::MG_Impl::GLImpl {
         if (id == 0) {
             return GL_FALSE;
         }
-        const std::lock_guard<std::mutex> lock(g_queryObjectsMutex);
+        // Session state owns its own registry and active slots; no extra scope lock.
         // A name from glGenQueries is not yet a query object: it becomes one when it is first
         // used with BeginQuery/QueryCounter (which is what a non-zero target records), or
         // immediately if it came from glCreateQueries.
@@ -481,18 +435,19 @@ namespace MobileGL::MG_Impl::GLImpl {
             RecordQueryError(ErrorCode::InvalidOperation, __FUNCTION__, "Query id 0 cannot be used.");
             return;
         }
-        const std::lock_guard<std::mutex> lock(g_queryObjectsMutex);
+        // Session state owns its own registry and active slots; no extra scope lock.
+        auto& state = SessionQueryState();
         auto* queryObject = FindQueryObjectLocked(id);
         if (!queryObject) {
             RecordQueryError(ErrorCode::InvalidOperation, __FUNCTION__, "Query object does not exist.");
             return;
         }
         GLuint& activeQueryId = isPipelineStatisticsQuery
-            ? g_activePipelineStatisticsQueryIds[target]
+            ? state.activePipelineStatisticsQueryIds[target]
             : (isTransformFeedbackQuery
-                   ? (target == GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN ? g_activePrimitivesWrittenQueryId
-                                                                         : g_activePrimitivesGeneratedQueryId)
-                   : (isOcclusionQuery ? g_activeSamplesPassedQueryId : g_activeTimeElapsedQueryId));
+                   ? (target == GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN ? state.activePrimitivesWrittenQueryId
+                                                                         : state.activePrimitivesGeneratedQueryId)
+                   : (isOcclusionQuery ? state.activeSamplesPassedQueryId : state.activeTimeElapsedQueryId));
         if (activeQueryId != 0) {
             RecordQueryError(ErrorCode::InvalidOperation, __FUNCTION__,
                              "A query is already active on this target.");
@@ -549,13 +504,14 @@ namespace MobileGL::MG_Impl::GLImpl {
             RecordQueryError(ErrorCode::InvalidEnum, __FUNCTION__, "Query target is not supported.");
             return;
         }
-        const std::lock_guard<std::mutex> lock(g_queryObjectsMutex);
+        // Session state owns its own registry and active slots; no extra scope lock.
+        auto& state = SessionQueryState();
         GLuint& activeQueryId = isPipelineStatisticsQuery
-            ? g_activePipelineStatisticsQueryIds[target]
+            ? state.activePipelineStatisticsQueryIds[target]
             : (isTransformFeedbackQuery
-                   ? (target == GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN ? g_activePrimitivesWrittenQueryId
-                                                                         : g_activePrimitivesGeneratedQueryId)
-                   : (isOcclusionQuery ? g_activeSamplesPassedQueryId : g_activeTimeElapsedQueryId));
+                   ? (target == GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN ? state.activePrimitivesWrittenQueryId
+                                                                         : state.activePrimitivesGeneratedQueryId)
+                   : (isOcclusionQuery ? state.activeSamplesPassedQueryId : state.activeTimeElapsedQueryId));
         if (activeQueryId == 0) {
             RecordQueryError(ErrorCode::InvalidOperation, __FUNCTION__, "No query is active on this target.");
             return;
@@ -623,7 +579,7 @@ namespace MobileGL::MG_Impl::GLImpl {
             RecordQueryError(ErrorCode::InvalidOperation, __FUNCTION__, "Query id 0 cannot be used.");
             return;
         }
-        const std::lock_guard<std::mutex> lock(g_queryObjectsMutex);
+        // Session state owns its own registry and active slots; no extra scope lock.
         auto* queryObject = FindQueryObjectLocked(id);
         if (!queryObject) {
             RecordQueryError(ErrorCode::InvalidOperation, __FUNCTION__, "Query object does not exist.");
@@ -678,7 +634,7 @@ namespace MobileGL::MG_Impl::GLImpl {
         }
 
         {
-            const std::lock_guard<std::mutex> lock(g_queryObjectsMutex);
+            // Session state owns its own registry and active slots; no extra scope lock.
             const auto* queryObject = FindQueryObjectLocked(id);
             // A generated NAME is not yet a query object; it becomes one at its first use with a
             // target (the same rule glIsQuery answers by).
@@ -722,26 +678,27 @@ namespace MobileGL::MG_Impl::GLImpl {
         }
         switch (pname) {
         case GL_CURRENT_QUERY: {
-            const std::lock_guard<std::mutex> lock(g_queryObjectsMutex);
+            // Session state owns its own registry and active slots; no extra scope lock.
+            auto& state = SessionQueryState();
             switch (target) {
             case GL_TIME_ELAPSED:
-                *params = static_cast<GLint>(g_activeTimeElapsedQueryId);
+                *params = static_cast<GLint>(state.activeTimeElapsedQueryId);
                 break;
             case GL_SAMPLES_PASSED:
             case GL_ANY_SAMPLES_PASSED:
             case GL_ANY_SAMPLES_PASSED_CONSERVATIVE:
-                *params = static_cast<GLint>(g_activeSamplesPassedQueryId);
+                *params = static_cast<GLint>(state.activeSamplesPassedQueryId);
                 break;
             case GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN:
-                *params = static_cast<GLint>(g_activePrimitivesWrittenQueryId);
+                *params = static_cast<GLint>(state.activePrimitivesWrittenQueryId);
                 break;
             case GL_PRIMITIVES_GENERATED:
-                *params = static_cast<GLint>(g_activePrimitivesGeneratedQueryId);
+                *params = static_cast<GLint>(state.activePrimitivesGeneratedQueryId);
                 break;
             default:
                 if (IsPipelineStatisticsQueryTarget(target)) {
-                    const auto it = g_activePipelineStatisticsQueryIds.find(target);
-                    *params = it != g_activePipelineStatisticsQueryIds.end() ? static_cast<GLint>(it->second) : 0;
+                    const auto it = state.activePipelineStatisticsQueryIds.find(target);
+                    *params = it != state.activePipelineStatisticsQueryIds.end() ? static_cast<GLint>(it->second) : 0;
                 } else {
                     *params = 0;
                 }
@@ -885,24 +842,12 @@ namespace MobileGL::MG_Impl::GLImpl {
     }
 
     void DestroyAllQueryObjects() {
-        // Detach the registry under the lock, release outside it - same discipline
-        // (and the same accepted teardown race) as DestroyAllSyncObjects. Without
-        // this drain, every query the app left undeleted survived full library
-        // teardown in the process-global registry: the objects and their backend
-        // wrappers leaked across Destroy/Initialize cycles, stale ids kept
-        // answering IsQuery == GL_TRUE in the re-initialized library, and a later
-        // glDeleteQueries could hand the OLD backend's handle to a DIFFERENT
-        // backend's DeleteBackendQuery, which casts it to the wrong wrapper type.
-        UnorderedMap<GLuint, QueryObject*> orphans;
-        {
-            const std::lock_guard<std::mutex> lock(g_queryObjectsMutex);
-            orphans.swap(g_liveQueryObjects);
-            g_activeTimeElapsedQueryId = 0;
-            g_activePrimitivesWrittenQueryId = 0;
-            g_activePrimitivesGeneratedQueryId = 0;
-            g_activeSamplesPassedQueryId = 0;
-        }
-        if (orphans.empty()) {
+        // Sweep the current session's session-private registry. Without this
+        // drain, every query the app left undeleted survived full library
+        // teardown in the process-global registry.
+        auto& state = SessionQueryState();
+        const auto ids = state.GetQueryIds();
+        if (ids.empty()) {
             return;
         }
         // Backend handles must be released by the backend that created them, so
@@ -910,12 +855,20 @@ namespace MobileGL::MG_Impl::GLImpl {
         // DeleteBackendQuery are generation-guarded, so a handle whose renderer
         // or ES context is already gone frees only the wrapper.
         const auto deleteBackendQuery = MG_Backend::gBackendFunctionsTable.GL.DeleteBackendQuery;
-        for (const auto& [_, queryObject] : orphans) {
-            if (deleteBackendQuery && queryObject->backendHandle) {
-                deleteBackendQuery(queryObject->backendHandle);
+        for (GLuint id : ids) {
+            auto* queryObject = state.FindQuery(id);
+            if (queryObject != nullptr) {
+                if (deleteBackendQuery && queryObject->backendHandle) {
+                    deleteBackendQuery(queryObject->backendHandle);
+                }
+                state.EraseQuery(id);
             }
-            delete queryObject;
         }
-        MGLOG_D("DestroyAllQueryObjects: reclaimed %zu query object(s) the app left undeleted", orphans.size());
+        state.activeTimeElapsedQueryId = 0;
+        state.activePrimitivesWrittenQueryId = 0;
+        state.activePrimitivesGeneratedQueryId = 0;
+        state.activeSamplesPassedQueryId = 0;
+        state.activePipelineStatisticsQueryIds.clear();
+        MGLOG_D("DestroyAllQueryObjects: reclaimed %zu query object(s) the app left undeleted", ids.size());
     }
 } // namespace MobileGL::MG_Impl::GLImpl

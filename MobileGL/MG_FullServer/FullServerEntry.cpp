@@ -30,19 +30,24 @@ namespace MobileGL::FullServer {
     void OnSessionChanged(MobileGLSessionId sessionId, void* user) {
         (void)user;
         BfaFrontendShim::Get().SetCurrentSession(sessionId);
+        const auto threadId =
+            static_cast<Uint64>(std::hash<std::thread::id>{}(std::this_thread::get_id()));
         if (sessionId == 0) {
             if (s_frontendSession != 0) {
                 MobileGL::MG_State::GLState::GLContextRegistry::DestroySession(s_frontendSession);
                 s_frontendSession = 0;
             }
+            MobileGL::MG_State::RestoreLegacyCurrentContext();
             return;
         }
         const auto group =
             MobileGL::MG_State::GLState::GLContextRegistry::GetOrCreateSharedGroup(0, 0);
         MobileGL::MG_State::GLState::GLContextRegistry::CreateSession(0, group, sessionId);
-        MobileGL::MG_State::GLState::GLContextRegistry::SetCurrent(
-            static_cast<Uint64>(std::hash<std::thread::id>{}(std::this_thread::get_id())),
-            sessionId);
+        MobileGL::MG_State::GLState::GLContextRegistry::SetCurrent(threadId, sessionId);
+        auto* context = MobileGL::MG_State::GLState::GLContextRegistry::GetCurrentGLContext(threadId);
+        if (context != nullptr) {
+            MobileGL::MG_State::pGLContext = context;
+        }
         s_frontendSession = sessionId;
     }
 
@@ -66,6 +71,10 @@ namespace MobileGL::FullServer {
         const auto threadId =
             static_cast<Uint64>(std::hash<std::thread::id>{}(std::this_thread::get_id()));
         MobileGL::MG_State::GLState::GLContextRegistry::SetCurrent(threadId, sessionId);
+        auto* context = MobileGL::MG_State::GLState::GLContextRegistry::GetCurrentGLContext(threadId);
+        if (context != nullptr) {
+            MobileGL::MG_State::pGLContext = context;
+        }
         BfaFrontendShim::Get().SetCurrentSession(sessionId);
         return MobileGL::Protocol::Wire::WireDispatchCall(opcode, sessionId, payloadBytes,
                                                           payloadSize, receivedShm,

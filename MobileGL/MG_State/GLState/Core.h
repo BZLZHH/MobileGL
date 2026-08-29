@@ -12,6 +12,7 @@
 #include "BufferState/BufferState.h"
 #include "MG_State/GLState/RenderbufferState/RenderbufferObject.h"
 #include "MG_State/GLState/RenderbufferState/RenderbufferState.h"
+#include "SessionPrivateState.h"
 #include "RenderState/RenderState.h"
 #include "ProgramState/ProgramState.h"
 #include "ProgramState/ProgramPipelineObject.h"
@@ -540,6 +541,11 @@ namespace MobileGL {
                 const SharedPtr<const MG_Util::ShaderTranspiler::CompileEnv>& GetCompileEnv();
                 void InvalidateCompileEnv();
 
+                // C/S Phase 2: session-private state owned by this context
+                // (sync objects today, query objects in the next increment).
+                SessionPrivateState& GetSessionState() { return m_sessionState; }
+                const SessionPrivateState& GetSessionState() const { return m_sessionState; }
+
             private:
                 UnorderedMap<Uint, TransformFeedbackObjectState>& GetTransformFeedbackObjectTable();
                 const UnorderedMap<Uint, TransformFeedbackObjectState>& GetTransformFeedbackObjectTable() const;
@@ -554,6 +560,7 @@ namespace MobileGL {
                 ErrorState m_errorState;
                 BufferState m_bufferState;
                 VertexArrayState m_vertexArrayState;
+                SessionPrivateState m_sessionState;
                 Array<CurrentVertexAttributeValue, VertexArrayObject::MAX_VERTEX_ATTRIBS> m_currentVertexAttributes{};
                 Bool m_transformFeedbackActive = false;
                 Bool m_transformFeedbackPaused = false;
