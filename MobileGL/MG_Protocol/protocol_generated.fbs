@@ -34,7 +34,7 @@ table GlAttachShader {
 table GlBindAttribLocation {
     program: uint;
     index: uint;
-    name: ShmRegion;
+    name: string;
 }
 table GlBindBuffer {
     target: uint;
@@ -261,20 +261,18 @@ table GlGetActiveAttrib {
     bufSize: int;
     length: [int];
     size: [int];
-    // TODO: unsupported GLenum* type
+    type: [uint];
     name: string;
 }
-// TODO(GEN): incomplete signature for GetActiveAttrib
 table GlGetActiveUniform {
     program: uint;
     index: uint;
     bufSize: int;
     length: [int];
     size: [int];
-    // TODO: unsupported GLenum* type
+    type: [uint];
     name: string;
 }
-// TODO(GEN): incomplete signature for GetActiveUniform
 table GlGetAttachedShaders {
     program: uint;
     maxCount: int;
@@ -283,7 +281,7 @@ table GlGetAttachedShaders {
 }
 table GlGetAttribLocation {
     program: uint;
-    name: ShmRegion;
+    name: string;
 }
 table GlGetBooleanv {
     pname: uint;
@@ -369,7 +367,7 @@ table GlGetUniformiv {
 }
 table GlGetUniformLocation {
     program: uint;
-    name: ShmRegion;
+    name: string;
 }
 table GlGetVertexAttribfv {
     index: uint;
@@ -805,9 +803,8 @@ table GlGetBufferPointerv {
 // TODO(GEN): incomplete signature for GetBufferPointerv
 table GlDrawBuffers {
     n: int;
-    // TODO: unsupported const GLenum* bufs
+    bufs: [uint];
 }
-// TODO(GEN): incomplete signature for DrawBuffers
 table GlUniformMatrix2x3fv {
     location: int;
     count: int;
@@ -921,10 +918,9 @@ table GlGetTransformFeedbackVarying {
     bufSize: int;
     length: [int];
     size: [int];
-    // TODO: unsupported GLenum* type
+    type: [uint];
     name: string;
 }
-// TODO(GEN): incomplete signature for GetTransformFeedbackVarying
 table GlVertexAttribIPointer {
     index: uint;
     size: int;
@@ -971,7 +967,7 @@ table GlGetUniformuiv {
 }
 table GlGetFragDataLocation {
     program: uint;
-    name: ShmRegion;
+    name: string;
 }
 table GlUniform1ui {
     location: int;
@@ -1058,7 +1054,7 @@ table GlGetActiveUniformsiv {
 }
 table GlGetUniformBlockIndex {
     program: uint;
-    uniformBlockName: ShmRegion;
+    uniformBlockName: string;
 }
 table GlGetActiveUniformBlockiv {
     program: uint;
@@ -1113,9 +1109,8 @@ table GlWaitSync {
 }
 table GlGetInteger64v {
     pname: uint;
-    // TODO: unsupported GLint64* data
+    data: [long];
 }
-// TODO(GEN): incomplete signature for GetInteger64v
 table GlGetSynciv {
     sync: ulong;
     pname: uint;
@@ -1126,15 +1121,13 @@ table GlGetSynciv {
 table GlGetInteger64i_v {
     target: uint;
     index: uint;
-    // TODO: unsupported GLint64* data
+    data: [long];
 }
-// TODO(GEN): incomplete signature for GetInteger64i_v
 table GlGetBufferParameteri64v {
     target: uint;
     pname: uint;
-    // TODO: unsupported GLint64* params
+    params: [long];
 }
-// TODO(GEN): incomplete signature for GetBufferParameteri64v
 table GlGenSamplers {
     count: int;
     samplers: [uint];
@@ -1203,10 +1196,9 @@ table GlGetProgramBinary {
     program: uint;
     bufSize: int;
     length: [int];
-    // TODO: unsupported GLenum* binaryFormat
+    binaryFormat: [uint];
     binary: ShmRegion;
 }
-// TODO(GEN): incomplete signature for GetProgramBinary
 table GlProgramBinary {
     program: uint;
     binaryFormat: uint;
@@ -1221,19 +1213,17 @@ table GlProgramParameteri {
 table GlInvalidateFramebuffer {
     target: uint;
     numAttachments: int;
-    // TODO: unsupported const GLenum* attachments
+    attachments: [uint];
 }
-// TODO(GEN): incomplete signature for InvalidateFramebuffer
 table GlInvalidateSubFramebuffer {
     target: uint;
     numAttachments: int;
-    // TODO: unsupported const GLenum* attachments
+    attachments: [uint];
     x: int;
     y: int;
     width: int;
     height: int;
 }
-// TODO(GEN): incomplete signature for InvalidateSubFramebuffer
 table GlTexStorage2D {
     target: uint;
     levels: int;
@@ -1292,7 +1282,7 @@ table GlGetProgramInterfaceiv {
 table GlGetProgramResourceIndex {
     program: uint;
     programInterface: uint;
-    name: ShmRegion;
+    name: string;
 }
 table GlGetProgramResourceName {
     program: uint;
@@ -1307,16 +1297,15 @@ table GlGetProgramResourceiv {
     programInterface: uint;
     index: uint;
     propCount: int;
-    // TODO: unsupported const GLenum* props
+    props: [uint];
     bufSize: int;
     length: [int];
     params: [int];
 }
-// TODO(GEN): incomplete signature for GetProgramResourceiv
 table GlGetProgramResourceLocation {
     program: uint;
     programInterface: uint;
-    name: ShmRegion;
+    name: string;
 }
 table GlUseProgramStages {
     pipeline: uint;
@@ -1680,7 +1669,7 @@ table GlDebugMessageInsert {
     id: uint;
     severity: uint;
     length: int;
-    buf: ShmRegion;
+    buf: string;
 }
 table GlDebugMessageCallback {
     // TODO: unsupported GLDEBUGPROC callback
@@ -1690,25 +1679,24 @@ table GlDebugMessageCallback {
 table GlGetDebugMessageLog {
     count: uint;
     bufSize: int;
-    // TODO: unsupported GLenum* sources
-    // TODO: unsupported GLenum* types
+    sources: [uint];
+    types: [uint];
     ids: [uint];
-    // TODO: unsupported GLenum* severities
+    severities: [uint];
     lengths: [int];
     messageLog: string;
 }
-// TODO(GEN): incomplete signature for GetDebugMessageLog
 table GlPushDebugGroup {
     source: uint;
     id: uint;
     length: int;
-    message: ShmRegion;
+    message: string;
 }
 table GlObjectLabel {
     identifier: uint;
     name: uint;
     length: int;
-    label: ShmRegion;
+    label: string;
 }
 table GlGetObjectLabel {
     identifier: uint;
@@ -1720,7 +1708,7 @@ table GlGetObjectLabel {
 table GlObjectPtrLabel {
     ptr: ShmRegion;
     length: int;
-    label: ShmRegion;
+    label: string;
 }
 table GlGetObjectPtrLabel {
     ptr: ShmRegion;
@@ -1961,13 +1949,11 @@ table GlPolygonMode {
     mode: uint;
 }
 table GlPolygonStipple {
-    // TODO: unsupported const GLubyte* mask
+    mask: [uint];
 }
-// TODO(GEN): incomplete signature for PolygonStipple
 table GlGetPolygonStipple {
-    // TODO: unsupported GLubyte* mask
+    mask: [uint];
 }
-// TODO(GEN): incomplete signature for GetPolygonStipple
 table GlEdgeFlag {
     flag: bool;
 }
@@ -1976,14 +1962,12 @@ table GlEdgeFlagv {
 }
 table GlClipPlane {
     plane: uint;
-    // TODO: unsupported const GLdouble* equation
+    equation: [double];
 }
-// TODO(GEN): incomplete signature for ClipPlane
 table GlGetClipPlane {
     plane: uint;
-    // TODO: unsupported GLdouble* equation
+    equation: [double];
 }
-// TODO(GEN): incomplete signature for GetClipPlane
 table GlDrawBuffer {
     mode: uint;
 }
@@ -1995,9 +1979,8 @@ table GlDisableClientState {
 }
 table GlGetDoublev {
     pname: uint;
-    // TODO: unsupported GLdouble* params
+    params: [double];
 }
-// TODO(GEN): incomplete signature for GetDoublev
 table GlPushAttrib {
     mask: uint;
 }
@@ -2041,16 +2024,14 @@ table GlFrustum {
     far_val: double;
 }
 table GlLoadMatrixd {
-    // TODO: unsupported const GLdouble* m
+    m: [double];
 }
-// TODO(GEN): incomplete signature for LoadMatrixd
 table GlLoadMatrixf {
     m: [float];
 }
 table GlMultMatrixd {
-    // TODO: unsupported const GLdouble* m
+    m: [double];
 }
-// TODO(GEN): incomplete signature for MultMatrixd
 table GlMultMatrixf {
     m: [float];
 }
@@ -2175,9 +2156,8 @@ table GlVertex4s {
     w: int;
 }
 table GlVertex2dv {
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for Vertex2dv
 table GlVertex2fv {
     v: [float];
 }
@@ -2185,13 +2165,11 @@ table GlVertex2iv {
     v: [int];
 }
 table GlVertex2sv {
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for Vertex2sv
 table GlVertex3dv {
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for Vertex3dv
 table GlVertex3fv {
     v: [float];
 }
@@ -2199,13 +2177,11 @@ table GlVertex3iv {
     v: [int];
 }
 table GlVertex3sv {
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for Vertex3sv
 table GlVertex4dv {
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for Vertex4dv
 table GlVertex4fv {
     v: [float];
 }
@@ -2213,9 +2189,8 @@ table GlVertex4iv {
     v: [int];
 }
 table GlVertex4sv {
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for Vertex4sv
 table GlNormal3b {
     nx: int;
     ny: int;
@@ -2242,13 +2217,11 @@ table GlNormal3s {
     nz: int;
 }
 table GlNormal3bv {
-    // TODO: unsupported const GLbyte* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for Normal3bv
 table GlNormal3dv {
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for Normal3dv
 table GlNormal3fv {
     v: [float];
 }
@@ -2256,9 +2229,8 @@ table GlNormal3iv {
     v: [int];
 }
 table GlNormal3sv {
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for Normal3sv
 table GlIndexd {
     c: double;
 }
@@ -2275,9 +2247,8 @@ table GlIndexub {
     c: uint;
 }
 table GlIndexdv {
-    // TODO: unsupported const GLdouble* c
+    c: [double];
 }
-// TODO(GEN): incomplete signature for Indexdv
 table GlIndexfv {
     c: [float];
 }
@@ -2285,13 +2256,11 @@ table GlIndexiv {
     c: [int];
 }
 table GlIndexsv {
-    // TODO: unsupported const GLshort* c
+    c: [int];
 }
-// TODO(GEN): incomplete signature for Indexsv
 table GlIndexubv {
-    // TODO: unsupported const GLubyte* c
+    c: [uint];
 }
-// TODO(GEN): incomplete signature for Indexubv
 table GlColor3b {
     red: int;
     green: int;
@@ -2381,13 +2350,11 @@ table GlColor4us {
     alpha: uint;
 }
 table GlColor3bv {
-    // TODO: unsupported const GLbyte* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for Color3bv
 table GlColor3dv {
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for Color3dv
 table GlColor3fv {
     v: [float];
 }
@@ -2395,28 +2362,23 @@ table GlColor3iv {
     v: [int];
 }
 table GlColor3sv {
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for Color3sv
 table GlColor3ubv {
-    // TODO: unsupported const GLubyte* v
+    v: [uint];
 }
-// TODO(GEN): incomplete signature for Color3ubv
 table GlColor3uiv {
     v: [uint];
 }
 table GlColor3usv {
-    // TODO: unsupported const GLushort* v
+    v: [uint];
 }
-// TODO(GEN): incomplete signature for Color3usv
 table GlColor4bv {
-    // TODO: unsupported const GLbyte* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for Color4bv
 table GlColor4dv {
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for Color4dv
 table GlColor4fv {
     v: [float];
 }
@@ -2424,20 +2386,17 @@ table GlColor4iv {
     v: [int];
 }
 table GlColor4sv {
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for Color4sv
 table GlColor4ubv {
-    // TODO: unsupported const GLubyte* v
+    v: [uint];
 }
-// TODO(GEN): incomplete signature for Color4ubv
 table GlColor4uiv {
     v: [uint];
 }
 table GlColor4usv {
-    // TODO: unsupported const GLushort* v
+    v: [uint];
 }
-// TODO(GEN): incomplete signature for Color4usv
 table GlTexCoord1d {
     s: double;
 }
@@ -2511,9 +2470,8 @@ table GlTexCoord4s {
     q: int;
 }
 table GlTexCoord1dv {
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for TexCoord1dv
 table GlTexCoord1fv {
     v: [float];
 }
@@ -2521,13 +2479,11 @@ table GlTexCoord1iv {
     v: [int];
 }
 table GlTexCoord1sv {
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for TexCoord1sv
 table GlTexCoord2dv {
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for TexCoord2dv
 table GlTexCoord2fv {
     v: [float];
 }
@@ -2535,13 +2491,11 @@ table GlTexCoord2iv {
     v: [int];
 }
 table GlTexCoord2sv {
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for TexCoord2sv
 table GlTexCoord3dv {
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for TexCoord3dv
 table GlTexCoord3fv {
     v: [float];
 }
@@ -2549,13 +2503,11 @@ table GlTexCoord3iv {
     v: [int];
 }
 table GlTexCoord3sv {
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for TexCoord3sv
 table GlTexCoord4dv {
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for TexCoord4dv
 table GlTexCoord4fv {
     v: [float];
 }
@@ -2563,9 +2515,8 @@ table GlTexCoord4iv {
     v: [int];
 }
 table GlTexCoord4sv {
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for TexCoord4sv
 table GlRasterPos2d {
     x: double;
     y: double;
@@ -2627,9 +2578,8 @@ table GlRasterPos4s {
     w: int;
 }
 table GlRasterPos2dv {
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for RasterPos2dv
 table GlRasterPos2fv {
     v: [float];
 }
@@ -2637,13 +2587,11 @@ table GlRasterPos2iv {
     v: [int];
 }
 table GlRasterPos2sv {
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for RasterPos2sv
 table GlRasterPos3dv {
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for RasterPos3dv
 table GlRasterPos3fv {
     v: [float];
 }
@@ -2651,13 +2599,11 @@ table GlRasterPos3iv {
     v: [int];
 }
 table GlRasterPos3sv {
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for RasterPos3sv
 table GlRasterPos4dv {
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for RasterPos4dv
 table GlRasterPos4fv {
     v: [float];
 }
@@ -2665,9 +2611,8 @@ table GlRasterPos4iv {
     v: [int];
 }
 table GlRasterPos4sv {
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for RasterPos4sv
 table GlRectd {
     x1: double;
     y1: double;
@@ -2693,10 +2638,9 @@ table GlRects {
     y2: int;
 }
 table GlRectdv {
-    // TODO: unsupported const GLdouble* v1
-    // TODO: unsupported const GLdouble* v2
+    v1: [double];
+    v2: [double];
 }
-// TODO(GEN): incomplete signature for Rectdv
 table GlRectfv {
     v1: [float];
     v2: [float];
@@ -2706,10 +2650,9 @@ table GlRectiv {
     v2: [int];
 }
 table GlRectsv {
-    // TODO: unsupported const GLshort* v1
-    // TODO: unsupported const GLshort* v2
+    v1: [int];
+    v2: [int];
 }
-// TODO(GEN): incomplete signature for Rectsv
 table GlVertexPointer {
     size: int;
     type: uint;
@@ -2862,9 +2805,8 @@ table GlPixelMapuiv {
 table GlPixelMapusv {
     map: uint;
     mapsize: int;
-    // TODO: unsupported const GLushort* values
+    values: [uint];
 }
-// TODO(GEN): incomplete signature for PixelMapusv
 table GlGetPixelMapfv {
     map: uint;
     values: [float];
@@ -2875,9 +2817,8 @@ table GlGetPixelMapuiv {
 }
 table GlGetPixelMapusv {
     map: uint;
-    // TODO: unsupported GLushort* values
+    values: [uint];
 }
-// TODO(GEN): incomplete signature for GetPixelMapusv
 table GlBitmap {
     width: int;
     height: int;
@@ -2885,9 +2826,8 @@ table GlBitmap {
     yorig: float;
     xmove: float;
     ymove: float;
-    // TODO: unsupported const GLubyte* bitmap
+    bitmap: [uint];
 }
-// TODO(GEN): incomplete signature for Bitmap
 table GlDrawPixels {
     width: int;
     height: int;
@@ -2920,9 +2860,8 @@ table GlTexGeni {
 table GlTexGendv {
     coord: uint;
     pname: uint;
-    // TODO: unsupported const GLdouble* params
+    params: [double];
 }
-// TODO(GEN): incomplete signature for TexGendv
 table GlTexGenfv {
     coord: uint;
     pname: uint;
@@ -2936,9 +2875,8 @@ table GlTexGeniv {
 table GlGetTexGendv {
     coord: uint;
     pname: uint;
-    // TODO: unsupported GLdouble* params
+    params: [double];
 }
-// TODO(GEN): incomplete signature for GetTexGendv
 table GlGetTexGenfv {
     coord: uint;
     pname: uint;
@@ -2999,9 +2937,8 @@ table GlGetTexImage {
 table GlPrioritizeTextures {
     n: int;
     textures: [uint];
-    // TODO: unsupported const GLclampf* priorities
+    priorities: [float];
 }
-// TODO(GEN): incomplete signature for PrioritizeTextures
 table GlAreTexturesResident {
     n: int;
     textures: [uint];
@@ -3039,9 +2976,8 @@ table GlMap1d {
     u2: double;
     stride: int;
     order: int;
-    // TODO: unsupported const GLdouble* points
+    points: [double];
 }
-// TODO(GEN): incomplete signature for Map1d
 table GlMap1f {
     target: uint;
     u1: float;
@@ -3060,9 +2996,8 @@ table GlMap2d {
     v2: double;
     vstride: int;
     vorder: int;
-    // TODO: unsupported const GLdouble* points
+    points: [double];
 }
-// TODO(GEN): incomplete signature for Map2d
 table GlMap2f {
     target: uint;
     u1: float;
@@ -3078,9 +3013,8 @@ table GlMap2f {
 table GlGetMapdv {
     target: uint;
     query: uint;
-    // TODO: unsupported GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for GetMapdv
 table GlGetMapfv {
     target: uint;
     query: uint;
@@ -3098,9 +3032,8 @@ table GlEvalCoord1f {
     u: float;
 }
 table GlEvalCoord1dv {
-    // TODO: unsupported const GLdouble* u
+    u: [double];
 }
-// TODO(GEN): incomplete signature for EvalCoord1dv
 table GlEvalCoord1fv {
     u: [float];
 }
@@ -3113,9 +3046,8 @@ table GlEvalCoord2f {
     v: float;
 }
 table GlEvalCoord2dv {
-    // TODO: unsupported const GLdouble* u
+    u: [double];
 }
-// TODO(GEN): incomplete signature for EvalCoord2dv
 table GlEvalCoord2fv {
     u: [float];
 }
@@ -3262,28 +3194,24 @@ table GlVertexAttribI3uiv {
 }
 table GlVertexAttribI4bv {
     index: uint;
-    // TODO: unsupported const GLbyte* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for VertexAttribI4bv
 table GlVertexAttribI4sv {
     index: uint;
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for VertexAttribI4sv
 table GlVertexAttribI4ubv {
     index: uint;
-    // TODO: unsupported const GLubyte* v
+    v: [uint];
 }
-// TODO(GEN): incomplete signature for VertexAttribI4ubv
 table GlVertexAttribI4usv {
     index: uint;
-    // TODO: unsupported const GLushort* v
+    v: [uint];
 }
-// TODO(GEN): incomplete signature for VertexAttribI4usv
 table GlBindFragDataLocation {
     program: uint;
     color: uint;
-    name: ShmRegion;
+    name: string;
 }
 table GlFramebufferTexture1D {
     target: uint;
@@ -3332,9 +3260,8 @@ table GlMultiTexCoord1d {
 }
 table GlMultiTexCoord1dv {
     target: uint;
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for MultiTexCoord1dv
 table GlMultiTexCoord1f {
     target: uint;
     s: float;
@@ -3357,9 +3284,8 @@ table GlMultiTexCoord1s {
 }
 table GlMultiTexCoord1sv {
     target: uint;
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for MultiTexCoord1sv
 table GlMultiTexCoord2d {
     target: uint;
     s: double;
@@ -3367,9 +3293,8 @@ table GlMultiTexCoord2d {
 }
 table GlMultiTexCoord2dv {
     target: uint;
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for MultiTexCoord2dv
 table GlMultiTexCoord2f {
     target: uint;
     s: float;
@@ -3395,9 +3320,8 @@ table GlMultiTexCoord2s {
 }
 table GlMultiTexCoord2sv {
     target: uint;
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for MultiTexCoord2sv
 table GlMultiTexCoord3d {
     target: uint;
     s: double;
@@ -3406,9 +3330,8 @@ table GlMultiTexCoord3d {
 }
 table GlMultiTexCoord3dv {
     target: uint;
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for MultiTexCoord3dv
 table GlMultiTexCoord3f {
     target: uint;
     s: float;
@@ -3437,9 +3360,8 @@ table GlMultiTexCoord3s {
 }
 table GlMultiTexCoord3sv {
     target: uint;
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for MultiTexCoord3sv
 table GlMultiTexCoord4d {
     target: uint;
     s: double;
@@ -3449,9 +3371,8 @@ table GlMultiTexCoord4d {
 }
 table GlMultiTexCoord4dv {
     target: uint;
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for MultiTexCoord4dv
 table GlMultiTexCoord4f {
     target: uint;
     s: float;
@@ -3483,23 +3404,20 @@ table GlMultiTexCoord4s {
 }
 table GlMultiTexCoord4sv {
     target: uint;
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for MultiTexCoord4sv
 table GlLoadTransposeMatrixf {
     m: [float];
 }
 table GlLoadTransposeMatrixd {
-    // TODO: unsupported const GLdouble* m
+    m: [double];
 }
-// TODO(GEN): incomplete signature for LoadTransposeMatrixd
 table GlMultTransposeMatrixf {
     m: [float];
 }
 table GlMultTransposeMatrixd {
-    // TODO: unsupported const GLdouble* m
+    m: [double];
 }
-// TODO(GEN): incomplete signature for MultTransposeMatrixd
 table GlMultiDrawArrays {
     mode: uint;
     first: [int];
@@ -3540,9 +3458,8 @@ table GlFogCoordd {
     coord: double;
 }
 table GlFogCoorddv {
-    // TODO: unsupported const GLdouble* coord
+    coord: [double];
 }
-// TODO(GEN): incomplete signature for FogCoorddv
 table GlFogCoordPointer {
     type: uint;
     stride: int;
@@ -3554,18 +3471,16 @@ table GlSecondaryColor3b {
     blue: int;
 }
 table GlSecondaryColor3bv {
-    // TODO: unsupported const GLbyte* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for SecondaryColor3bv
 table GlSecondaryColor3d {
     red: double;
     green: double;
     blue: double;
 }
 table GlSecondaryColor3dv {
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for SecondaryColor3dv
 table GlSecondaryColor3f {
     red: float;
     green: float;
@@ -3588,18 +3503,16 @@ table GlSecondaryColor3s {
     blue: int;
 }
 table GlSecondaryColor3sv {
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for SecondaryColor3sv
 table GlSecondaryColor3ub {
     red: uint;
     green: uint;
     blue: uint;
 }
 table GlSecondaryColor3ubv {
-    // TODO: unsupported const GLubyte* v
+    v: [uint];
 }
-// TODO(GEN): incomplete signature for SecondaryColor3ubv
 table GlSecondaryColor3ui {
     red: uint;
     green: uint;
@@ -3614,9 +3527,8 @@ table GlSecondaryColor3us {
     blue: uint;
 }
 table GlSecondaryColor3usv {
-    // TODO: unsupported const GLushort* v
+    v: [uint];
 }
-// TODO(GEN): incomplete signature for SecondaryColor3usv
 table GlSecondaryColorPointer {
     size: int;
     type: uint;
@@ -3628,9 +3540,8 @@ table GlWindowPos2d {
     y: double;
 }
 table GlWindowPos2dv {
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for WindowPos2dv
 table GlWindowPos2f {
     x: float;
     y: float;
@@ -3650,18 +3561,16 @@ table GlWindowPos2s {
     y: int;
 }
 table GlWindowPos2sv {
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for WindowPos2sv
 table GlWindowPos3d {
     x: double;
     y: double;
     z: double;
 }
 table GlWindowPos3dv {
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for WindowPos3dv
 table GlWindowPos3f {
     x: float;
     y: float;
@@ -3684,9 +3593,8 @@ table GlWindowPos3s {
     z: int;
 }
 table GlWindowPos3sv {
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for WindowPos3sv
 table GlGetQueryObjectiv {
     id: uint;
     pname: uint;
@@ -3701,27 +3609,24 @@ table GlGetBufferSubData {
 table GlGetVertexAttribdv {
     index: uint;
     pname: uint;
-    // TODO: unsupported GLdouble* params
+    params: [double];
 }
-// TODO(GEN): incomplete signature for GetVertexAttribdv
 table GlVertexAttrib1d {
     index: uint;
     x: double;
 }
 table GlVertexAttrib1dv {
     index: uint;
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for VertexAttrib1dv
 table GlVertexAttrib1s {
     index: uint;
     x: int;
 }
 table GlVertexAttrib1sv {
     index: uint;
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for VertexAttrib1sv
 table GlVertexAttrib2d {
     index: uint;
     x: double;
@@ -3729,9 +3634,8 @@ table GlVertexAttrib2d {
 }
 table GlVertexAttrib2dv {
     index: uint;
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for VertexAttrib2dv
 table GlVertexAttrib2s {
     index: uint;
     x: int;
@@ -3739,9 +3643,8 @@ table GlVertexAttrib2s {
 }
 table GlVertexAttrib2sv {
     index: uint;
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for VertexAttrib2sv
 table GlVertexAttrib3d {
     index: uint;
     x: double;
@@ -3750,9 +3653,8 @@ table GlVertexAttrib3d {
 }
 table GlVertexAttrib3dv {
     index: uint;
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for VertexAttrib3dv
 table GlVertexAttrib3s {
     index: uint;
     x: int;
@@ -3761,23 +3663,20 @@ table GlVertexAttrib3s {
 }
 table GlVertexAttrib3sv {
     index: uint;
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for VertexAttrib3sv
 table GlVertexAttrib4Nbv {
     index: uint;
-    // TODO: unsupported const GLbyte* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for VertexAttrib4Nbv
 table GlVertexAttrib4Niv {
     index: uint;
     v: [int];
 }
 table GlVertexAttrib4Nsv {
     index: uint;
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for VertexAttrib4Nsv
 table GlVertexAttrib4Nub {
     index: uint;
     x: uint;
@@ -3787,23 +3686,20 @@ table GlVertexAttrib4Nub {
 }
 table GlVertexAttrib4Nubv {
     index: uint;
-    // TODO: unsupported const GLubyte* v
+    v: [uint];
 }
-// TODO(GEN): incomplete signature for VertexAttrib4Nubv
 table GlVertexAttrib4Nuiv {
     index: uint;
     v: [uint];
 }
 table GlVertexAttrib4Nusv {
     index: uint;
-    // TODO: unsupported const GLushort* v
+    v: [uint];
 }
-// TODO(GEN): incomplete signature for VertexAttrib4Nusv
 table GlVertexAttrib4bv {
     index: uint;
-    // TODO: unsupported const GLbyte* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for VertexAttrib4bv
 table GlVertexAttrib4d {
     index: uint;
     x: double;
@@ -3813,9 +3709,8 @@ table GlVertexAttrib4d {
 }
 table GlVertexAttrib4dv {
     index: uint;
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for VertexAttrib4dv
 table GlVertexAttrib4iv {
     index: uint;
     v: [int];
@@ -3829,23 +3724,20 @@ table GlVertexAttrib4s {
 }
 table GlVertexAttrib4sv {
     index: uint;
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for VertexAttrib4sv
 table GlVertexAttrib4ubv {
     index: uint;
-    // TODO: unsupported const GLubyte* v
+    v: [uint];
 }
-// TODO(GEN): incomplete signature for VertexAttrib4ubv
 table GlVertexAttrib4uiv {
     index: uint;
     v: [uint];
 }
 table GlVertexAttrib4usv {
     index: uint;
-    // TODO: unsupported const GLushort* v
+    v: [uint];
 }
-// TODO(GEN): incomplete signature for VertexAttrib4usv
 table GlPrimitiveRestartIndex {
     index: uint;
 }
@@ -3889,11 +3781,11 @@ table GlBindFragDataLocationIndexed {
     program: uint;
     colorNumber: uint;
     index: uint;
-    name: ShmRegion;
+    name: string;
 }
 table GlGetFragDataIndex {
     program: uint;
-    name: ShmRegion;
+    name: string;
 }
 table GlQueryCounter {
     id: uint;
@@ -3902,15 +3794,13 @@ table GlQueryCounter {
 table GlGetQueryObjecti64v {
     id: uint;
     pname: uint;
-    // TODO: unsupported GLint64* params
+    params: [long];
 }
-// TODO(GEN): incomplete signature for GetQueryObjecti64v
 table GlGetQueryObjectui64v {
     id: uint;
     pname: uint;
-    // TODO: unsupported GLuint64* params
+    params: [ulong];
 }
-// TODO(GEN): incomplete signature for GetQueryObjectui64v
 table GlVertexAttribP1ui {
     index: uint;
     type: uint;
@@ -4112,105 +4002,91 @@ table GlUniform4d {
 table GlUniform1dv {
     location: int;
     count: int;
-    // TODO: unsupported const GLdouble* value
+    value: [double];
 }
-// TODO(GEN): incomplete signature for Uniform1dv
 table GlUniform2dv {
     location: int;
     count: int;
-    // TODO: unsupported const GLdouble* value
+    value: [double];
 }
-// TODO(GEN): incomplete signature for Uniform2dv
 table GlUniform3dv {
     location: int;
     count: int;
-    // TODO: unsupported const GLdouble* value
+    value: [double];
 }
-// TODO(GEN): incomplete signature for Uniform3dv
 table GlUniform4dv {
     location: int;
     count: int;
-    // TODO: unsupported const GLdouble* value
+    value: [double];
 }
-// TODO(GEN): incomplete signature for Uniform4dv
 table GlUniformMatrix2dv {
     location: int;
     count: int;
     transpose: bool;
-    // TODO: unsupported const GLdouble* value
+    value: [double];
 }
-// TODO(GEN): incomplete signature for UniformMatrix2dv
 table GlUniformMatrix3dv {
     location: int;
     count: int;
     transpose: bool;
-    // TODO: unsupported const GLdouble* value
+    value: [double];
 }
-// TODO(GEN): incomplete signature for UniformMatrix3dv
 table GlUniformMatrix4dv {
     location: int;
     count: int;
     transpose: bool;
-    // TODO: unsupported const GLdouble* value
+    value: [double];
 }
-// TODO(GEN): incomplete signature for UniformMatrix4dv
 table GlUniformMatrix2x3dv {
     location: int;
     count: int;
     transpose: bool;
-    // TODO: unsupported const GLdouble* value
+    value: [double];
 }
-// TODO(GEN): incomplete signature for UniformMatrix2x3dv
 table GlUniformMatrix2x4dv {
     location: int;
     count: int;
     transpose: bool;
-    // TODO: unsupported const GLdouble* value
+    value: [double];
 }
-// TODO(GEN): incomplete signature for UniformMatrix2x4dv
 table GlUniformMatrix3x2dv {
     location: int;
     count: int;
     transpose: bool;
-    // TODO: unsupported const GLdouble* value
+    value: [double];
 }
-// TODO(GEN): incomplete signature for UniformMatrix3x2dv
 table GlUniformMatrix3x4dv {
     location: int;
     count: int;
     transpose: bool;
-    // TODO: unsupported const GLdouble* value
+    value: [double];
 }
-// TODO(GEN): incomplete signature for UniformMatrix3x4dv
 table GlUniformMatrix4x2dv {
     location: int;
     count: int;
     transpose: bool;
-    // TODO: unsupported const GLdouble* value
+    value: [double];
 }
-// TODO(GEN): incomplete signature for UniformMatrix4x2dv
 table GlUniformMatrix4x3dv {
     location: int;
     count: int;
     transpose: bool;
-    // TODO: unsupported const GLdouble* value
+    value: [double];
 }
-// TODO(GEN): incomplete signature for UniformMatrix4x3dv
 table GlGetUniformdv {
     program: uint;
     location: int;
-    // TODO: unsupported GLdouble* params
+    params: [double];
 }
-// TODO(GEN): incomplete signature for GetUniformdv
 table GlGetSubroutineUniformLocation {
     program: uint;
     shadertype: uint;
-    name: ShmRegion;
+    name: string;
 }
 table GlGetSubroutineIndex {
     program: uint;
     shadertype: uint;
-    name: ShmRegion;
+    name: string;
 }
 table GlGetActiveSubroutineUniformiv {
     program: uint;
@@ -4288,9 +4164,8 @@ table GlProgramUniform1dv {
     program: uint;
     location: int;
     count: int;
-    // TODO: unsupported const GLdouble* value
+    value: [double];
 }
-// TODO(GEN): incomplete signature for ProgramUniform1dv
 table GlProgramUniform2d {
     program: uint;
     location: int;
@@ -4301,9 +4176,8 @@ table GlProgramUniform2dv {
     program: uint;
     location: int;
     count: int;
-    // TODO: unsupported const GLdouble* value
+    value: [double];
 }
-// TODO(GEN): incomplete signature for ProgramUniform2dv
 table GlProgramUniform3d {
     program: uint;
     location: int;
@@ -4315,9 +4189,8 @@ table GlProgramUniform3dv {
     program: uint;
     location: int;
     count: int;
-    // TODO: unsupported const GLdouble* value
+    value: [double];
 }
-// TODO(GEN): incomplete signature for ProgramUniform3dv
 table GlProgramUniform4d {
     program: uint;
     location: int;
@@ -4330,81 +4203,71 @@ table GlProgramUniform4dv {
     program: uint;
     location: int;
     count: int;
-    // TODO: unsupported const GLdouble* value
+    value: [double];
 }
-// TODO(GEN): incomplete signature for ProgramUniform4dv
 table GlProgramUniformMatrix2dv {
     program: uint;
     location: int;
     count: int;
     transpose: bool;
-    // TODO: unsupported const GLdouble* value
+    value: [double];
 }
-// TODO(GEN): incomplete signature for ProgramUniformMatrix2dv
 table GlProgramUniformMatrix3dv {
     program: uint;
     location: int;
     count: int;
     transpose: bool;
-    // TODO: unsupported const GLdouble* value
+    value: [double];
 }
-// TODO(GEN): incomplete signature for ProgramUniformMatrix3dv
 table GlProgramUniformMatrix4dv {
     program: uint;
     location: int;
     count: int;
     transpose: bool;
-    // TODO: unsupported const GLdouble* value
+    value: [double];
 }
-// TODO(GEN): incomplete signature for ProgramUniformMatrix4dv
 table GlProgramUniformMatrix2x3dv {
     program: uint;
     location: int;
     count: int;
     transpose: bool;
-    // TODO: unsupported const GLdouble* value
+    value: [double];
 }
-// TODO(GEN): incomplete signature for ProgramUniformMatrix2x3dv
 table GlProgramUniformMatrix3x2dv {
     program: uint;
     location: int;
     count: int;
     transpose: bool;
-    // TODO: unsupported const GLdouble* value
+    value: [double];
 }
-// TODO(GEN): incomplete signature for ProgramUniformMatrix3x2dv
 table GlProgramUniformMatrix2x4dv {
     program: uint;
     location: int;
     count: int;
     transpose: bool;
-    // TODO: unsupported const GLdouble* value
+    value: [double];
 }
-// TODO(GEN): incomplete signature for ProgramUniformMatrix2x4dv
 table GlProgramUniformMatrix4x2dv {
     program: uint;
     location: int;
     count: int;
     transpose: bool;
-    // TODO: unsupported const GLdouble* value
+    value: [double];
 }
-// TODO(GEN): incomplete signature for ProgramUniformMatrix4x2dv
 table GlProgramUniformMatrix3x4dv {
     program: uint;
     location: int;
     count: int;
     transpose: bool;
-    // TODO: unsupported const GLdouble* value
+    value: [double];
 }
-// TODO(GEN): incomplete signature for ProgramUniformMatrix3x4dv
 table GlProgramUniformMatrix4x3dv {
     program: uint;
     location: int;
     count: int;
     transpose: bool;
-    // TODO: unsupported const GLdouble* value
+    value: [double];
 }
-// TODO(GEN): incomplete signature for ProgramUniformMatrix4x3dv
 table GlVertexAttribL1d {
     index: uint;
     x: double;
@@ -4429,24 +4292,20 @@ table GlVertexAttribL4d {
 }
 table GlVertexAttribL1dv {
     index: uint;
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for VertexAttribL1dv
 table GlVertexAttribL2dv {
     index: uint;
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for VertexAttribL2dv
 table GlVertexAttribL3dv {
     index: uint;
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for VertexAttribL3dv
 table GlVertexAttribL4dv {
     index: uint;
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for VertexAttribL4dv
 table GlVertexAttribLPointer {
     index: uint;
     size: int;
@@ -4457,9 +4316,8 @@ table GlVertexAttribLPointer {
 table GlGetVertexAttribLdv {
     index: uint;
     pname: uint;
-    // TODO: unsupported GLdouble* params
+    params: [double];
 }
-// TODO(GEN): incomplete signature for GetVertexAttribLdv
 table GlViewportArrayv {
     first: uint;
     count: int;
@@ -4495,9 +4353,8 @@ table GlScissorIndexedv {
 table GlDepthRangeArrayv {
     first: uint;
     count: int;
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for DepthRangeArrayv
 table GlDepthRangeIndexed {
     index: uint;
     n: double;
@@ -4511,9 +4368,8 @@ table GlGetFloati_v {
 table GlGetDoublei_v {
     target: uint;
     index: uint;
-    // TODO: unsupported GLdouble* data
+    data: [double];
 }
-// TODO(GEN): incomplete signature for GetDoublei_v
 table GlDrawArraysInstancedBaseInstance {
     mode: uint;
     first: int;
@@ -4576,9 +4432,8 @@ table GlGetInternalformati64v {
     internalformat: uint;
     pname: uint;
     count: int;
-    // TODO: unsupported GLint64* params
+    params: [long];
 }
-// TODO(GEN): incomplete signature for GetInternalformati64v
 table GlInvalidateTexSubImage {
     texture: uint;
     level: int;
@@ -4617,7 +4472,7 @@ table GlMultiDrawElementsIndirect {
 table GlGetProgramResourceLocationIndex {
     program: uint;
     programInterface: uint;
-    name: ShmRegion;
+    name: string;
 }
 table GlShaderStorageBlockBinding {
     program: uint;
@@ -4739,9 +4594,8 @@ table GlGetTransformFeedbacki64_v {
     xfb: uint;
     pname: uint;
     index: uint;
-    // TODO: unsupported GLint64* param
+    param: [long];
 }
-// TODO(GEN): incomplete signature for GetTransformFeedbacki64_v
 table GlCreateBuffers {
     n: int;
     buffers: [uint];
@@ -4803,9 +4657,8 @@ table GlGetNamedBufferParameteriv {
 table GlGetNamedBufferParameteri64v {
     buffer: uint;
     pname: uint;
-    // TODO: unsupported GLint64* params
+    params: [long];
 }
-// TODO(GEN): incomplete signature for GetNamedBufferParameteri64v
 table GlGetNamedBufferPointerv {
     buffer: uint;
     pname: uint;
@@ -4853,9 +4706,8 @@ table GlNamedFramebufferDrawBuffer {
 table GlNamedFramebufferDrawBuffers {
     framebuffer: uint;
     n: int;
-    // TODO: unsupported const GLenum* bufs
+    bufs: [uint];
 }
-// TODO(GEN): incomplete signature for NamedFramebufferDrawBuffers
 table GlNamedFramebufferReadBuffer {
     framebuffer: uint;
     src: uint;
@@ -4863,19 +4715,17 @@ table GlNamedFramebufferReadBuffer {
 table GlInvalidateNamedFramebufferData {
     framebuffer: uint;
     numAttachments: int;
-    // TODO: unsupported const GLenum* attachments
+    attachments: [uint];
 }
-// TODO(GEN): incomplete signature for InvalidateNamedFramebufferData
 table GlInvalidateNamedFramebufferSubData {
     framebuffer: uint;
     numAttachments: int;
-    // TODO: unsupported const GLenum* attachments
+    attachments: [uint];
     x: int;
     y: int;
     width: int;
     height: int;
 }
-// TODO(GEN): incomplete signature for InvalidateNamedFramebufferSubData
 table GlClearNamedFramebufferiv {
     framebuffer: uint;
     buffer: uint;
@@ -5264,9 +5114,8 @@ table GlGetVertexArrayIndexed64iv {
     vaobj: uint;
     index: uint;
     pname: uint;
-    // TODO: unsupported GLint64* param
+    param: [long];
 }
-// TODO(GEN): incomplete signature for GetVertexArrayIndexed64iv
 table GlCreateSamplers {
     n: int;
     samplers: [uint];
@@ -5348,16 +5197,14 @@ table GlGetnUniformdv {
     program: uint;
     location: int;
     bufSize: int;
-    // TODO: unsupported GLdouble* params
+    params: [double];
 }
-// TODO(GEN): incomplete signature for GetnUniformdv
 table GlGetnMapdv {
     target: uint;
     query: uint;
     bufSize: int;
-    // TODO: unsupported GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for GetnMapdv
 table GlGetnMapfv {
     target: uint;
     query: uint;
@@ -5383,14 +5230,12 @@ table GlGetnPixelMapuiv {
 table GlGetnPixelMapusv {
     map: uint;
     bufSize: int;
-    // TODO: unsupported GLushort* values
+    values: [uint];
 }
-// TODO(GEN): incomplete signature for GetnPixelMapusv
 table GlGetnPolygonStipple {
     bufSize: int;
-    // TODO: unsupported GLubyte* pattern
+    pattern: [uint];
 }
-// TODO(GEN): incomplete signature for GetnPolygonStipple
 table GlGetnColorTable {
     target: uint;
     format: uint;
@@ -5437,7 +5282,7 @@ table GlTextureBarrier {
 // TODO(GEN): incomplete signature for TextureBarrier
 table GlSpecializeShader {
     shader: uint;
-    pEntryPoint: ShmRegion;
+    pEntryPoint: string;
     numSpecializationConstants: uint;
     pConstantIndex: [uint];
     pConstantValue: [uint];
@@ -5506,9 +5351,8 @@ table GlUniformHandleui64ARB {
 table GlUniformHandleui64vARB {
     location: int;
     count: int;
-    // TODO: unsupported const GLuint64* value
+    value: [ulong];
 }
-// TODO(GEN): incomplete signature for UniformHandleui64vARB
 table GlProgramUniformHandleui64ARB {
     program: uint;
     location: int;
@@ -5518,9 +5362,8 @@ table GlProgramUniformHandleui64vARB {
     program: uint;
     location: int;
     count: int;
-    // TODO: unsupported const GLuint64* values
+    values: [ulong];
 }
-// TODO(GEN): incomplete signature for ProgramUniformHandleui64vARB
 table GlIsTextureHandleResidentARB {
     handle: ulong;
 }
@@ -5533,15 +5376,13 @@ table GlVertexAttribL1ui64ARB {
 }
 table GlVertexAttribL1ui64vARB {
     index: uint;
-    // TODO: unsupported const GLuint64EXT* v
+    v: [ulong];
 }
-// TODO(GEN): incomplete signature for VertexAttribL1ui64vARB
 table GlGetVertexAttribLui64vARB {
     index: uint;
     pname: uint;
-    // TODO: unsupported GLuint64EXT* params
+    params: [ulong];
 }
-// TODO(GEN): incomplete signature for GetVertexAttribLui64vARB
 table GlCreateSyncFromCLeventARB {
     // TODO: unsupported struct _cl_context* context
     // TODO: unsupported struct _cl_event* event
@@ -5589,9 +5430,8 @@ table GlProgramEnvParameter4dARB {
 table GlProgramEnvParameter4dvARB {
     target: uint;
     index: uint;
-    // TODO: unsupported const GLdouble* params
+    params: [double];
 }
-// TODO(GEN): incomplete signature for ProgramEnvParameter4dvARB
 table GlProgramEnvParameter4fARB {
     target: uint;
     index: uint;
@@ -5616,9 +5456,8 @@ table GlProgramLocalParameter4dARB {
 table GlProgramLocalParameter4dvARB {
     target: uint;
     index: uint;
-    // TODO: unsupported const GLdouble* params
+    params: [double];
 }
-// TODO(GEN): incomplete signature for ProgramLocalParameter4dvARB
 table GlProgramLocalParameter4fARB {
     target: uint;
     index: uint;
@@ -5635,9 +5474,8 @@ table GlProgramLocalParameter4fvARB {
 table GlGetProgramEnvParameterdvARB {
     target: uint;
     index: uint;
-    // TODO: unsupported GLdouble* params
+    params: [double];
 }
-// TODO(GEN): incomplete signature for GetProgramEnvParameterdvARB
 table GlGetProgramEnvParameterfvARB {
     target: uint;
     index: uint;
@@ -5646,9 +5484,8 @@ table GlGetProgramEnvParameterfvARB {
 table GlGetProgramLocalParameterdvARB {
     target: uint;
     index: uint;
-    // TODO: unsupported GLdouble* params
+    params: [double];
 }
-// TODO(GEN): incomplete signature for GetProgramLocalParameterdvARB
 table GlGetProgramLocalParameterfvARB {
     target: uint;
     index: uint;
@@ -5668,7 +5505,7 @@ table GlFramebufferTextureFaceARB {
 }
 table GlSpecializeShaderARB {
     shader: uint;
-    pEntryPoint: ShmRegion;
+    pEntryPoint: string;
     numSpecializationConstants: uint;
     pConstantIndex: [uint];
     pConstantValue: [uint];
@@ -5698,27 +5535,23 @@ table GlUniform4i64ARB {
 table GlUniform1i64vARB {
     location: int;
     count: int;
-    // TODO: unsupported const GLint64* value
+    value: [long];
 }
-// TODO(GEN): incomplete signature for Uniform1i64vARB
 table GlUniform2i64vARB {
     location: int;
     count: int;
-    // TODO: unsupported const GLint64* value
+    value: [long];
 }
-// TODO(GEN): incomplete signature for Uniform2i64vARB
 table GlUniform3i64vARB {
     location: int;
     count: int;
-    // TODO: unsupported const GLint64* value
+    value: [long];
 }
-// TODO(GEN): incomplete signature for Uniform3i64vARB
 table GlUniform4i64vARB {
     location: int;
     count: int;
-    // TODO: unsupported const GLint64* value
+    value: [long];
 }
-// TODO(GEN): incomplete signature for Uniform4i64vARB
 table GlUniform1ui64ARB {
     location: int;
     x: ulong;
@@ -5744,53 +5577,45 @@ table GlUniform4ui64ARB {
 table GlUniform1ui64vARB {
     location: int;
     count: int;
-    // TODO: unsupported const GLuint64* value
+    value: [ulong];
 }
-// TODO(GEN): incomplete signature for Uniform1ui64vARB
 table GlUniform2ui64vARB {
     location: int;
     count: int;
-    // TODO: unsupported const GLuint64* value
+    value: [ulong];
 }
-// TODO(GEN): incomplete signature for Uniform2ui64vARB
 table GlUniform3ui64vARB {
     location: int;
     count: int;
-    // TODO: unsupported const GLuint64* value
+    value: [ulong];
 }
-// TODO(GEN): incomplete signature for Uniform3ui64vARB
 table GlUniform4ui64vARB {
     location: int;
     count: int;
-    // TODO: unsupported const GLuint64* value
+    value: [ulong];
 }
-// TODO(GEN): incomplete signature for Uniform4ui64vARB
 table GlGetUniformi64vARB {
     program: uint;
     location: int;
-    // TODO: unsupported GLint64* params
+    params: [long];
 }
-// TODO(GEN): incomplete signature for GetUniformi64vARB
 table GlGetUniformui64vARB {
     program: uint;
     location: int;
-    // TODO: unsupported GLuint64* params
+    params: [ulong];
 }
-// TODO(GEN): incomplete signature for GetUniformui64vARB
 table GlGetnUniformi64vARB {
     program: uint;
     location: int;
     bufSize: int;
-    // TODO: unsupported GLint64* params
+    params: [long];
 }
-// TODO(GEN): incomplete signature for GetnUniformi64vARB
 table GlGetnUniformui64vARB {
     program: uint;
     location: int;
     bufSize: int;
-    // TODO: unsupported GLuint64* params
+    params: [ulong];
 }
-// TODO(GEN): incomplete signature for GetnUniformui64vARB
 table GlProgramUniform1i64ARB {
     program: uint;
     location: int;
@@ -5821,30 +5646,26 @@ table GlProgramUniform1i64vARB {
     program: uint;
     location: int;
     count: int;
-    // TODO: unsupported const GLint64* value
+    value: [long];
 }
-// TODO(GEN): incomplete signature for ProgramUniform1i64vARB
 table GlProgramUniform2i64vARB {
     program: uint;
     location: int;
     count: int;
-    // TODO: unsupported const GLint64* value
+    value: [long];
 }
-// TODO(GEN): incomplete signature for ProgramUniform2i64vARB
 table GlProgramUniform3i64vARB {
     program: uint;
     location: int;
     count: int;
-    // TODO: unsupported const GLint64* value
+    value: [long];
 }
-// TODO(GEN): incomplete signature for ProgramUniform3i64vARB
 table GlProgramUniform4i64vARB {
     program: uint;
     location: int;
     count: int;
-    // TODO: unsupported const GLint64* value
+    value: [long];
 }
-// TODO(GEN): incomplete signature for ProgramUniform4i64vARB
 table GlProgramUniform1ui64ARB {
     program: uint;
     location: int;
@@ -5875,30 +5696,26 @@ table GlProgramUniform1ui64vARB {
     program: uint;
     location: int;
     count: int;
-    // TODO: unsupported const GLuint64* value
+    value: [ulong];
 }
-// TODO(GEN): incomplete signature for ProgramUniform1ui64vARB
 table GlProgramUniform2ui64vARB {
     program: uint;
     location: int;
     count: int;
-    // TODO: unsupported const GLuint64* value
+    value: [ulong];
 }
-// TODO(GEN): incomplete signature for ProgramUniform2ui64vARB
 table GlProgramUniform3ui64vARB {
     program: uint;
     location: int;
     count: int;
-    // TODO: unsupported const GLuint64* value
+    value: [ulong];
 }
-// TODO(GEN): incomplete signature for ProgramUniform3ui64vARB
 table GlProgramUniform4ui64vARB {
     program: uint;
     location: int;
     count: int;
-    // TODO: unsupported const GLuint64* value
+    value: [ulong];
 }
-// TODO(GEN): incomplete signature for ProgramUniform4ui64vARB
 table GlColorTable {
     target: uint;
     internalformat: uint;
@@ -6112,14 +5929,12 @@ table GlCurrentPaletteMatrixARB {
 }
 table GlMatrixIndexubvARB {
     size: int;
-    // TODO: unsupported const GLubyte* indices
+    indices: [uint];
 }
-// TODO(GEN): incomplete signature for MatrixIndexubvARB
 table GlMatrixIndexusvARB {
     size: int;
-    // TODO: unsupported const GLushort* indices
+    indices: [uint];
 }
-// TODO(GEN): incomplete signature for MatrixIndexusvARB
 table GlMatrixIndexuivARB {
     size: int;
     indices: [uint];
@@ -6139,9 +5954,8 @@ table GlMultiTexCoord1dARB {
 }
 table GlMultiTexCoord1dvARB {
     target: uint;
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for MultiTexCoord1dvARB
 table GlMultiTexCoord1fARB {
     target: uint;
     s: float;
@@ -6164,9 +5978,8 @@ table GlMultiTexCoord1sARB {
 }
 table GlMultiTexCoord1svARB {
     target: uint;
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for MultiTexCoord1svARB
 table GlMultiTexCoord2dARB {
     target: uint;
     s: double;
@@ -6174,9 +5987,8 @@ table GlMultiTexCoord2dARB {
 }
 table GlMultiTexCoord2dvARB {
     target: uint;
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for MultiTexCoord2dvARB
 table GlMultiTexCoord2fARB {
     target: uint;
     s: float;
@@ -6202,9 +6014,8 @@ table GlMultiTexCoord2sARB {
 }
 table GlMultiTexCoord2svARB {
     target: uint;
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for MultiTexCoord2svARB
 table GlMultiTexCoord3dARB {
     target: uint;
     s: double;
@@ -6213,9 +6024,8 @@ table GlMultiTexCoord3dARB {
 }
 table GlMultiTexCoord3dvARB {
     target: uint;
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for MultiTexCoord3dvARB
 table GlMultiTexCoord3fARB {
     target: uint;
     s: float;
@@ -6244,9 +6054,8 @@ table GlMultiTexCoord3sARB {
 }
 table GlMultiTexCoord3svARB {
     target: uint;
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for MultiTexCoord3svARB
 table GlMultiTexCoord4dARB {
     target: uint;
     s: double;
@@ -6256,9 +6065,8 @@ table GlMultiTexCoord4dARB {
 }
 table GlMultiTexCoord4dvARB {
     target: uint;
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for MultiTexCoord4dvARB
 table GlMultiTexCoord4fARB {
     target: uint;
     s: float;
@@ -6290,9 +6098,8 @@ table GlMultiTexCoord4sARB {
 }
 table GlMultiTexCoord4svARB {
     target: uint;
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for MultiTexCoord4svARB
 table GlGetQueryObjectivARB {
     id: uint;
     pname: uint;
@@ -6327,16 +6134,14 @@ table GlGetnUniformdvARB {
     program: uint;
     location: int;
     bufSize: int;
-    // TODO: unsupported GLdouble* params
+    params: [double];
 }
-// TODO(GEN): incomplete signature for GetnUniformdvARB
 table GlGetnMapdvARB {
     target: uint;
     query: uint;
     bufSize: int;
-    // TODO: unsupported GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for GetnMapdvARB
 table GlGetnMapfvARB {
     target: uint;
     query: uint;
@@ -6362,14 +6167,12 @@ table GlGetnPixelMapuivARB {
 table GlGetnPixelMapusvARB {
     map: uint;
     bufSize: int;
-    // TODO: unsupported GLushort* values
+    values: [uint];
 }
-// TODO(GEN): incomplete signature for GetnPixelMapusvARB
 table GlGetnPolygonStippleARB {
     bufSize: int;
-    // TODO: unsupported GLubyte* pattern
+    pattern: [uint];
 }
-// TODO(GEN): incomplete signature for GetnPolygonStippleARB
 table GlGetnColorTableARB {
     target: uint;
     format: uint;
@@ -6477,13 +6280,13 @@ table GlGetAttachedObjectsARB {
 table GlNamedStringARB {
     type: uint;
     namelen: int;
-    name: ShmRegion;
+    name: string;
     strinen: int;
-    string: ShmRegion;
+    string: string;
 }
 table GlDeleteNamedStringARB {
     namelen: int;
-    name: ShmRegion;
+    name: string;
 }
 table GlCompileShaderIncludeARB {
     shader: uint;
@@ -6493,18 +6296,18 @@ table GlCompileShaderIncludeARB {
 }
 table GlIsNamedStringARB {
     namelen: int;
-    name: ShmRegion;
+    name: string;
 }
 table GlGetNamedStringARB {
     namelen: int;
-    name: ShmRegion;
+    name: string;
     bufSize: int;
     strinen: [int];
     string: string;
 }
 table GlGetNamedStringivARB {
     namelen: int;
-    name: ShmRegion;
+    name: string;
     pname: uint;
     params: [int];
 }
@@ -6564,26 +6367,22 @@ table GlLoadTransposeMatrixfARB {
     m: [float];
 }
 table GlLoadTransposeMatrixdARB {
-    // TODO: unsupported const GLdouble* m
+    m: [double];
 }
-// TODO(GEN): incomplete signature for LoadTransposeMatrixdARB
 table GlMultTransposeMatrixfARB {
     m: [float];
 }
 table GlMultTransposeMatrixdARB {
-    // TODO: unsupported const GLdouble* m
+    m: [double];
 }
-// TODO(GEN): incomplete signature for MultTransposeMatrixdARB
 table GlWeightbvARB {
     size: int;
-    // TODO: unsupported const GLbyte* weights
+    weights: [int];
 }
-// TODO(GEN): incomplete signature for WeightbvARB
 table GlWeightsvARB {
     size: int;
-    // TODO: unsupported const GLshort* weights
+    weights: [int];
 }
-// TODO(GEN): incomplete signature for WeightsvARB
 table GlWeightivARB {
     size: int;
     weights: [int];
@@ -6594,19 +6393,16 @@ table GlWeightfvARB {
 }
 table GlWeightdvARB {
     size: int;
-    // TODO: unsupported const GLdouble* weights
+    weights: [double];
 }
-// TODO(GEN): incomplete signature for WeightdvARB
 table GlWeightubvARB {
     size: int;
-    // TODO: unsupported const GLubyte* weights
+    weights: [uint];
 }
-// TODO(GEN): incomplete signature for WeightubvARB
 table GlWeightusvARB {
     size: int;
-    // TODO: unsupported const GLushort* weights
+    weights: [uint];
 }
-// TODO(GEN): incomplete signature for WeightusvARB
 table GlWeightuivARB {
     size: int;
     weights: [uint];
@@ -6632,18 +6428,16 @@ table GlVertexAttrib1dARB {
 }
 table GlVertexAttrib1dvARB {
     index: uint;
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for VertexAttrib1dvARB
 table GlVertexAttrib1sARB {
     index: uint;
     x: int;
 }
 table GlVertexAttrib1svARB {
     index: uint;
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for VertexAttrib1svARB
 table GlVertexAttrib2dARB {
     index: uint;
     x: double;
@@ -6651,9 +6445,8 @@ table GlVertexAttrib2dARB {
 }
 table GlVertexAttrib2dvARB {
     index: uint;
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for VertexAttrib2dvARB
 table GlVertexAttrib2sARB {
     index: uint;
     x: int;
@@ -6661,9 +6454,8 @@ table GlVertexAttrib2sARB {
 }
 table GlVertexAttrib2svARB {
     index: uint;
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for VertexAttrib2svARB
 table GlVertexAttrib3dARB {
     index: uint;
     x: double;
@@ -6672,9 +6464,8 @@ table GlVertexAttrib3dARB {
 }
 table GlVertexAttrib3dvARB {
     index: uint;
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for VertexAttrib3dvARB
 table GlVertexAttrib3sARB {
     index: uint;
     x: int;
@@ -6683,23 +6474,20 @@ table GlVertexAttrib3sARB {
 }
 table GlVertexAttrib3svARB {
     index: uint;
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for VertexAttrib3svARB
 table GlVertexAttrib4NbvARB {
     index: uint;
-    // TODO: unsupported const GLbyte* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for VertexAttrib4NbvARB
 table GlVertexAttrib4NivARB {
     index: uint;
     v: [int];
 }
 table GlVertexAttrib4NsvARB {
     index: uint;
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for VertexAttrib4NsvARB
 table GlVertexAttrib4NubARB {
     index: uint;
     x: uint;
@@ -6709,23 +6497,20 @@ table GlVertexAttrib4NubARB {
 }
 table GlVertexAttrib4NubvARB {
     index: uint;
-    // TODO: unsupported const GLubyte* v
+    v: [uint];
 }
-// TODO(GEN): incomplete signature for VertexAttrib4NubvARB
 table GlVertexAttrib4NuivARB {
     index: uint;
     v: [uint];
 }
 table GlVertexAttrib4NusvARB {
     index: uint;
-    // TODO: unsupported const GLushort* v
+    v: [uint];
 }
-// TODO(GEN): incomplete signature for VertexAttrib4NusvARB
 table GlVertexAttrib4bvARB {
     index: uint;
-    // TODO: unsupported const GLbyte* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for VertexAttrib4bvARB
 table GlVertexAttrib4dARB {
     index: uint;
     x: double;
@@ -6735,9 +6520,8 @@ table GlVertexAttrib4dARB {
 }
 table GlVertexAttrib4dvARB {
     index: uint;
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for VertexAttrib4dvARB
 table GlVertexAttrib4ivARB {
     index: uint;
     v: [int];
@@ -6751,35 +6535,30 @@ table GlVertexAttrib4sARB {
 }
 table GlVertexAttrib4svARB {
     index: uint;
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for VertexAttrib4svARB
 table GlVertexAttrib4ubvARB {
     index: uint;
-    // TODO: unsupported const GLubyte* v
+    v: [uint];
 }
-// TODO(GEN): incomplete signature for VertexAttrib4ubvARB
 table GlVertexAttrib4uivARB {
     index: uint;
     v: [uint];
 }
 table GlVertexAttrib4usvARB {
     index: uint;
-    // TODO: unsupported const GLushort* v
+    v: [uint];
 }
-// TODO(GEN): incomplete signature for VertexAttrib4usvARB
 table GlGetVertexAttribdvARB {
     index: uint;
     pname: uint;
-    // TODO: unsupported GLdouble* params
+    params: [double];
 }
-// TODO(GEN): incomplete signature for GetVertexAttribdvARB
 table GlDepthRangeArraydvNV {
     first: uint;
     count: int;
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for DepthRangeArraydvNV
 table GlDepthRangeIndexeddNV {
     index: uint;
     n: double;
@@ -6790,9 +6569,8 @@ table GlWindowPos2dARB {
     y: double;
 }
 table GlWindowPos2dvARB {
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for WindowPos2dvARB
 table GlWindowPos2fARB {
     x: float;
     y: float;
@@ -6812,18 +6590,16 @@ table GlWindowPos2sARB {
     y: int;
 }
 table GlWindowPos2svARB {
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for WindowPos2svARB
 table GlWindowPos3dARB {
     x: double;
     y: double;
     z: double;
 }
 table GlWindowPos3dvARB {
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for WindowPos3dvARB
 table GlWindowPos3fARB {
     x: float;
     y: float;
@@ -6846,9 +6622,8 @@ table GlWindowPos3sARB {
     z: int;
 }
 table GlWindowPos3svARB {
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for WindowPos3svARB
 table GlBlendBarrierKHR {
     // TODO: unsupported  void
 }
@@ -6862,9 +6637,8 @@ table GlMultiTexCoord1bOES {
 }
 table GlMultiTexCoord1bvOES {
     texture: uint;
-    // TODO: unsupported const GLbyte* coords
+    coords: [int];
 }
-// TODO(GEN): incomplete signature for MultiTexCoord1bvOES
 table GlMultiTexCoord2bOES {
     texture: uint;
     s: int;
@@ -6872,9 +6646,8 @@ table GlMultiTexCoord2bOES {
 }
 table GlMultiTexCoord2bvOES {
     texture: uint;
-    // TODO: unsupported const GLbyte* coords
+    coords: [int];
 }
-// TODO(GEN): incomplete signature for MultiTexCoord2bvOES
 table GlMultiTexCoord3bOES {
     texture: uint;
     s: int;
@@ -6883,9 +6656,8 @@ table GlMultiTexCoord3bOES {
 }
 table GlMultiTexCoord3bvOES {
     texture: uint;
-    // TODO: unsupported const GLbyte* coords
+    coords: [int];
 }
-// TODO(GEN): incomplete signature for MultiTexCoord3bvOES
 table GlMultiTexCoord4bOES {
     texture: uint;
     s: int;
@@ -6895,33 +6667,29 @@ table GlMultiTexCoord4bOES {
 }
 table GlMultiTexCoord4bvOES {
     texture: uint;
-    // TODO: unsupported const GLbyte* coords
+    coords: [int];
 }
-// TODO(GEN): incomplete signature for MultiTexCoord4bvOES
 table GlTexCoord1bOES {
     s: int;
 }
 table GlTexCoord1bvOES {
-    // TODO: unsupported const GLbyte* coords
+    coords: [int];
 }
-// TODO(GEN): incomplete signature for TexCoord1bvOES
 table GlTexCoord2bOES {
     s: int;
     t: int;
 }
 table GlTexCoord2bvOES {
-    // TODO: unsupported const GLbyte* coords
+    coords: [int];
 }
-// TODO(GEN): incomplete signature for TexCoord2bvOES
 table GlTexCoord3bOES {
     s: int;
     t: int;
     r: int;
 }
 table GlTexCoord3bvOES {
-    // TODO: unsupported const GLbyte* coords
+    coords: [int];
 }
-// TODO(GEN): incomplete signature for TexCoord3bvOES
 table GlTexCoord4bOES {
     s: int;
     t: int;
@@ -6929,26 +6697,23 @@ table GlTexCoord4bOES {
     q: int;
 }
 table GlTexCoord4bvOES {
-    // TODO: unsupported const GLbyte* coords
+    coords: [int];
 }
-// TODO(GEN): incomplete signature for TexCoord4bvOES
 table GlVertex2bOES {
     x: int;
     y: int;
 }
 table GlVertex2bvOES {
-    // TODO: unsupported const GLbyte* coords
+    coords: [int];
 }
-// TODO(GEN): incomplete signature for Vertex2bvOES
 table GlVertex3bOES {
     x: int;
     y: int;
     z: int;
 }
 table GlVertex3bvOES {
-    // TODO: unsupported const GLbyte* coords
+    coords: [int];
 }
-// TODO(GEN): incomplete signature for Vertex3bvOES
 table GlVertex4bOES {
     x: int;
     y: int;
@@ -6956,9 +6721,8 @@ table GlVertex4bOES {
     w: int;
 }
 table GlVertex4bvOES {
-    // TODO: unsupported const GLbyte* coords
+    coords: [int];
 }
-// TODO(GEN): incomplete signature for Vertex4bvOES
 table GlAlphaFuncxOES {
     func: uint;
     ref: int;
@@ -6974,9 +6738,8 @@ table GlClearDepthxOES {
 }
 table GlClipPlanexOES {
     plane: uint;
-    // TODO: unsupported const GLfixed* equation
+    equation: [int];
 }
-// TODO(GEN): incomplete signature for ClipPlanexOES
 table GlColor4xOES {
     red: int;
     green: int;
@@ -6993,9 +6756,8 @@ table GlFogxOES {
 }
 table GlFogxvOES {
     pname: uint;
-    // TODO: unsupported const GLfixed* param
+    param: [int];
 }
-// TODO(GEN): incomplete signature for FogxvOES
 table GlFrustumxOES {
     l: int;
     r: int;
@@ -7006,35 +6768,30 @@ table GlFrustumxOES {
 }
 table GlGetClipPlanexOES {
     plane: uint;
-    // TODO: unsupported GLfixed* equation
+    equation: [int];
 }
-// TODO(GEN): incomplete signature for GetClipPlanexOES
 table GlGetFixedvOES {
     pname: uint;
-    // TODO: unsupported GLfixed* params
+    params: [int];
 }
-// TODO(GEN): incomplete signature for GetFixedvOES
 table GlGetTexEnvxvOES {
     target: uint;
     pname: uint;
-    // TODO: unsupported GLfixed* params
+    params: [int];
 }
-// TODO(GEN): incomplete signature for GetTexEnvxvOES
 table GlGetTexParameterxvOES {
     target: uint;
     pname: uint;
-    // TODO: unsupported GLfixed* params
+    params: [int];
 }
-// TODO(GEN): incomplete signature for GetTexParameterxvOES
 table GlLightModelxOES {
     pname: uint;
     param: int;
 }
 table GlLightModelxvOES {
     pname: uint;
-    // TODO: unsupported const GLfixed* param
+    param: [int];
 }
-// TODO(GEN): incomplete signature for LightModelxvOES
 table GlLightxOES {
     light: uint;
     pname: uint;
@@ -7043,16 +6800,14 @@ table GlLightxOES {
 table GlLightxvOES {
     light: uint;
     pname: uint;
-    // TODO: unsupported const GLfixed* params
+    params: [int];
 }
-// TODO(GEN): incomplete signature for LightxvOES
 table GlLineWidthxOES {
     width: int;
 }
 table GlLoadMatrixxOES {
-    // TODO: unsupported const GLfixed* m
+    m: [int];
 }
-// TODO(GEN): incomplete signature for LoadMatrixxOES
 table GlMaterialxOES {
     face: uint;
     pname: uint;
@@ -7061,13 +6816,11 @@ table GlMaterialxOES {
 table GlMaterialxvOES {
     face: uint;
     pname: uint;
-    // TODO: unsupported const GLfixed* param
+    param: [int];
 }
-// TODO(GEN): incomplete signature for MaterialxvOES
 table GlMultMatrixxOES {
-    // TODO: unsupported const GLfixed* m
+    m: [int];
 }
-// TODO(GEN): incomplete signature for MultMatrixxOES
 table GlMultiTexCoord4xOES {
     texture: uint;
     s: int;
@@ -7090,9 +6843,8 @@ table GlOrthoxOES {
 }
 table GlPointParameterxvOES {
     pname: uint;
-    // TODO: unsupported const GLfixed* params
+    params: [int];
 }
-// TODO(GEN): incomplete signature for PointParameterxvOES
 table GlPointSizexOES {
     size: int;
 }
@@ -7119,9 +6871,8 @@ table GlTexEnvxOES {
 table GlTexEnvxvOES {
     target: uint;
     pname: uint;
-    // TODO: unsupported const GLfixed* params
+    params: [int];
 }
-// TODO(GEN): incomplete signature for TexEnvxvOES
 table GlTexParameterxOES {
     target: uint;
     pname: uint;
@@ -7130,9 +6881,8 @@ table GlTexParameterxOES {
 table GlTexParameterxvOES {
     target: uint;
     pname: uint;
-    // TODO: unsupported const GLfixed* params
+    params: [int];
 }
-// TODO(GEN): incomplete signature for TexParameterxvOES
 table GlTranslatexOES {
     x: int;
     y: int;
@@ -7149,9 +6899,8 @@ table GlBitmapxOES {
     yorig: int;
     xmove: int;
     ymove: int;
-    // TODO: unsupported const GLubyte* bitmap
+    bitmap: [uint];
 }
-// TODO(GEN): incomplete signature for BitmapxOES
 table GlBlendColorxOES {
     red: int;
     green: int;
@@ -7170,13 +6919,11 @@ table GlColor3xOES {
     blue: int;
 }
 table GlColor3xvOES {
-    // TODO: unsupported const GLfixed* components
+    components: [int];
 }
-// TODO(GEN): incomplete signature for Color3xvOES
 table GlColor4xvOES {
-    // TODO: unsupported const GLfixed* components
+    components: [int];
 }
-// TODO(GEN): incomplete signature for Color4xvOES
 table GlConvolutionParameterxOES {
     target: uint;
     pname: uint;
@@ -7185,54 +6932,46 @@ table GlConvolutionParameterxOES {
 table GlConvolutionParameterxvOES {
     target: uint;
     pname: uint;
-    // TODO: unsupported const GLfixed* params
+    params: [int];
 }
-// TODO(GEN): incomplete signature for ConvolutionParameterxvOES
 table GlEvalCoord1xOES {
     u: int;
 }
 table GlEvalCoord1xvOES {
-    // TODO: unsupported const GLfixed* coords
+    coords: [int];
 }
-// TODO(GEN): incomplete signature for EvalCoord1xvOES
 table GlEvalCoord2xOES {
     u: int;
     v: int;
 }
 table GlEvalCoord2xvOES {
-    // TODO: unsupported const GLfixed* coords
+    coords: [int];
 }
-// TODO(GEN): incomplete signature for EvalCoord2xvOES
 table GlFeedbackBufferxOES {
     n: int;
     type: uint;
-    // TODO: unsupported const GLfixed* buffer
+    buffer: [int];
 }
-// TODO(GEN): incomplete signature for FeedbackBufferxOES
 table GlGetConvolutionParameterxvOES {
     target: uint;
     pname: uint;
-    // TODO: unsupported GLfixed* params
+    params: [int];
 }
-// TODO(GEN): incomplete signature for GetConvolutionParameterxvOES
 table GlGetHistogramParameterxvOES {
     target: uint;
     pname: uint;
-    // TODO: unsupported GLfixed* params
+    params: [int];
 }
-// TODO(GEN): incomplete signature for GetHistogramParameterxvOES
 table GlGetLightxOES {
     light: uint;
     pname: uint;
-    // TODO: unsupported GLfixed* params
+    params: [int];
 }
-// TODO(GEN): incomplete signature for GetLightxOES
 table GlGetMapxvOES {
     target: uint;
     query: uint;
-    // TODO: unsupported GLfixed* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for GetMapxvOES
 table GlGetMaterialxOES {
     face: uint;
     pname: uint;
@@ -7241,33 +6980,28 @@ table GlGetMaterialxOES {
 table GlGetPixelMapxv {
     map: uint;
     size: int;
-    // TODO: unsupported GLfixed* values
+    values: [int];
 }
-// TODO(GEN): incomplete signature for GetPixelMapxv
 table GlGetTexGenxvOES {
     coord: uint;
     pname: uint;
-    // TODO: unsupported GLfixed* params
+    params: [int];
 }
-// TODO(GEN): incomplete signature for GetTexGenxvOES
 table GlGetTexLevelParameterxvOES {
     target: uint;
     level: int;
     pname: uint;
-    // TODO: unsupported GLfixed* params
+    params: [int];
 }
-// TODO(GEN): incomplete signature for GetTexLevelParameterxvOES
 table GlIndexxOES {
     component: int;
 }
 table GlIndexxvOES {
-    // TODO: unsupported const GLfixed* component
+    component: [int];
 }
-// TODO(GEN): incomplete signature for IndexxvOES
 table GlLoadTransposeMatrixxOES {
-    // TODO: unsupported const GLfixed* m
+    m: [int];
 }
-// TODO(GEN): incomplete signature for LoadTransposeMatrixxOES
 table GlMap1xOES {
     target: uint;
     u1: int;
@@ -7301,18 +7035,16 @@ table GlMapGrid2xOES {
     v2: int;
 }
 table GlMultTransposeMatrixxOES {
-    // TODO: unsupported const GLfixed* m
+    m: [int];
 }
-// TODO(GEN): incomplete signature for MultTransposeMatrixxOES
 table GlMultiTexCoord1xOES {
     texture: uint;
     s: int;
 }
 table GlMultiTexCoord1xvOES {
     texture: uint;
-    // TODO: unsupported const GLfixed* coords
+    coords: [int];
 }
-// TODO(GEN): incomplete signature for MultiTexCoord1xvOES
 table GlMultiTexCoord2xOES {
     texture: uint;
     s: int;
@@ -7320,9 +7052,8 @@ table GlMultiTexCoord2xOES {
 }
 table GlMultiTexCoord2xvOES {
     texture: uint;
-    // TODO: unsupported const GLfixed* coords
+    coords: [int];
 }
-// TODO(GEN): incomplete signature for MultiTexCoord2xvOES
 table GlMultiTexCoord3xOES {
     texture: uint;
     s: int;
@@ -7331,27 +7062,23 @@ table GlMultiTexCoord3xOES {
 }
 table GlMultiTexCoord3xvOES {
     texture: uint;
-    // TODO: unsupported const GLfixed* coords
+    coords: [int];
 }
-// TODO(GEN): incomplete signature for MultiTexCoord3xvOES
 table GlMultiTexCoord4xvOES {
     texture: uint;
-    // TODO: unsupported const GLfixed* coords
+    coords: [int];
 }
-// TODO(GEN): incomplete signature for MultiTexCoord4xvOES
 table GlNormal3xvOES {
-    // TODO: unsupported const GLfixed* coords
+    coords: [int];
 }
-// TODO(GEN): incomplete signature for Normal3xvOES
 table GlPassThroughxOES {
     token: int;
 }
 table GlPixelMapx {
     map: uint;
     size: int;
-    // TODO: unsupported const GLfixed* values
+    values: [int];
 }
-// TODO(GEN): incomplete signature for PixelMapx
 table GlPixelStorex {
     pname: uint;
     param: int;
@@ -7367,26 +7094,23 @@ table GlPixelZoomxOES {
 table GlPrioritizeTexturesxOES {
     n: int;
     textures: [uint];
-    // TODO: unsupported const GLfixed* priorities
+    priorities: [int];
 }
-// TODO(GEN): incomplete signature for PrioritizeTexturesxOES
 table GlRasterPos2xOES {
     x: int;
     y: int;
 }
 table GlRasterPos2xvOES {
-    // TODO: unsupported const GLfixed* coords
+    coords: [int];
 }
-// TODO(GEN): incomplete signature for RasterPos2xvOES
 table GlRasterPos3xOES {
     x: int;
     y: int;
     z: int;
 }
 table GlRasterPos3xvOES {
-    // TODO: unsupported const GLfixed* coords
+    coords: [int];
 }
-// TODO(GEN): incomplete signature for RasterPos3xvOES
 table GlRasterPos4xOES {
     x: int;
     y: int;
@@ -7394,9 +7118,8 @@ table GlRasterPos4xOES {
     w: int;
 }
 table GlRasterPos4xvOES {
-    // TODO: unsupported const GLfixed* coords
+    coords: [int];
 }
-// TODO(GEN): incomplete signature for RasterPos4xvOES
 table GlRectxOES {
     x1: int;
     y1: int;
@@ -7404,34 +7127,30 @@ table GlRectxOES {
     y2: int;
 }
 table GlRectxvOES {
-    // TODO: unsupported const GLfixed* v1
-    // TODO: unsupported const GLfixed* v2
+    v1: [int];
+    v2: [int];
 }
-// TODO(GEN): incomplete signature for RectxvOES
 table GlTexCoord1xOES {
     s: int;
 }
 table GlTexCoord1xvOES {
-    // TODO: unsupported const GLfixed* coords
+    coords: [int];
 }
-// TODO(GEN): incomplete signature for TexCoord1xvOES
 table GlTexCoord2xOES {
     s: int;
     t: int;
 }
 table GlTexCoord2xvOES {
-    // TODO: unsupported const GLfixed* coords
+    coords: [int];
 }
-// TODO(GEN): incomplete signature for TexCoord2xvOES
 table GlTexCoord3xOES {
     s: int;
     t: int;
     r: int;
 }
 table GlTexCoord3xvOES {
-    // TODO: unsupported const GLfixed* coords
+    coords: [int];
 }
-// TODO(GEN): incomplete signature for TexCoord3xvOES
 table GlTexCoord4xOES {
     s: int;
     t: int;
@@ -7439,9 +7158,8 @@ table GlTexCoord4xOES {
     q: int;
 }
 table GlTexCoord4xvOES {
-    // TODO: unsupported const GLfixed* coords
+    coords: [int];
 }
-// TODO(GEN): incomplete signature for TexCoord4xvOES
 table GlTexGenxOES {
     coord: uint;
     pname: uint;
@@ -7450,38 +7168,33 @@ table GlTexGenxOES {
 table GlTexGenxvOES {
     coord: uint;
     pname: uint;
-    // TODO: unsupported const GLfixed* params
+    params: [int];
 }
-// TODO(GEN): incomplete signature for TexGenxvOES
 table GlVertex2xOES {
     x: int;
 }
 table GlVertex2xvOES {
-    // TODO: unsupported const GLfixed* coords
+    coords: [int];
 }
-// TODO(GEN): incomplete signature for Vertex2xvOES
 table GlVertex3xOES {
     x: int;
     y: int;
 }
 table GlVertex3xvOES {
-    // TODO: unsupported const GLfixed* coords
+    coords: [int];
 }
-// TODO(GEN): incomplete signature for Vertex3xvOES
 table GlVertex4xOES {
     x: int;
     y: int;
     z: int;
 }
 table GlVertex4xvOES {
-    // TODO: unsupported const GLfixed* coords
+    coords: [int];
 }
-// TODO(GEN): incomplete signature for Vertex4xvOES
 table GlQueryMatrixxOES {
-    // TODO: unsupported GLfixed* mantissa
+    mantissa: [int];
     exponent: [int];
 }
-// TODO(GEN): incomplete signature for QueryMatrixxOES
 table GlClearDepthfOES {
     depth: float;
 }
@@ -7528,7 +7241,7 @@ table GlDebugMessageInsertAMD {
     severity: uint;
     id: uint;
     length: int;
-    buf: ShmRegion;
+    buf: string;
 }
 table GlDebugMessageCallbackAMD {
     // TODO: unsupported GLDEBUGPROCAMD callback
@@ -7538,13 +7251,12 @@ table GlDebugMessageCallbackAMD {
 table GlGetDebugMessageLogAMD {
     count: uint;
     bufSize: int;
-    // TODO: unsupported GLenum* categories
+    categories: [uint];
     severities: [uint];
     ids: [uint];
     lengths: [int];
     message: string;
 }
-// TODO(GEN): incomplete signature for GetDebugMessageLogAMD
 table GlBlendFuncIndexedAMD {
     buf: uint;
     src: uint;
@@ -7635,27 +7347,23 @@ table GlUniform4i64NV {
 table GlUniform1i64vNV {
     location: int;
     count: int;
-    // TODO: unsupported const GLint64EXT* value
+    value: [long];
 }
-// TODO(GEN): incomplete signature for Uniform1i64vNV
 table GlUniform2i64vNV {
     location: int;
     count: int;
-    // TODO: unsupported const GLint64EXT* value
+    value: [long];
 }
-// TODO(GEN): incomplete signature for Uniform2i64vNV
 table GlUniform3i64vNV {
     location: int;
     count: int;
-    // TODO: unsupported const GLint64EXT* value
+    value: [long];
 }
-// TODO(GEN): incomplete signature for Uniform3i64vNV
 table GlUniform4i64vNV {
     location: int;
     count: int;
-    // TODO: unsupported const GLint64EXT* value
+    value: [long];
 }
-// TODO(GEN): incomplete signature for Uniform4i64vNV
 table GlUniform1ui64NV {
     location: int;
     x: ulong;
@@ -7681,39 +7389,33 @@ table GlUniform4ui64NV {
 table GlUniform1ui64vNV {
     location: int;
     count: int;
-    // TODO: unsupported const GLuint64EXT* value
+    value: [ulong];
 }
-// TODO(GEN): incomplete signature for Uniform1ui64vNV
 table GlUniform2ui64vNV {
     location: int;
     count: int;
-    // TODO: unsupported const GLuint64EXT* value
+    value: [ulong];
 }
-// TODO(GEN): incomplete signature for Uniform2ui64vNV
 table GlUniform3ui64vNV {
     location: int;
     count: int;
-    // TODO: unsupported const GLuint64EXT* value
+    value: [ulong];
 }
-// TODO(GEN): incomplete signature for Uniform3ui64vNV
 table GlUniform4ui64vNV {
     location: int;
     count: int;
-    // TODO: unsupported const GLuint64EXT* value
+    value: [ulong];
 }
-// TODO(GEN): incomplete signature for Uniform4ui64vNV
 table GlGetUniformi64vNV {
     program: uint;
     location: int;
-    // TODO: unsupported GLint64EXT* params
+    params: [long];
 }
-// TODO(GEN): incomplete signature for GetUniformi64vNV
 table GlGetUniformui64vNV {
     program: uint;
     location: int;
-    // TODO: unsupported GLuint64EXT* params
+    params: [ulong];
 }
-// TODO(GEN): incomplete signature for GetUniformui64vNV
 table GlProgramUniform1i64NV {
     program: uint;
     location: int;
@@ -7744,30 +7446,26 @@ table GlProgramUniform1i64vNV {
     program: uint;
     location: int;
     count: int;
-    // TODO: unsupported const GLint64EXT* value
+    value: [long];
 }
-// TODO(GEN): incomplete signature for ProgramUniform1i64vNV
 table GlProgramUniform2i64vNV {
     program: uint;
     location: int;
     count: int;
-    // TODO: unsupported const GLint64EXT* value
+    value: [long];
 }
-// TODO(GEN): incomplete signature for ProgramUniform2i64vNV
 table GlProgramUniform3i64vNV {
     program: uint;
     location: int;
     count: int;
-    // TODO: unsupported const GLint64EXT* value
+    value: [long];
 }
-// TODO(GEN): incomplete signature for ProgramUniform3i64vNV
 table GlProgramUniform4i64vNV {
     program: uint;
     location: int;
     count: int;
-    // TODO: unsupported const GLint64EXT* value
+    value: [long];
 }
-// TODO(GEN): incomplete signature for ProgramUniform4i64vNV
 table GlProgramUniform1ui64NV {
     program: uint;
     location: int;
@@ -7798,30 +7496,26 @@ table GlProgramUniform1ui64vNV {
     program: uint;
     location: int;
     count: int;
-    // TODO: unsupported const GLuint64EXT* value
+    value: [ulong];
 }
-// TODO(GEN): incomplete signature for ProgramUniform1ui64vNV
 table GlProgramUniform2ui64vNV {
     program: uint;
     location: int;
     count: int;
-    // TODO: unsupported const GLuint64EXT* value
+    value: [ulong];
 }
-// TODO(GEN): incomplete signature for ProgramUniform2ui64vNV
 table GlProgramUniform3ui64vNV {
     program: uint;
     location: int;
     count: int;
-    // TODO: unsupported const GLuint64EXT* value
+    value: [ulong];
 }
-// TODO(GEN): incomplete signature for ProgramUniform3ui64vNV
 table GlProgramUniform4ui64vNV {
     program: uint;
     location: int;
     count: int;
-    // TODO: unsupported const GLuint64EXT* value
+    value: [ulong];
 }
-// TODO(GEN): incomplete signature for ProgramUniform4ui64vNV
 table GlVertexAttribParameteriAMD {
     index: uint;
     pname: uint;
@@ -8093,9 +7787,8 @@ table GlMapVertexAttrib1dAPPLE {
     u2: double;
     stride: int;
     order: int;
-    // TODO: unsupported const GLdouble* points
+    points: [double];
 }
-// TODO(GEN): incomplete signature for MapVertexAttrib1dAPPLE
 table GlMapVertexAttrib1fAPPLE {
     index: uint;
     size: uint;
@@ -8116,9 +7809,8 @@ table GlMapVertexAttrib2dAPPLE {
     v2: double;
     vstride: int;
     vorder: int;
-    // TODO: unsupported const GLdouble* points
+    points: [double];
 }
-// TODO(GEN): incomplete signature for MapVertexAttrib2dAPPLE
 table GlMapVertexAttrib2fAPPLE {
     index: uint;
     size: uint;
@@ -8134,9 +7826,8 @@ table GlMapVertexAttrib2fAPPLE {
 }
 table GlDrawBuffersATI {
     n: int;
-    // TODO: unsupported const GLenum* bufs
+    bufs: [uint];
 }
-// TODO(GEN): incomplete signature for DrawBuffersATI
 table GlElementPointerATI {
     type: uint;
     pointer: ShmRegion;
@@ -8378,9 +8069,8 @@ table GlVertexStream1sATI {
 }
 table GlVertexStream1svATI {
     stream: uint;
-    // TODO: unsupported const GLshort* coords
+    coords: [int];
 }
-// TODO(GEN): incomplete signature for VertexStream1svATI
 table GlVertexStream1iATI {
     stream: uint;
     x: int;
@@ -8403,9 +8093,8 @@ table GlVertexStream1dATI {
 }
 table GlVertexStream1dvATI {
     stream: uint;
-    // TODO: unsupported const GLdouble* coords
+    coords: [double];
 }
-// TODO(GEN): incomplete signature for VertexStream1dvATI
 table GlVertexStream2sATI {
     stream: uint;
     x: int;
@@ -8413,9 +8102,8 @@ table GlVertexStream2sATI {
 }
 table GlVertexStream2svATI {
     stream: uint;
-    // TODO: unsupported const GLshort* coords
+    coords: [int];
 }
-// TODO(GEN): incomplete signature for VertexStream2svATI
 table GlVertexStream2iATI {
     stream: uint;
     x: int;
@@ -8441,9 +8129,8 @@ table GlVertexStream2dATI {
 }
 table GlVertexStream2dvATI {
     stream: uint;
-    // TODO: unsupported const GLdouble* coords
+    coords: [double];
 }
-// TODO(GEN): incomplete signature for VertexStream2dvATI
 table GlVertexStream3sATI {
     stream: uint;
     x: int;
@@ -8452,9 +8139,8 @@ table GlVertexStream3sATI {
 }
 table GlVertexStream3svATI {
     stream: uint;
-    // TODO: unsupported const GLshort* coords
+    coords: [int];
 }
-// TODO(GEN): incomplete signature for VertexStream3svATI
 table GlVertexStream3iATI {
     stream: uint;
     x: int;
@@ -8483,9 +8169,8 @@ table GlVertexStream3dATI {
 }
 table GlVertexStream3dvATI {
     stream: uint;
-    // TODO: unsupported const GLdouble* coords
+    coords: [double];
 }
-// TODO(GEN): incomplete signature for VertexStream3dvATI
 table GlVertexStream4sATI {
     stream: uint;
     x: int;
@@ -8495,9 +8180,8 @@ table GlVertexStream4sATI {
 }
 table GlVertexStream4svATI {
     stream: uint;
-    // TODO: unsupported const GLshort* coords
+    coords: [int];
 }
-// TODO(GEN): incomplete signature for VertexStream4svATI
 table GlVertexStream4iATI {
     stream: uint;
     x: int;
@@ -8529,9 +8213,8 @@ table GlVertexStream4dATI {
 }
 table GlVertexStream4dvATI {
     stream: uint;
-    // TODO: unsupported const GLdouble* coords
+    coords: [double];
 }
-// TODO(GEN): incomplete signature for VertexStream4dvATI
 table GlNormalStream3bATI {
     stream: uint;
     nx: int;
@@ -8540,9 +8223,8 @@ table GlNormalStream3bATI {
 }
 table GlNormalStream3bvATI {
     stream: uint;
-    // TODO: unsupported const GLbyte* coords
+    coords: [int];
 }
-// TODO(GEN): incomplete signature for NormalStream3bvATI
 table GlNormalStream3sATI {
     stream: uint;
     nx: int;
@@ -8551,9 +8233,8 @@ table GlNormalStream3sATI {
 }
 table GlNormalStream3svATI {
     stream: uint;
-    // TODO: unsupported const GLshort* coords
+    coords: [int];
 }
-// TODO(GEN): incomplete signature for NormalStream3svATI
 table GlNormalStream3iATI {
     stream: uint;
     nx: int;
@@ -8582,9 +8263,8 @@ table GlNormalStream3dATI {
 }
 table GlNormalStream3dvATI {
     stream: uint;
-    // TODO: unsupported const GLdouble* coords
+    coords: [double];
 }
-// TODO(GEN): incomplete signature for NormalStream3dvATI
 table GlClientActiveVertexStreamATI {
     stream: uint;
 }
@@ -8736,18 +8416,16 @@ table GlTangent3bEXT {
     tz: int;
 }
 table GlTangent3bvEXT {
-    // TODO: unsupported const GLbyte* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for Tangent3bvEXT
 table GlTangent3dEXT {
     tx: double;
     ty: double;
     tz: double;
 }
 table GlTangent3dvEXT {
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for Tangent3dvEXT
 table GlTangent3fEXT {
     tx: float;
     ty: float;
@@ -8770,27 +8448,24 @@ table GlTangent3sEXT {
     tz: int;
 }
 table GlTangent3svEXT {
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for Tangent3svEXT
 table GlBinormal3bEXT {
     bx: int;
     by: int;
     bz: int;
 }
 table GlBinormal3bvEXT {
-    // TODO: unsupported const GLbyte* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for Binormal3bvEXT
 table GlBinormal3dEXT {
     bx: double;
     by: double;
     bz: double;
 }
 table GlBinormal3dvEXT {
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for Binormal3dvEXT
 table GlBinormal3fEXT {
     bx: float;
     by: float;
@@ -8813,9 +8488,8 @@ table GlBinormal3sEXT {
     bz: int;
 }
 table GlBinormal3svEXT {
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for Binormal3svEXT
 table GlTangentPointerEXT {
     type: uint;
     stride: int;
@@ -8845,9 +8519,8 @@ table GlCopyTexSubImage1DEXT {
 }
 table GlCullParameterdvEXT {
     pname: uint;
-    // TODO: unsupported GLdouble* params
+    params: [double];
 }
-// TODO(GEN): incomplete signature for CullParameterdvEXT
 table GlCullParameterfvEXT {
     pname: uint;
     params: [float];
@@ -8856,15 +8529,15 @@ table GlLabelObjectEXT {
     type: uint;
     object: uint;
     length: int;
-    label: ShmRegion;
+    label: string;
 }
 table GlInsertEventMarkerEXT {
     length: int;
-    marker: ShmRegion;
+    marker: string;
 }
 table GlPushGroupMarkerEXT {
     length: int;
-    marker: ShmRegion;
+    marker: string;
 }
 table GlPopGroupMarkerEXT {
     // TODO: unsupported  void
@@ -8880,18 +8553,16 @@ table GlMatrixLoadfEXT {
 }
 table GlMatrixLoaddEXT {
     mode: uint;
-    // TODO: unsupported const GLdouble* m
+    m: [double];
 }
-// TODO(GEN): incomplete signature for MatrixLoaddEXT
 table GlMatrixMultfEXT {
     mode: uint;
     m: [float];
 }
 table GlMatrixMultdEXT {
     mode: uint;
-    // TODO: unsupported const GLdouble* m
+    m: [double];
 }
-// TODO(GEN): incomplete signature for MatrixMultdEXT
 table GlMatrixLoadIdentityEXT {
     mode: uint;
 }
@@ -9192,9 +8863,8 @@ table GlMultiTexGendvEXT {
     texunit: uint;
     coord: uint;
     pname: uint;
-    // TODO: unsupported const GLdouble* params
+    params: [double];
 }
-// TODO(GEN): incomplete signature for MultiTexGendvEXT
 table GlMultiTexGenfEXT {
     texunit: uint;
     coord: uint;
@@ -9235,9 +8905,8 @@ table GlGetMultiTexGendvEXT {
     texunit: uint;
     coord: uint;
     pname: uint;
-    // TODO: unsupported GLdouble* params
+    params: [double];
 }
-// TODO(GEN): incomplete signature for GetMultiTexGendvEXT
 table GlGetMultiTexGenfvEXT {
     texunit: uint;
     coord: uint;
@@ -9449,9 +9118,8 @@ table GlGetFloatIndexedvEXT {
 table GlGetDoubleIndexedvEXT {
     target: uint;
     index: uint;
-    // TODO: unsupported GLdouble* data
+    data: [double];
 }
-// TODO(GEN): incomplete signature for GetDoubleIndexedvEXT
 table GlGetPointerIndexedvEXT {
     target: uint;
     index: uint;
@@ -9636,18 +9304,16 @@ table GlMatrixLoadTransposefEXT {
 }
 table GlMatrixLoadTransposedEXT {
     mode: uint;
-    // TODO: unsupported const GLdouble* m
+    m: [double];
 }
-// TODO(GEN): incomplete signature for MatrixLoadTransposedEXT
 table GlMatrixMultTransposefEXT {
     mode: uint;
     m: [float];
 }
 table GlMatrixMultTransposedEXT {
     mode: uint;
-    // TODO: unsupported const GLdouble* m
+    m: [double];
 }
-// TODO(GEN): incomplete signature for MatrixMultTransposedEXT
 table GlNamedBufferDataEXT {
     buffer: uint;
     size: ulong;
@@ -9819,9 +9485,8 @@ table GlGetFloati_vEXT {
 table GlGetDoublei_vEXT {
     pname: uint;
     index: uint;
-    // TODO: unsupported GLdouble* params
+    params: [double];
 }
-// TODO(GEN): incomplete signature for GetDoublei_vEXT
 table GlGetPointeri_vEXT {
     pname: uint;
     index: uint;
@@ -9848,9 +9513,8 @@ table GlNamedProgramLocalParameter4dvEXT {
     program: uint;
     target: uint;
     index: uint;
-    // TODO: unsupported const GLdouble* params
+    params: [double];
 }
-// TODO(GEN): incomplete signature for NamedProgramLocalParameter4dvEXT
 table GlNamedProgramLocalParameter4fEXT {
     program: uint;
     target: uint;
@@ -9870,9 +9534,8 @@ table GlGetNamedProgramLocalParameterdvEXT {
     program: uint;
     target: uint;
     index: uint;
-    // TODO: unsupported GLdouble* params
+    params: [double];
 }
-// TODO(GEN): incomplete signature for GetNamedProgramLocalParameterdvEXT
 table GlGetNamedProgramLocalParameterfvEXT {
     program: uint;
     target: uint;
@@ -9970,9 +9633,8 @@ table GlFramebufferDrawBufferEXT {
 table GlFramebufferDrawBuffersEXT {
     framebuffer: uint;
     n: int;
-    // TODO: unsupported const GLenum* bufs
+    bufs: [uint];
 }
-// TODO(GEN): incomplete signature for FramebufferDrawBuffersEXT
 table GlFramebufferReadBufferEXT {
     framebuffer: uint;
     mode: uint;
@@ -10208,102 +9870,89 @@ table GlProgramUniform1dvEXT {
     program: uint;
     location: int;
     count: int;
-    // TODO: unsupported const GLdouble* value
+    value: [double];
 }
-// TODO(GEN): incomplete signature for ProgramUniform1dvEXT
 table GlProgramUniform2dvEXT {
     program: uint;
     location: int;
     count: int;
-    // TODO: unsupported const GLdouble* value
+    value: [double];
 }
-// TODO(GEN): incomplete signature for ProgramUniform2dvEXT
 table GlProgramUniform3dvEXT {
     program: uint;
     location: int;
     count: int;
-    // TODO: unsupported const GLdouble* value
+    value: [double];
 }
-// TODO(GEN): incomplete signature for ProgramUniform3dvEXT
 table GlProgramUniform4dvEXT {
     program: uint;
     location: int;
     count: int;
-    // TODO: unsupported const GLdouble* value
+    value: [double];
 }
-// TODO(GEN): incomplete signature for ProgramUniform4dvEXT
 table GlProgramUniformMatrix2dvEXT {
     program: uint;
     location: int;
     count: int;
     transpose: bool;
-    // TODO: unsupported const GLdouble* value
+    value: [double];
 }
-// TODO(GEN): incomplete signature for ProgramUniformMatrix2dvEXT
 table GlProgramUniformMatrix3dvEXT {
     program: uint;
     location: int;
     count: int;
     transpose: bool;
-    // TODO: unsupported const GLdouble* value
+    value: [double];
 }
-// TODO(GEN): incomplete signature for ProgramUniformMatrix3dvEXT
 table GlProgramUniformMatrix4dvEXT {
     program: uint;
     location: int;
     count: int;
     transpose: bool;
-    // TODO: unsupported const GLdouble* value
+    value: [double];
 }
-// TODO(GEN): incomplete signature for ProgramUniformMatrix4dvEXT
 table GlProgramUniformMatrix2x3dvEXT {
     program: uint;
     location: int;
     count: int;
     transpose: bool;
-    // TODO: unsupported const GLdouble* value
+    value: [double];
 }
-// TODO(GEN): incomplete signature for ProgramUniformMatrix2x3dvEXT
 table GlProgramUniformMatrix2x4dvEXT {
     program: uint;
     location: int;
     count: int;
     transpose: bool;
-    // TODO: unsupported const GLdouble* value
+    value: [double];
 }
-// TODO(GEN): incomplete signature for ProgramUniformMatrix2x4dvEXT
 table GlProgramUniformMatrix3x2dvEXT {
     program: uint;
     location: int;
     count: int;
     transpose: bool;
-    // TODO: unsupported const GLdouble* value
+    value: [double];
 }
-// TODO(GEN): incomplete signature for ProgramUniformMatrix3x2dvEXT
 table GlProgramUniformMatrix3x4dvEXT {
     program: uint;
     location: int;
     count: int;
     transpose: bool;
-    // TODO: unsupported const GLdouble* value
+    value: [double];
 }
-// TODO(GEN): incomplete signature for ProgramUniformMatrix3x4dvEXT
 table GlProgramUniformMatrix4x2dvEXT {
     program: uint;
     location: int;
     count: int;
     transpose: bool;
-    // TODO: unsupported const GLdouble* value
+    value: [double];
 }
-// TODO(GEN): incomplete signature for ProgramUniformMatrix4x2dvEXT
 table GlProgramUniformMatrix4x3dvEXT {
     program: uint;
     location: int;
     count: int;
     transpose: bool;
-    // TODO: unsupported const GLdouble* value
+    value: [double];
 }
-// TODO(GEN): incomplete signature for ProgramUniformMatrix4x3dvEXT
 table GlTextureBufferRangeEXT {
     texture: uint;
     target: uint;
@@ -10452,9 +10101,8 @@ table GlFogCoorddEXT {
     coord: double;
 }
 table GlFogCoorddvEXT {
-    // TODO: unsupported const GLdouble* coord
+    coord: [double];
 }
-// TODO(GEN): incomplete signature for FogCoorddvEXT
 table GlFogCoordPointerEXT {
     type: uint;
     stride: int;
@@ -10490,7 +10138,7 @@ table GlProgramLocalParameters4fvEXT {
 table GlBindFragDataLocationEXT {
     program: uint;
     color: uint;
-    name: ShmRegion;
+    name: string;
 }
 table GlVertexAttribI1iEXT {
     index: uint;
@@ -10548,24 +10196,20 @@ table GlVertexAttribI3uivEXT {
 }
 table GlVertexAttribI4bvEXT {
     index: uint;
-    // TODO: unsupported const GLbyte* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for VertexAttribI4bvEXT
 table GlVertexAttribI4svEXT {
     index: uint;
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for VertexAttribI4svEXT
 table GlVertexAttribI4ubvEXT {
     index: uint;
-    // TODO: unsupported const GLubyte* v
+    v: [uint];
 }
-// TODO(GEN): incomplete signature for VertexAttribI4ubvEXT
 table GlVertexAttribI4usvEXT {
     index: uint;
-    // TODO: unsupported const GLushort* v
+    v: [uint];
 }
-// TODO(GEN): incomplete signature for VertexAttribI4usvEXT
 table GlGetHistogramEXT {
     target: uint;
     reset: bool;
@@ -10637,15 +10281,13 @@ table GlTextureMaterialEXT {
 }
 table GlGetUnsignedBytevEXT {
     pname: uint;
-    // TODO: unsupported GLubyte* data
+    data: [uint];
 }
-// TODO(GEN): incomplete signature for GetUnsignedBytevEXT
 table GlGetUnsignedBytei_vEXT {
     target: uint;
     index: uint;
-    // TODO: unsupported GLubyte* data
+    data: [uint];
 }
-// TODO(GEN): incomplete signature for GetUnsignedBytei_vEXT
 table GlDeleteMemoryObjectsEXT {
     n: int;
     memoryObjects: [uint];
@@ -10894,18 +10536,16 @@ table GlSecondaryColor3bEXT {
     blue: int;
 }
 table GlSecondaryColor3bvEXT {
-    // TODO: unsupported const GLbyte* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for SecondaryColor3bvEXT
 table GlSecondaryColor3dEXT {
     red: double;
     green: double;
     blue: double;
 }
 table GlSecondaryColor3dvEXT {
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for SecondaryColor3dvEXT
 table GlSecondaryColor3fEXT {
     red: float;
     green: float;
@@ -10928,18 +10568,16 @@ table GlSecondaryColor3sEXT {
     blue: int;
 }
 table GlSecondaryColor3svEXT {
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for SecondaryColor3svEXT
 table GlSecondaryColor3ubEXT {
     red: uint;
     green: uint;
     blue: uint;
 }
 table GlSecondaryColor3ubvEXT {
-    // TODO: unsupported const GLubyte* v
+    v: [uint];
 }
-// TODO(GEN): incomplete signature for SecondaryColor3ubvEXT
 table GlSecondaryColor3uiEXT {
     red: uint;
     green: uint;
@@ -10954,9 +10592,8 @@ table GlSecondaryColor3usEXT {
     blue: uint;
 }
 table GlSecondaryColor3usvEXT {
-    // TODO: unsupported const GLushort* v
+    v: [uint];
 }
-// TODO(GEN): incomplete signature for SecondaryColor3usvEXT
 table GlSecondaryColorPointerEXT {
     size: int;
     type: uint;
@@ -10977,33 +10614,29 @@ table GlIsSemaphoreEXT {
 table GlSemaphoreParameterui64vEXT {
     semaphore: uint;
     pname: uint;
-    // TODO: unsupported const GLuint64* params
+    params: [ulong];
 }
-// TODO(GEN): incomplete signature for SemaphoreParameterui64vEXT
 table GlGetSemaphoreParameterui64vEXT {
     semaphore: uint;
     pname: uint;
-    // TODO: unsupported GLuint64* params
+    params: [ulong];
 }
-// TODO(GEN): incomplete signature for GetSemaphoreParameterui64vEXT
 table GlWaitSemaphoreEXT {
     semaphore: uint;
     numBufferBarriers: uint;
     buffers: [uint];
     numTextureBarriers: uint;
     textures: [uint];
-    // TODO: unsupported const GLenum* srcLayouts
+    srcLayouts: [uint];
 }
-// TODO(GEN): incomplete signature for WaitSemaphoreEXT
 table GlSignalSemaphoreEXT {
     semaphore: uint;
     numBufferBarriers: uint;
     buffers: [uint];
     numTextureBarriers: uint;
     textures: [uint];
-    // TODO: unsupported const GLenum* dstLayouts
+    dstLayouts: [uint];
 }
-// TODO(GEN): incomplete signature for SignalSemaphoreEXT
 table GlImportSemaphoreFdEXT {
     semaphore: uint;
     handleType: uint;
@@ -11028,7 +10661,7 @@ table GlActiveProgramEXT {
 }
 table GlCreateShaderProgramEXT {
     type: uint;
-    string: ShmRegion;
+    string: string;
 }
 table GlFramebufferFetchBarrierEXT {
     // TODO: unsupported  void
@@ -11070,9 +10703,8 @@ table GlAreTexturesResidentEXT {
 table GlPrioritizeTexturesEXT {
     n: int;
     textures: [uint];
-    // TODO: unsupported const GLclampf* priorities
+    priorities: [float];
 }
-// TODO(GEN): incomplete signature for PrioritizeTexturesEXT
 table GlTextureNormalEXT {
     mode: uint;
 }
@@ -11085,15 +10717,13 @@ table GlTexStorage1DEXT {
 table GlGetQueryObjecti64vEXT {
     id: uint;
     pname: uint;
-    // TODO: unsupported GLint64* params
+    params: [long];
 }
-// TODO(GEN): incomplete signature for GetQueryObjecti64vEXT
 table GlGetQueryObjectui64vEXT {
     id: uint;
     pname: uint;
-    // TODO: unsupported GLuint64* params
+    params: [ulong];
 }
-// TODO(GEN): incomplete signature for GetQueryObjectui64vEXT
 table GlBindBufferOffsetEXT {
     target: uint;
     index: uint;
@@ -11165,24 +10795,20 @@ table GlVertexAttribL4dEXT {
 }
 table GlVertexAttribL1dvEXT {
     index: uint;
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for VertexAttribL1dvEXT
 table GlVertexAttribL2dvEXT {
     index: uint;
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for VertexAttribL2dvEXT
 table GlVertexAttribL3dvEXT {
     index: uint;
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for VertexAttribL3dvEXT
 table GlVertexAttribL4dvEXT {
     index: uint;
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for VertexAttribL4dvEXT
 table GlVertexAttribLPointerEXT {
     index: uint;
     size: int;
@@ -11193,9 +10819,8 @@ table GlVertexAttribLPointerEXT {
 table GlGetVertexAttribLdvEXT {
     index: uint;
     pname: uint;
-    // TODO: unsupported GLdouble* params
+    params: [double];
 }
-// TODO(GEN): incomplete signature for GetVertexAttribLdvEXT
 table GlBeginVertexShaderEXT {
     // TODO: unsupported  void
 }
@@ -11275,14 +10900,12 @@ table GlSetLocalConstantEXT {
 }
 table GlVariantbvEXT {
     id: uint;
-    // TODO: unsupported const GLbyte* addr
+    addr: [int];
 }
-// TODO(GEN): incomplete signature for VariantbvEXT
 table GlVariantsvEXT {
     id: uint;
-    // TODO: unsupported const GLshort* addr
+    addr: [int];
 }
-// TODO(GEN): incomplete signature for VariantsvEXT
 table GlVariantivEXT {
     id: uint;
     addr: [int];
@@ -11293,19 +10916,16 @@ table GlVariantfvEXT {
 }
 table GlVariantdvEXT {
     id: uint;
-    // TODO: unsupported const GLdouble* addr
+    addr: [double];
 }
-// TODO(GEN): incomplete signature for VariantdvEXT
 table GlVariantubvEXT {
     id: uint;
-    // TODO: unsupported const GLubyte* addr
+    addr: [uint];
 }
-// TODO(GEN): incomplete signature for VariantubvEXT
 table GlVariantusvEXT {
     id: uint;
-    // TODO: unsupported const GLushort* addr
+    addr: [uint];
 }
-// TODO(GEN): incomplete signature for VariantusvEXT
 table GlVariantuivEXT {
     id: uint;
     addr: [uint];
@@ -11467,15 +11087,14 @@ table GlGetImageTransformParameterfvHP {
     params: [float];
 }
 table GlMultiModeDrawArraysIBM {
-    // TODO: unsupported const GLenum* mode
+    mode: [uint];
     first: [int];
     count: [int];
     primcount: int;
     modestride: int;
 }
-// TODO(GEN): incomplete signature for MultiModeDrawArraysIBM
 table GlMultiModeDrawElementsIBM {
-    // TODO: unsupported const GLenum* mode
+    mode: [uint];
     count: [int];
     type: uint;
     // TODO: unsupported const void* const* indices
@@ -11616,9 +11235,8 @@ table GlGetPerfCounterInfoINTEL {
     counterDataSize: [uint];
     counterTypeEnum: [uint];
     counterDataTypeEnum: [uint];
-    // TODO: unsupported GLuint64* rawCounterMaxValue
+    rawCounterMaxValue: [ulong];
 }
-// TODO(GEN): incomplete signature for GetPerfCounterInfoINTEL
 table GlGetPerfQueryDataINTEL {
     queryHandle: uint;
     flags: uint;
@@ -11658,9 +11276,8 @@ table GlWindowPos2dMESA {
     y: double;
 }
 table GlWindowPos2dvMESA {
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for WindowPos2dvMESA
 table GlWindowPos2fMESA {
     x: float;
     y: float;
@@ -11680,18 +11297,16 @@ table GlWindowPos2sMESA {
     y: int;
 }
 table GlWindowPos2svMESA {
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for WindowPos2svMESA
 table GlWindowPos3dMESA {
     x: double;
     y: double;
     z: double;
 }
 table GlWindowPos3dvMESA {
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for WindowPos3dvMESA
 table GlWindowPos3fMESA {
     x: float;
     y: float;
@@ -11714,9 +11329,8 @@ table GlWindowPos3sMESA {
     z: int;
 }
 table GlWindowPos3svMESA {
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for WindowPos3svMESA
 table GlWindowPos4dMESA {
     x: double;
     y: double;
@@ -11724,9 +11338,8 @@ table GlWindowPos4dMESA {
     w: double;
 }
 table GlWindowPos4dvMESA {
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for WindowPos4dvMESA
 table GlWindowPos4fMESA {
     x: float;
     y: float;
@@ -11752,9 +11365,8 @@ table GlWindowPos4sMESA {
     w: int;
 }
 table GlWindowPos4svMESA {
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for WindowPos4svMESA
 table GlBeginConditionalRenderNVX {
     id: uint;
 }
@@ -11786,7 +11398,7 @@ table GlMulticastScissorArrayvNVX {
 table GlAsyncCopyBufferSubDataNVX {
     waitSemaphoreCount: int;
     waitSemaphoreArray: [uint];
-    // TODO: unsupported const GLuint64* fenceValueArray
+    fenceValueArray: [ulong];
     readGpu: uint;
     writeGpuMask: uint;
     readBuffer: uint;
@@ -11796,13 +11408,12 @@ table GlAsyncCopyBufferSubDataNVX {
     size: ulong;
     signalSemaphoreCount: int;
     signalSemaphoreArray: [uint];
-    // TODO: unsupported const GLuint64* signalValueArray
+    signalValueArray: [ulong];
 }
-// TODO(GEN): incomplete signature for AsyncCopyBufferSubDataNVX
 table GlAsyncCopyImageSubDataNVX {
     waitSemaphoreCount: int;
     waitSemaphoreArray: [uint];
-    // TODO: unsupported const GLuint64* waitValueArray
+    waitValueArray: [ulong];
     srcGpu: uint;
     dstGpuMask: uint;
     srcName: uint;
@@ -11822,9 +11433,8 @@ table GlAsyncCopyImageSubDataNVX {
     srcDepth: int;
     signalSemaphoreCount: int;
     signalSemaphoreArray: [uint];
-    // TODO: unsupported const GLuint64* signalValueArray
+    signalValueArray: [ulong];
 }
-// TODO(GEN): incomplete signature for AsyncCopyImageSubDataNVX
 table GlLGPUNamedBufferSubDataNVX {
     gpuMask: uint;
     buffer: uint;
@@ -11863,22 +11473,19 @@ table GlSignalSemaphoreui64NVX {
     signalGpu: uint;
     fenceObjectCount: int;
     semaphoreArray: [uint];
-    // TODO: unsupported const GLuint64* fenceValueArray
+    fenceValueArray: [ulong];
 }
-// TODO(GEN): incomplete signature for SignalSemaphoreui64NVX
 table GlWaitSemaphoreui64NVX {
     waitGpu: uint;
     fenceObjectCount: int;
     semaphoreArray: [uint];
-    // TODO: unsupported const GLuint64* fenceValueArray
+    fenceValueArray: [ulong];
 }
-// TODO(GEN): incomplete signature for WaitSemaphoreui64NVX
 table GlClientWaitSemaphoreui64NVX {
     fenceObjectCount: int;
     semaphoreArray: [uint];
-    // TODO: unsupported const GLuint64* fenceValueArray
+    fenceValueArray: [ulong];
 }
-// TODO(GEN): incomplete signature for ClientWaitSemaphoreui64NVX
 table GlAlphaToCoverageDitherControlNV {
     mode: uint;
 }
@@ -11948,9 +11555,8 @@ table GlUniformHandleui64NV {
 table GlUniformHandleui64vNV {
     location: int;
     count: int;
-    // TODO: unsupported const GLuint64* value
+    value: [ulong];
 }
-// TODO(GEN): incomplete signature for UniformHandleui64vNV
 table GlProgramUniformHandleui64NV {
     program: uint;
     location: int;
@@ -11960,9 +11566,8 @@ table GlProgramUniformHandleui64vNV {
     program: uint;
     location: int;
     count: int;
-    // TODO: unsupported const GLuint64* values
+    values: [ulong];
 }
-// TODO(GEN): incomplete signature for ProgramUniformHandleui64vNV
 table GlIsTextureHandleResidentNV {
     handle: ulong;
 }
@@ -12014,11 +11619,10 @@ table GlDrawCommandsNV {
 // TODO(GEN): incomplete signature for DrawCommandsNV
 table GlDrawCommandsAddressNV {
     primitiveMode: uint;
-    // TODO: unsupported const GLuint64* indirects
+    indirects: [ulong];
     sizes: [int];
     count: uint;
 }
-// TODO(GEN): incomplete signature for DrawCommandsAddressNV
 table GlDrawCommandsStatesNV {
     buffer: uint;
     // TODO: unsupported const GLintptr* indirects
@@ -12029,13 +11633,12 @@ table GlDrawCommandsStatesNV {
 }
 // TODO(GEN): incomplete signature for DrawCommandsStatesNV
 table GlDrawCommandsStatesAddressNV {
-    // TODO: unsupported const GLuint64* indirects
+    indirects: [ulong];
     sizes: [int];
     states: [uint];
     fbos: [uint];
     count: uint;
 }
-// TODO(GEN): incomplete signature for DrawCommandsStatesAddressNV
 table GlCreateCommandListsNV {
     n: int;
     lists: [uint];
@@ -12142,7 +11745,7 @@ table GlDrawVkImageNV {
     t1: float;
 }
 table GlGetVkProcAddrNV {
-    name: ShmRegion;
+    name: string;
 }
 table GlWaitVkSemaphoreNV {
     vkSemaphore: ulong;
@@ -12254,51 +11857,45 @@ table GlFragmentCoverageColorNV {
 table GlProgramNamedParameter4fNV {
     id: uint;
     len: int;
-    // TODO: unsupported const GLubyte* name
+    name: [uint];
     x: float;
     y: float;
     z: float;
     w: float;
 }
-// TODO(GEN): incomplete signature for ProgramNamedParameter4fNV
 table GlProgramNamedParameter4fvNV {
     id: uint;
     len: int;
-    // TODO: unsupported const GLubyte* name
+    name: [uint];
     v: [float];
 }
-// TODO(GEN): incomplete signature for ProgramNamedParameter4fvNV
 table GlProgramNamedParameter4dNV {
     id: uint;
     len: int;
-    // TODO: unsupported const GLubyte* name
+    name: [uint];
     x: double;
     y: double;
     z: double;
     w: double;
 }
-// TODO(GEN): incomplete signature for ProgramNamedParameter4dNV
 table GlProgramNamedParameter4dvNV {
     id: uint;
     len: int;
-    // TODO: unsupported const GLubyte* name
-    // TODO: unsupported const GLdouble* v
+    name: [uint];
+    v: [double];
 }
-// TODO(GEN): incomplete signature for ProgramNamedParameter4dvNV
 table GlGetProgramNamedParameterfvNV {
     id: uint;
     len: int;
-    // TODO: unsupported const GLubyte* name
+    name: [uint];
     params: [float];
 }
-// TODO(GEN): incomplete signature for GetProgramNamedParameterfvNV
 table GlGetProgramNamedParameterdvNV {
     id: uint;
     len: int;
-    // TODO: unsupported const GLubyte* name
-    // TODO: unsupported GLdouble* params
+    name: [uint];
+    params: [double];
 }
-// TODO(GEN): incomplete signature for GetProgramNamedParameterdvNV
 table GlCoverageModulationTableNV {
     n: int;
     v: [float];
@@ -12412,16 +12009,14 @@ table GlMulticastGetQueryObjecti64vNV {
     gpu: uint;
     id: uint;
     pname: uint;
-    // TODO: unsupported GLint64* params
+    params: [long];
 }
-// TODO(GEN): incomplete signature for MulticastGetQueryObjecti64vNV
 table GlMulticastGetQueryObjectui64vNV {
     gpu: uint;
     id: uint;
     pname: uint;
-    // TODO: unsupported GLuint64* params
+    params: [ulong];
 }
-// TODO(GEN): incomplete signature for MulticastGetQueryObjectui64vNV
 table GlProgramLocalParameterI4iNV {
     target: uint;
     index: uint;
@@ -12932,12 +12527,11 @@ table GlIsPathNV {
 table GlPathCommandsNV {
     path: uint;
     numCommands: int;
-    // TODO: unsupported const GLubyte* commands
+    commands: [uint];
     numCoords: int;
     coordType: uint;
     coords: ShmRegion;
 }
-// TODO(GEN): incomplete signature for PathCommandsNV
 table GlPathCoordsNV {
     path: uint;
     numCoords: int;
@@ -12949,12 +12543,11 @@ table GlPathSubCommandsNV {
     commandStart: int;
     commandsToDelete: int;
     numCommands: int;
-    // TODO: unsupported const GLubyte* commands
+    commands: [uint];
     numCoords: int;
     coordType: uint;
     coords: ShmRegion;
 }
-// TODO(GEN): incomplete signature for PathSubCommandsNV
 table GlPathSubCoordsNV {
     path: uint;
     coordStart: int;
@@ -13118,9 +12711,8 @@ table GlGetPathParameterfvNV {
 }
 table GlGetPathCommandsNV {
     path: uint;
-    // TODO: unsupported GLubyte* commands
+    commands: [uint];
 }
-// TODO(GEN): incomplete signature for GetPathCommandsNV
 table GlGetPathCoordsNV {
     path: uint;
     coords: [float];
@@ -13281,12 +12873,11 @@ table GlGetProgramResourcefvNV {
     programInterface: uint;
     index: uint;
     propCount: int;
-    // TODO: unsupported const GLenum* props
+    props: [uint];
     count: int;
     length: [int];
     params: [float];
 }
-// TODO(GEN): incomplete signature for GetProgramResourcefvNV
 table GlPathColorGenNV {
     color: uint;
     genMode: uint;
@@ -13379,15 +12970,13 @@ table GlGetVideouivNV {
 table GlGetVideoi64vNV {
     video_slot: uint;
     pname: uint;
-    // TODO: unsupported GLint64EXT* params
+    params: [long];
 }
-// TODO(GEN): incomplete signature for GetVideoi64vNV
 table GlGetVideoui64vNV {
     video_slot: uint;
     pname: uint;
-    // TODO: unsupported GLuint64EXT* params
+    params: [ulong];
 }
-// TODO(GEN): incomplete signature for GetVideoui64vNV
 table GlPrimitiveRestartNV {
     // TODO: unsupported  void
 }
@@ -13411,7 +13000,7 @@ table GlDeleteQueryResourceTagNV {
 }
 table GlQueryResourceTagNV {
     tagId: int;
-    tagString: ShmRegion;
+    tagString: string;
 }
 table GlCombinerParameterfvNV {
     pname: uint;
@@ -13551,20 +13140,17 @@ table GlIsNamedBufferResidentNV {
 table GlGetBufferParameterui64vNV {
     target: uint;
     pname: uint;
-    // TODO: unsupported GLuint64EXT* params
+    params: [ulong];
 }
-// TODO(GEN): incomplete signature for GetBufferParameterui64vNV
 table GlGetNamedBufferParameterui64vNV {
     buffer: uint;
     pname: uint;
-    // TODO: unsupported GLuint64EXT* params
+    params: [ulong];
 }
-// TODO(GEN): incomplete signature for GetNamedBufferParameterui64vNV
 table GlGetIntegerui64vNV {
     value: uint;
-    // TODO: unsupported GLuint64EXT* result
+    result: [ulong];
 }
-// TODO(GEN): incomplete signature for GetIntegerui64vNV
 table GlUniformui64NV {
     location: int;
     value: ulong;
@@ -13572,9 +13158,8 @@ table GlUniformui64NV {
 table GlUniformui64vNV {
     location: int;
     count: int;
-    // TODO: unsupported const GLuint64EXT* value
+    value: [ulong];
 }
-// TODO(GEN): incomplete signature for Uniformui64vNV
 table GlProgramUniformui64NV {
     program: uint;
     location: int;
@@ -13584,18 +13169,16 @@ table GlProgramUniformui64vNV {
     program: uint;
     location: int;
     count: int;
-    // TODO: unsupported const GLuint64EXT* value
+    value: [ulong];
 }
-// TODO(GEN): incomplete signature for ProgramUniformui64vNV
 table GlBindShadingRateImageNV {
     texture: uint;
 }
 table GlGetShadingRateImagePaletteNV {
     viewport: uint;
     entry: uint;
-    // TODO: unsupported GLenum* rate
+    rate: [uint];
 }
-// TODO(GEN): incomplete signature for GetShadingRateImagePaletteNV
 table GlGetShadingRateSampleLocationivNV {
     rate: uint;
     samples: uint;
@@ -13609,9 +13192,8 @@ table GlShadingRateImagePaletteNV {
     viewport: uint;
     first: uint;
     count: int;
-    // TODO: unsupported const GLenum* rates
+    rates: [uint];
 }
-// TODO(GEN): incomplete signature for ShadingRateImagePaletteNV
 table GlShadingRateSampleOrderNV {
     order: uint;
 }
@@ -13735,11 +13317,11 @@ table GlTransformFeedbackVaryingsNV {
 }
 table GlActiveVaryingNV {
     program: uint;
-    name: ShmRegion;
+    name: string;
 }
 table GlGetVaryingLocationNV {
     program: uint;
-    name: ShmRegion;
+    name: string;
 }
 table GlGetActiveVaryingNV {
     program: uint;
@@ -13747,10 +13329,9 @@ table GlGetActiveVaryingNV {
     bufSize: int;
     length: [int];
     size: [int];
-    // TODO: unsupported GLenum* type
+    type: [uint];
     name: string;
 }
-// TODO(GEN): incomplete signature for GetActiveVaryingNV
 table GlGetTransformFeedbackVaryingNV {
     program: uint;
     index: uint;
@@ -13877,24 +13458,20 @@ table GlVertexAttribL4i64NV {
 }
 table GlVertexAttribL1i64vNV {
     index: uint;
-    // TODO: unsupported const GLint64EXT* v
+    v: [long];
 }
-// TODO(GEN): incomplete signature for VertexAttribL1i64vNV
 table GlVertexAttribL2i64vNV {
     index: uint;
-    // TODO: unsupported const GLint64EXT* v
+    v: [long];
 }
-// TODO(GEN): incomplete signature for VertexAttribL2i64vNV
 table GlVertexAttribL3i64vNV {
     index: uint;
-    // TODO: unsupported const GLint64EXT* v
+    v: [long];
 }
-// TODO(GEN): incomplete signature for VertexAttribL3i64vNV
 table GlVertexAttribL4i64vNV {
     index: uint;
-    // TODO: unsupported const GLint64EXT* v
+    v: [long];
 }
-// TODO(GEN): incomplete signature for VertexAttribL4i64vNV
 table GlVertexAttribL1ui64NV {
     index: uint;
     x: ulong;
@@ -13919,36 +13496,30 @@ table GlVertexAttribL4ui64NV {
 }
 table GlVertexAttribL1ui64vNV {
     index: uint;
-    // TODO: unsupported const GLuint64EXT* v
+    v: [ulong];
 }
-// TODO(GEN): incomplete signature for VertexAttribL1ui64vNV
 table GlVertexAttribL2ui64vNV {
     index: uint;
-    // TODO: unsupported const GLuint64EXT* v
+    v: [ulong];
 }
-// TODO(GEN): incomplete signature for VertexAttribL2ui64vNV
 table GlVertexAttribL3ui64vNV {
     index: uint;
-    // TODO: unsupported const GLuint64EXT* v
+    v: [ulong];
 }
-// TODO(GEN): incomplete signature for VertexAttribL3ui64vNV
 table GlVertexAttribL4ui64vNV {
     index: uint;
-    // TODO: unsupported const GLuint64EXT* v
+    v: [ulong];
 }
-// TODO(GEN): incomplete signature for VertexAttribL4ui64vNV
 table GlGetVertexAttribLi64vNV {
     index: uint;
     pname: uint;
-    // TODO: unsupported GLint64EXT* params
+    params: [long];
 }
-// TODO(GEN): incomplete signature for GetVertexAttribLi64vNV
 table GlGetVertexAttribLui64vNV {
     index: uint;
     pname: uint;
-    // TODO: unsupported GLuint64EXT* params
+    params: [ulong];
 }
-// TODO(GEN): incomplete signature for GetVertexAttribLui64vNV
 table GlVertexAttribLFormatNV {
     index: uint;
     size: int;
@@ -14012,9 +13583,8 @@ table GlVertexAttribIFormatNV {
 table GlGetIntegerui64i_vNV {
     value: uint;
     index: uint;
-    // TODO: unsupported GLuint64EXT* result
+    result: [ulong];
 }
-// TODO(GEN): incomplete signature for GetIntegerui64i_vNV
 table GlAreProgramsResidentNV {
     n: int;
     programs: [uint];
@@ -14041,9 +13611,8 @@ table GlGetProgramParameterdvNV {
     target: uint;
     index: uint;
     pname: uint;
-    // TODO: unsupported GLdouble* params
+    params: [double];
 }
-// TODO(GEN): incomplete signature for GetProgramParameterdvNV
 table GlGetProgramParameterfvNV {
     target: uint;
     index: uint;
@@ -14058,9 +13627,8 @@ table GlGetProgramivNV {
 table GlGetProgramStringNV {
     id: uint;
     pname: uint;
-    // TODO: unsupported GLubyte* program
+    program: [uint];
 }
-// TODO(GEN): incomplete signature for GetProgramStringNV
 table GlGetTrackMatrixivNV {
     target: uint;
     address: uint;
@@ -14070,9 +13638,8 @@ table GlGetTrackMatrixivNV {
 table GlGetVertexAttribdvNV {
     index: uint;
     pname: uint;
-    // TODO: unsupported GLdouble* params
+    params: [double];
 }
-// TODO(GEN): incomplete signature for GetVertexAttribdvNV
 table GlGetVertexAttribfvNV {
     index: uint;
     pname: uint;
@@ -14096,9 +13663,8 @@ table GlLoadProgramNV {
     target: uint;
     id: uint;
     len: int;
-    // TODO: unsupported const GLubyte* program
+    program: [uint];
 }
-// TODO(GEN): incomplete signature for LoadProgramNV
 table GlProgramParameter4dNV {
     target: uint;
     index: uint;
@@ -14110,9 +13676,8 @@ table GlProgramParameter4dNV {
 table GlProgramParameter4dvNV {
     target: uint;
     index: uint;
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for ProgramParameter4dvNV
 table GlProgramParameter4fNV {
     target: uint;
     index: uint;
@@ -14130,9 +13695,8 @@ table GlProgramParameters4dvNV {
     target: uint;
     index: uint;
     count: int;
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for ProgramParameters4dvNV
 table GlProgramParameters4fvNV {
     target: uint;
     index: uint;
@@ -14162,9 +13726,8 @@ table GlVertexAttrib1dNV {
 }
 table GlVertexAttrib1dvNV {
     index: uint;
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for VertexAttrib1dvNV
 table GlVertexAttrib1fNV {
     index: uint;
     x: float;
@@ -14179,9 +13742,8 @@ table GlVertexAttrib1sNV {
 }
 table GlVertexAttrib1svNV {
     index: uint;
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for VertexAttrib1svNV
 table GlVertexAttrib2dNV {
     index: uint;
     x: double;
@@ -14189,9 +13751,8 @@ table GlVertexAttrib2dNV {
 }
 table GlVertexAttrib2dvNV {
     index: uint;
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for VertexAttrib2dvNV
 table GlVertexAttrib2fNV {
     index: uint;
     x: float;
@@ -14208,9 +13769,8 @@ table GlVertexAttrib2sNV {
 }
 table GlVertexAttrib2svNV {
     index: uint;
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for VertexAttrib2svNV
 table GlVertexAttrib3dNV {
     index: uint;
     x: double;
@@ -14219,9 +13779,8 @@ table GlVertexAttrib3dNV {
 }
 table GlVertexAttrib3dvNV {
     index: uint;
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for VertexAttrib3dvNV
 table GlVertexAttrib3fNV {
     index: uint;
     x: float;
@@ -14240,9 +13799,8 @@ table GlVertexAttrib3sNV {
 }
 table GlVertexAttrib3svNV {
     index: uint;
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for VertexAttrib3svNV
 table GlVertexAttrib4dNV {
     index: uint;
     x: double;
@@ -14252,9 +13810,8 @@ table GlVertexAttrib4dNV {
 }
 table GlVertexAttrib4dvNV {
     index: uint;
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for VertexAttrib4dvNV
 table GlVertexAttrib4fNV {
     index: uint;
     x: float;
@@ -14275,9 +13832,8 @@ table GlVertexAttrib4sNV {
 }
 table GlVertexAttrib4svNV {
     index: uint;
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for VertexAttrib4svNV
 table GlVertexAttrib4ubNV {
     index: uint;
     x: uint;
@@ -14287,15 +13843,13 @@ table GlVertexAttrib4ubNV {
 }
 table GlVertexAttrib4ubvNV {
     index: uint;
-    // TODO: unsupported const GLubyte* v
+    v: [uint];
 }
-// TODO(GEN): incomplete signature for VertexAttrib4ubvNV
 table GlVertexAttribs1dvNV {
     index: uint;
     count: int;
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for VertexAttribs1dvNV
 table GlVertexAttribs1fvNV {
     index: uint;
     count: int;
@@ -14304,15 +13858,13 @@ table GlVertexAttribs1fvNV {
 table GlVertexAttribs1svNV {
     index: uint;
     count: int;
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for VertexAttribs1svNV
 table GlVertexAttribs2dvNV {
     index: uint;
     count: int;
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for VertexAttribs2dvNV
 table GlVertexAttribs2fvNV {
     index: uint;
     count: int;
@@ -14321,15 +13873,13 @@ table GlVertexAttribs2fvNV {
 table GlVertexAttribs2svNV {
     index: uint;
     count: int;
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for VertexAttribs2svNV
 table GlVertexAttribs3dvNV {
     index: uint;
     count: int;
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for VertexAttribs3dvNV
 table GlVertexAttribs3fvNV {
     index: uint;
     count: int;
@@ -14338,15 +13888,13 @@ table GlVertexAttribs3fvNV {
 table GlVertexAttribs3svNV {
     index: uint;
     count: int;
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for VertexAttribs3svNV
 table GlVertexAttribs4dvNV {
     index: uint;
     count: int;
-    // TODO: unsupported const GLdouble* v
+    v: [double];
 }
-// TODO(GEN): incomplete signature for VertexAttribs4dvNV
 table GlVertexAttribs4fvNV {
     index: uint;
     count: int;
@@ -14355,15 +13903,13 @@ table GlVertexAttribs4fvNV {
 table GlVertexAttribs4svNV {
     index: uint;
     count: int;
-    // TODO: unsupported const GLshort* v
+    v: [int];
 }
-// TODO(GEN): incomplete signature for VertexAttribs4svNV
 table GlVertexAttribs4ubvNV {
     index: uint;
     count: int;
-    // TODO: unsupported const GLubyte* v
+    v: [uint];
 }
-// TODO(GEN): incomplete signature for VertexAttribs4ubvNV
 table GlBeginVideoCaptureNV {
     video_capture_slot: uint;
 }
@@ -14404,15 +13950,13 @@ table GlGetVideoCaptureStreamdvNV {
     video_capture_slot: uint;
     stream: uint;
     pname: uint;
-    // TODO: unsupported GLdouble* params
+    params: [double];
 }
-// TODO(GEN): incomplete signature for GetVideoCaptureStreamdvNV
 table GlVideoCaptureNV {
     video_capture_slot: uint;
     sequence_num: [uint];
-    // TODO: unsupported GLuint64EXT* capture_time
+    capture_time: [ulong];
 }
-// TODO(GEN): incomplete signature for VideoCaptureNV
 table GlVideoCaptureStreamParameterivNV {
     video_capture_slot: uint;
     stream: uint;
@@ -14429,9 +13973,8 @@ table GlVideoCaptureStreamParameterdvNV {
     video_capture_slot: uint;
     stream: uint;
     pname: uint;
-    // TODO: unsupported const GLdouble* params
+    params: [double];
 }
-// TODO(GEN): incomplete signature for VideoCaptureStreamParameterdvNV
 table GlViewportSwizzleNV {
     index: uint;
     swizzlex: uint;
@@ -14742,9 +14285,8 @@ table GlDeformationMap3dSGIX {
     w2: double;
     wstride: int;
     worder: int;
-    // TODO: unsupported const GLdouble* points
+    points: [double];
 }
-// TODO(GEN): incomplete signature for DeformationMap3dSGIX
 table GlDeformationMap3fSGIX {
     target: uint;
     u1: float;
@@ -14768,9 +14310,8 @@ table GlLoadIdentityDeformationMapSGIX {
     mask: uint;
 }
 table GlReferencePlaneSGIX {
-    // TODO: unsupported const GLdouble* equation
+    equation: [double];
 }
-// TODO(GEN): incomplete signature for ReferencePlaneSGIX
 table GlSpriteParameterfSGIX {
     pname: uint;
     param: float;
@@ -14879,13 +14420,11 @@ table GlReplacementCodeuivSUN {
     code: [uint];
 }
 table GlReplacementCodeusvSUN {
-    // TODO: unsupported const GLushort* code
+    code: [uint];
 }
-// TODO(GEN): incomplete signature for ReplacementCodeusvSUN
 table GlReplacementCodeubvSUN {
-    // TODO: unsupported const GLubyte* code
+    code: [uint];
 }
-// TODO(GEN): incomplete signature for ReplacementCodeubvSUN
 table GlReplacementCodePointerSUN {
     type: uint;
     stride: int;
@@ -14901,10 +14440,9 @@ table GlColor4ubVertex2fSUN {
     y: float;
 }
 table GlColor4ubVertex2fvSUN {
-    // TODO: unsupported const GLubyte* c
+    c: [uint];
     v: [float];
 }
-// TODO(GEN): incomplete signature for Color4ubVertex2fvSUN
 table GlColor4ubVertex3fSUN {
     r: uint;
     g: uint;
@@ -14915,10 +14453,9 @@ table GlColor4ubVertex3fSUN {
     z: float;
 }
 table GlColor4ubVertex3fvSUN {
-    // TODO: unsupported const GLubyte* c
+    c: [uint];
     v: [float];
 }
-// TODO(GEN): incomplete signature for Color4ubVertex3fvSUN
 table GlColor3fVertex3fSUN {
     r: float;
     g: float;
@@ -14998,10 +14535,9 @@ table GlTexCoord2fColor4ubVertex3fSUN {
 }
 table GlTexCoord2fColor4ubVertex3fvSUN {
     tc: [float];
-    // TODO: unsupported const GLubyte* c
+    c: [uint];
     v: [float];
 }
-// TODO(GEN): incomplete signature for TexCoord2fColor4ubVertex3fvSUN
 table GlTexCoord2fColor3fVertex3fSUN {
     s: float;
     t: float;
@@ -15097,10 +14633,9 @@ table GlReplacementCodeuiColor4ubVertex3fSUN {
 }
 table GlReplacementCodeuiColor4ubVertex3fvSUN {
     rc: [uint];
-    // TODO: unsupported const GLubyte* c
+    c: [uint];
     v: [float];
 }
-// TODO(GEN): incomplete signature for ReplacementCodeuiColor4ubVertex3fvSUN
 table GlReplacementCodeuiColor3fVertex3fSUN {
     rc: uint;
     r: float;

@@ -16,6 +16,7 @@ add_library(MobileGL_FullServer SHARED
     ServerCore.cpp
     FullServerEntry.cpp
     BfaFrontendShim.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../MG_Protocol/generated_wire_dispatch.cpp
 )
 
 target_link_libraries(MobileGL_FullServer PRIVATE
@@ -40,6 +41,9 @@ endif()
 
 if (TARGET MG_FlatBuffersGen)
     add_dependencies(MobileGL_FullServer MG_FlatBuffersGen)
+endif()
+if (TARGET MG_WireDispatchGen)
+    add_dependencies(MobileGL_FullServer MG_WireDispatchGen)
 endif()
 
 # End of File

@@ -331,6 +331,7 @@ table Command {
     end_occlusion_query: EndOcclusionQuery;
     begin_xfb_primitives_query: BeginXfbPrimitivesQuery;
     end_xfb_primitives_query: EndXfbPrimitivesQuery;
+    payload_bytes: [ubyte];
 }
 
 table Message {
@@ -341,6 +342,7 @@ table Message {
 table Response {
     status: uint;
     token: ulong;
+    session_id: ulong;
     data_byte: uint;
     sync: ulong;
     string_value: string;

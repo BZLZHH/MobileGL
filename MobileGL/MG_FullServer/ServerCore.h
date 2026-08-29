@@ -31,6 +31,15 @@ namespace MobileGL::FullServer {
     class ServerCore {
     public:
         using SessionListener = void (*)(MobileGLSessionId sessionId, void* user);
+        // Optional generated wire dispatch hook (set by FullServerEntry to
+        // WireDispatchCall). It decodes Command.payload_bytes and executes the
+        // full source-list GL/EGL API surface; tests may leave it null.
+        using WireDispatchFn = uint32_t (*)(uint32_t opcode,
+                                            uint32_t sessionId,
+                                            const void* payloadBytes,
+                                            uint64_t payloadSize,
+                                            const void* const* receivedShm,
+                                            uint32_t receivedShmCount);
 
         ServerCore(const MobileGLTransportOps* ops, MobileGLTransport* transport,
                    MobileGLBackend* backend, const MobileGLBackendVTable* vtable);
@@ -42,6 +51,7 @@ namespace MobileGL::FullServer {
         // Optional hook fired with the created session id (or 0 on destroy) so
         // the FullServer can keep the frontend shim's current session in sync.
         void SetSessionListener(SessionListener listener, void* user);
+        void SetWireDispatch(WireDispatchFn fn);
 
     private:
         void NotifySessionChanged(MobileGLSessionId sessionId);
@@ -53,6 +63,7 @@ namespace MobileGL::FullServer {
         Bool m_running = false;
         SessionListener m_sessionListener = nullptr;
         void* m_sessionUser = nullptr;
+        WireDispatchFn m_wireDispatch = nullptr;
         // Sessions created through SessionCreate control commands; commands for
         // unknown/destroyed sessions are rejected until re-created.
         UnorderedMap<MobileGLSessionId, Bool> m_liveSessions;

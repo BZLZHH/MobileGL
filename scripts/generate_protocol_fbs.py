@@ -44,6 +44,18 @@ FBS_TYPE_BY_C = [
     (r"const\s+GLchar\s*\*", "ShmRegion"),
     (r"const\s+void\s*\*", "ShmRegion"),
     (r"void\s*\*", "ShmRegion"),
+    (r"GLenum\s*\*", "[uint]"),
+    (r"GLdouble\s*\*", "[double]"),
+    (r"GLshort\s*\*", "[int]"),
+    (r"GLushort\s*\*", "[uint]"),
+    (r"GLbyte\s*\*", "[int]"),
+    (r"GLubyte\s*\*", "[uint]"),
+    (r"GLint64(?:EXT)?\s*\*", "[long]"),
+    (r"GLuint64(?:EXT)?\s*\*", "[ulong]"),
+    (r"GLclampf\s*\*", "[float]"),
+    (r"GLclampd\s*\*", "[double]"),
+    (r"GLfixed\s*\*", "[int]"),
+    (r"GLhalf\s*\*", "[uint]"),
     (r"GLuint64(?:EXT)?", "ulong"),
     (r"GLint64(?:EXT)?", "long"),
     (r"GLsizeiptr(?:ARB)?", "ulong"),
@@ -73,10 +85,12 @@ def fbs_type(arg: str) -> str | None:
     arg = arg.strip()
     # Strip default initializers, e.g. `int x = 0`.
     arg = re.sub(r"=\s*[^,]+$", "", arg).strip()
-    # A const GLchar* stream (shader source / names) always travels as a
-    # ShmRegion payload; do this check before stripping the qualifier.
-    if re.search(r"GLchar\s*\*\s*const\s*\*", arg) or re.search(r"const\s+GLchar\s*\*", arg):
+    # A const GLchar* const* stream (shader source / names) always travels as a
+    # ShmRegion payload; plain const GLchar* names travel as FlatBuffer strings.
+    if re.search(r"GLchar\s*\*\s*const\s*\*", arg):
         return "ShmRegion"
+    if re.search(r"const\s+GLchar\s*\*", arg):
+        return "string"
     # Strip storage qualifiers.
     arg = re.sub(r"\b(?:const|volatile)\s+", "", arg).strip()
     arg = arg.replace("GLvoid", "void")

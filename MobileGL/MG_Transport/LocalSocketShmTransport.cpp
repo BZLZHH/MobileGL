@@ -11,6 +11,7 @@
 #include "MG_Protocol/gen/wire_generated.h"
 
 #if defined(__linux__) || defined(__APPLE__) || defined(__ANDROID__)
+#include <poll.h>
 #include <sys/mman.h>
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -200,10 +201,24 @@ namespace MobileGL::Transport {
             }
 
             Bool WaitResponses(MobileGLResponseQueue* out, uint32_t timeoutMs) {
-                (void)timeoutMs;
                 if (out == nullptr || m_socketFd < 0) {
                     m_lastError = "WaitResponses requires an output queue and a connected socket.";
                     return false;
+                }
+
+                if (timeoutMs > 0) {
+                    pollfd descriptor{};
+                    descriptor.fd = m_socketFd;
+                    descriptor.events = POLLIN;
+                    const int pollResult = poll(&descriptor, 1, static_cast<int>(timeoutMs));
+                    if (pollResult == 0) {
+                        m_lastError = "WaitResponses: timed out.";
+                        return false;
+                    }
+                    if (pollResult < 0 || (descriptor.revents & POLLIN) == 0) {
+                        m_lastError = "WaitResponses: poll failed or socket is not readable.";
+                        return false;
+                    }
                 }
 
                 Uint32 payloadSize = 0;

@@ -16,6 +16,11 @@
 
 namespace MobileGL::Client {
     namespace {
+        struct PendingToken {
+            Uint64 Token = 0;
+            Uint64 SessionId = 0;
+        };
+
         String s_lastError;
         Bool s_initialized = false;
         Bool s_ownsTransport = false;
@@ -32,12 +37,23 @@ namespace MobileGL::Client {
         Uint64 s_mappedOffset = 0;
         Uint64 s_mappedSize = 0;
         void* s_mappedPtr = nullptr;
+        UnorderedMap<Uint64, PendingToken> s_pendingTokens;
+        UnorderedMap<Uint64, Bool> s_invalidatedTokens;
+        // Tokens that, on a successful response, invalidate their bound session
+        // (set by SubmitSessionControl(destroy)); invalidation runs after the
+        // response is consumed so the destroy call itself can still be waited on.
+        UnorderedMap<Uint64, Uint64> s_invalidateAfterResponse;
+
+        void RegisterToken(Uint64 token, Uint64 sessionId) {
+            s_pendingTokens[token] = PendingToken{token, sessionId};
+        }
 
         Bool SendOpcodesOnly(Uint32 opcode, Uint64 sessionId, Uint64 token) {
             if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
                 s_lastError = "Client is not initialized.";
                 return false;
             }
+            RegisterToken(token, sessionId);
             flatbuffers::FlatBufferBuilder builder;
             const auto command =
                 MobileGL::Protocol::Wire::CreateCommand(builder, opcode, sessionId, token);
@@ -55,11 +71,12 @@ namespace MobileGL::Client {
             return WaitResponseForToken(token, 0);
         }
 
-        Bool SubmitFlatBuffer(const uint8_t* data, Uint32 size, Uint64 token) {
+        Bool SubmitFlatBuffer(const uint8_t* data, Uint32 size, Uint64 token, Uint64 sessionId) {
             if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
                 s_lastError = "Client is not initialized.";
                 return false;
             }
+            RegisterToken(token, sessionId);
             MobileGLCommandBatch batch{};
             batch.structSize = sizeof(MobileGLCommandBatch);
             batch.flatBufferData = const_cast<uint8_t*>(data);
@@ -616,7 +633,7 @@ namespace MobileGL::Client {
         const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 0);
         builder.Finish(message);
         if (!SubmitFlatBuffer(builder.GetBufferPointer(), static_cast<Uint32>(builder.GetSize()),
-                              token)) {
+                              token, sessionId)) {
             return false;
         }
         if (outResult != nullptr) {
@@ -653,7 +670,7 @@ namespace MobileGL::Client {
         const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 0);
         builder.Finish(message);
         return SubmitFlatBuffer(builder.GetBufferPointer(), static_cast<Uint32>(builder.GetSize()),
-                                token);
+                                token, sessionId);
     }
 
     Bool SendDeleteBackendQuery(Uint64 sessionId, uint64_t query, Uint64 token) {
@@ -672,7 +689,7 @@ namespace MobileGL::Client {
         const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 0);
         builder.Finish(message);
         return SubmitFlatBuffer(builder.GetBufferPointer(), static_cast<Uint32>(builder.GetSize()),
-                                token);
+                                token, sessionId);
     }
 
     Bool SendIsQueryResultAvailable(Uint64 sessionId, uint64_t query, Uint64 token,
@@ -689,7 +706,7 @@ namespace MobileGL::Client {
         const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 0);
         builder.Finish(message);
         if (!SubmitFlatBuffer(builder.GetBufferPointer(), static_cast<Uint32>(builder.GetSize()),
-                              token)) {
+                              token, sessionId)) {
             return false;
         }
         if (outAvailable != nullptr) {
@@ -715,7 +732,7 @@ namespace MobileGL::Client {
         const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 0);
         builder.Finish(message);
         if (!SubmitFlatBuffer(builder.GetBufferPointer(), static_cast<Uint32>(builder.GetSize()),
-                              token)) {
+                              token, sessionId)) {
             return false;
         }
         if (outAvailable != nullptr) {
@@ -756,7 +773,7 @@ namespace MobileGL::Client {
         const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 0);
         builder.Finish(message);
         return SubmitFlatBuffer(builder.GetBufferPointer(), static_cast<Uint32>(builder.GetSize()),
-                                token);
+                                token, sessionId);
     }
 
     Bool SendBeginXfbPrimitivesQuery(Uint64 sessionId, Bool generated, Uint64 token,
@@ -778,7 +795,7 @@ namespace MobileGL::Client {
         const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 0);
         builder.Finish(message);
         if (!SubmitFlatBuffer(builder.GetBufferPointer(), static_cast<Uint32>(builder.GetSize()),
-                              token)) {
+                              token, sessionId)) {
             return false;
         }
         if (outHandle != nullptr) {
@@ -804,7 +821,7 @@ namespace MobileGL::Client {
         const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 0);
         builder.Finish(message);
         return SubmitFlatBuffer(builder.GetBufferPointer(), static_cast<Uint32>(builder.GetSize()),
-                                token);
+                                token, sessionId);
     }
 
     Bool SendDrawArraysInstanced(Uint64 sessionId, uint32_t mode, int32_t first, int32_t count,
@@ -1414,12 +1431,48 @@ namespace MobileGL::Client {
         return SubmitDataCommand(sessionId, opcode, token, 0, 0, nullptr);
     }
 
+    Bool SendWirePayload(Uint64 sessionId, Uint32 opcode, Uint64 token,
+                         const uint8_t* payloadBytes, Uint32 payloadSize,
+                         MobileGLShmHandle* shm) {
+        if (!s_initialized || s_transport == nullptr || s_ops == nullptr ||
+            payloadBytes == nullptr || payloadSize == 0) {
+            s_lastError = "Client is not initialized or payload is missing.";
+            return false;
+        }
+        RegisterToken(token, sessionId);
+        flatbuffers::FlatBufferBuilder builder;
+        const auto payload =
+            builder.CreateVector(payloadBytes, payloadSize);
+        MobileGL::Protocol::Wire::CommandBuilder commandBuilder(builder);
+        commandBuilder.add_opcode(opcode);
+        commandBuilder.add_session_id(sessionId);
+        commandBuilder.add_token(token);
+        commandBuilder.add_payload_bytes(payload);
+        const auto command = commandBuilder.Finish();
+        const auto message =
+            MobileGL::Protocol::Wire::CreateMessage(builder, command, shm == nullptr ? 0 : 1);
+        builder.Finish(message);
+
+        MobileGLCommandBatch batch{};
+        batch.structSize = sizeof(MobileGLCommandBatch);
+        batch.flatBufferData = builder.GetBufferPointer();
+        batch.flatBufferSize = static_cast<Uint32>(builder.GetSize());
+        batch.shmHandleCount = shm == nullptr ? 0 : 1;
+        batch.shmHandles = shm;
+        if (!s_ops->SubmitCommands(s_transport, &batch)) {
+            s_lastError = s_ops->GetLastError(s_transport);
+            return false;
+        }
+        return WaitResponseForToken(token, 0);
+    }
+
     Bool SubmitDataCommand(Uint32 sessionId, Uint32 opcode, Uint64 token,
                            Uint64 shmOffset, Uint64 shmSize, MobileGLShmHandle* shm) {
         if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
             s_lastError = "Client is not initialized.";
             return false;
         }
+        RegisterToken(token, sessionId);
 
         flatbuffers::FlatBufferBuilder builder;
         const auto clear = MobileGL::Protocol::Wire::CreateGlClear(builder, 0);
@@ -1451,6 +1504,11 @@ namespace MobileGL::Client {
         const uint32_t opcode = create
             ? static_cast<uint32_t>(MobileGL::Protocol::MobileGLControlOpcode::SessionCreate)
             : static_cast<uint32_t>(MobileGL::Protocol::MobileGLControlOpcode::SessionDestroy);
+        if (!create) {
+            // Invalidate once the destroy response is consumed; the caller
+            // still waits for this token, so it must not be invalidated now.
+            s_invalidateAfterResponse[token] = sessionId;
+        }
         return SubmitCommand(static_cast<Uint32>(sessionId), opcode, token);
     }
 
@@ -1473,6 +1531,14 @@ namespace MobileGL::Client {
             s_lastError = "Client is not initialized.";
             return false;
         }
+        const auto invalidated = s_invalidatedTokens.find(token);
+        if (invalidated != s_invalidatedTokens.end()) {
+            s_invalidatedTokens.erase(invalidated);
+            s_lastError = "Token was invalidated by session teardown or timeout.";
+            return false;
+        }
+        const auto pending = s_pendingTokens.find(token);
+        const Uint64 expectedSession = pending == s_pendingTokens.end() ? 0 : pending->second.SessionId;
         for (auto& handle : s_lastResponseShm) {
             if (s_ops->ReleaseSharedMemory != nullptr) {
                 s_ops->ReleaseSharedMemory(s_transport, &handle);
@@ -1480,38 +1546,89 @@ namespace MobileGL::Client {
         }
         s_lastResponseShm.clear();
 
-        MobileGLResponseQueue response{};
-        if (!s_ops->WaitResponses(s_transport, &response, timeoutMs)) {
-            s_lastError = s_ops->GetLastError(s_transport);
-            return false;
-        }
+        for (;;) {
+            MobileGLResponseQueue response{};
+            if (!s_ops->WaitResponses(s_transport, &response, timeoutMs)) {
+                if (pending != s_pendingTokens.end()) {
+                    s_pendingTokens.erase(token);
+                }
+                s_invalidatedTokens[token] = true;
+                s_lastError = s_ops->GetLastError(s_transport);
+                return false;
+            }
 
-        const auto* parsed =
-            flatbuffers::GetRoot<MobileGL::Protocol::Wire::Response>(response.flatBufferData);
-        if (parsed == nullptr) {
-            s_lastError = "Invalid response.";
-            return false;
+            const auto* parsed =
+                flatbuffers::GetRoot<MobileGL::Protocol::Wire::Response>(response.flatBufferData);
+            if (parsed == nullptr) {
+                s_pendingTokens.erase(token);
+                s_invalidatedTokens[token] = true;
+                s_lastError = "Invalid response.";
+                return false;
+            }
+            // A late reply for a token that was invalidated (session destroy,
+            // timeout or explicit InvalidateSession) is discarded instead of
+            // being mistaken for the response we are still waiting for.
+            if (parsed->token() != token && s_pendingTokens.find(parsed->token()) == s_pendingTokens.end()) {
+                for (Uint32 i = 0; i < response.shmHandleCount; ++i) {
+                    if (response.shmHandles != nullptr && s_ops->ReleaseSharedMemory != nullptr) {
+                        s_ops->ReleaseSharedMemory(s_transport, &response.shmHandles[i]);
+                    }
+                }
+                continue;
+            }
+            if (parsed->token() != token) {
+                s_pendingTokens.erase(token);
+                s_invalidatedTokens[token] = true;
+                s_lastError = "Response token mismatch.";
+                return false;
+            }
+            if (pending != s_pendingTokens.end() && parsed->session_id() != 0 &&
+                parsed->session_id() != expectedSession) {
+                s_pendingTokens.erase(token);
+                s_invalidatedTokens[token] = true;
+                s_lastError = "Response session mismatch.";
+                return false;
+            }
+            const auto invalidateAfter = s_invalidateAfterResponse.find(token);
+            if (invalidateAfter != s_invalidateAfterResponse.end()) {
+                if (parsed->status() == 0) {
+                    InvalidateSession(invalidateAfter->second);
+                }
+                s_invalidateAfterResponse.erase(invalidateAfter);
+            }
+            s_pendingTokens.erase(token);
+            s_lastResponseByte = parsed->data_byte();
+            s_lastResponseSync = parsed->sync();
+            s_lastResponseQueryNs = parsed->query_ns();
+            if (parsed->string_value() != nullptr) {
+                s_lastResponseString = parsed->string_value()->str();
+            } else {
+                s_lastResponseString.clear();
+            }
+            if (response.shmHandleCount > 0 && response.shmHandles != nullptr) {
+                s_lastResponseShm.reserve(response.shmHandleCount);
+                for (Uint32 i = 0; i < response.shmHandleCount; ++i) {
+                    s_lastResponseShm.push_back(response.shmHandles[i]);
+                }
+            }
+            s_lastError.clear();
+            return parsed->status() == 0;
         }
-        if (parsed->token() != token) {
-            s_lastError = "Response token mismatch.";
-            return false;
-        }
-        s_lastResponseByte = parsed->data_byte();
-        s_lastResponseSync = parsed->sync();
-        s_lastResponseQueryNs = parsed->query_ns();
-        if (parsed->string_value() != nullptr) {
-            s_lastResponseString = parsed->string_value()->str();
-        } else {
-            s_lastResponseString.clear();
-        }
-        if (response.shmHandleCount > 0 && response.shmHandles != nullptr) {
-            s_lastResponseShm.reserve(response.shmHandleCount);
-            for (Uint32 i = 0; i < response.shmHandleCount; ++i) {
-                s_lastResponseShm.push_back(response.shmHandles[i]);
+    }
+
+    void InvalidateSession(Uint64 sessionId) {
+        for (auto it = s_pendingTokens.begin(); it != s_pendingTokens.end();) {
+            if (it->second.SessionId == sessionId) {
+                s_invalidatedTokens[it->first] = true;
+                it = s_pendingTokens.erase(it);
+            } else {
+                ++it;
             }
         }
-        s_lastError.clear();
-        return parsed->status() == 0;
+    }
+
+    Uint32 GetPendingTokenCount() {
+        return static_cast<Uint32>(s_pendingTokens.size());
     }
 
     Uint64 GetLastResponseSync() {
@@ -1560,6 +1677,9 @@ namespace MobileGL::Client {
         s_ops = nullptr;
         s_ownsTransport = false;
         s_initialized = false;
+        s_pendingTokens.clear();
+        s_invalidatedTokens.clear();
+        s_invalidateAfterResponse.clear();
     }
 
     const String& GetLastError() {

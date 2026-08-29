@@ -12,6 +12,7 @@
 #include "BfaFrontendShim.h"
 #include "ServerCore.h"
 #include "UtilRuntimeLoader.h"
+#include "MG_Protocol/generated_wire_dispatch.h"
 #include "MG_State/GLState/ContextRegistry.h"
 #include "MG_Transport/LocalSocketShmTransport.h"
 
@@ -57,6 +58,18 @@ namespace MobileGL::FullServer {
             static_cast<Uint64>(std::hash<std::thread::id>{}(std::this_thread::get_id()));
         auto* context = MobileGL::MG_State::GLState::GLContextRegistry::GetCurrentGLContext(threadId);
         return context == nullptr ? glName : context->GetObjectHandle(objectKind, glName);
+    }
+
+    uint32_t WireDispatchWithSession(uint32_t opcode, uint32_t sessionId,
+                                     const void* payloadBytes, uint64_t payloadSize,
+                                     const void* const* receivedShm, uint32_t receivedShmCount) {
+        const auto threadId =
+            static_cast<Uint64>(std::hash<std::thread::id>{}(std::this_thread::get_id()));
+        MobileGL::MG_State::GLState::GLContextRegistry::SetCurrent(threadId, sessionId);
+        BfaFrontendShim::Get().SetCurrentSession(sessionId);
+        return MobileGL::Protocol::Wire::WireDispatchCall(opcode, sessionId, payloadBytes,
+                                                          payloadSize, receivedShm,
+                                                          receivedShmCount);
     }
 } // namespace MobileGL::FullServer
 
@@ -142,6 +155,7 @@ extern "C" int mobilegl_fullserver_attach_transport(MobileGLFullServerHandle han
     instance->core = new MobileGL::FullServer::ServerCore(ops, transport, instance->backendObject,
                                                           instance->vtable);
     instance->core->SetSessionListener(&MobileGL::FullServer::OnSessionChanged, nullptr);
+    instance->core->SetWireDispatch(&MobileGL::FullServer::WireDispatchWithSession);
     return instance->core->Start() ? 0 : -1;
 }
 
@@ -175,6 +189,7 @@ extern "C" int mobilegl_fullserver_run_socket(MobileGLFullServerHandle handle,
     instance->core = new MobileGL::FullServer::ServerCore(&ops, accepted, instance->backendObject,
                                                           instance->vtable);
     instance->core->SetSessionListener(&MobileGL::FullServer::OnSessionChanged, nullptr);
+    instance->core->SetWireDispatch(&MobileGL::FullServer::WireDispatchWithSession);
     if (!instance->core->Start()) {
         delete instance->core;
         instance->core = nullptr;

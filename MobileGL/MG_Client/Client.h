@@ -196,6 +196,14 @@ namespace MobileGL::Client {
     Bool SubmitDataCommand(Uint32 sessionId, Uint32 opcode, Uint64 token,
                            Uint64 shmOffset, Uint64 shmSize, MobileGLShmHandle* shm);
 
+    // Submits one command whose arguments are already serialized as a
+    // WireFull Gen* root table (payloadBytes). This is the generic full
+    // source-list path; the wire schema routes payload_bytes to the generated
+    // server dispatch.
+    Bool SendWirePayload(Uint64 sessionId, Uint32 opcode, Uint64 token,
+                         const uint8_t* payloadBytes, Uint32 payloadSize,
+                         MobileGLShmHandle* shm = nullptr);
+
     // Submits a session lifecycle control command (SessionCreate/Destroy).
     Bool SubmitSessionControl(Uint64 sessionId, Bool create, Uint64 token);
 
@@ -207,6 +215,15 @@ namespace MobileGL::Client {
 
     // Waits for the response whose echoed token equals `token`.
     Bool WaitResponseForToken(Uint64 token, Uint32 timeoutMs);
+
+    // Invalidates every outstanding token bound to `sessionId`: their
+    // WaitResponseForToken calls fail immediately (late responses are never
+    // mistaken for a newer request because tokens are never reused).
+    void InvalidateSession(Uint64 sessionId);
+
+    // Pending (submitted-but-not-yet-completed) token count; useful for
+    // tests that exercise token/session invalidation.
+    Uint32 GetPendingTokenCount();
 
     // Byte echoed back by the server's response data_byte field (payload
     // readback verification).

@@ -24,5 +24,8 @@ target_include_directories(MobileGL_Client PRIVATE
 if (TARGET MG_FlatBuffersGen)
     add_dependencies(MobileGL_Client MG_FlatBuffersGen)
 endif()
+if (TARGET MG_WireClientGen)
+    add_dependencies(MobileGL_Client MG_WireClientGen)
+endif()
 
 # End of File

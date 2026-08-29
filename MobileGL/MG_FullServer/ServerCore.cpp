@@ -79,6 +79,28 @@ namespace MobileGL::FullServer {
         uint32_t status = 1;
         const uint32_t opcode = command->opcode();
         const auto sessionId = static_cast<MobileGLSessionId>(command->session_id());
+
+        // Full source-list path: when the client carries a generic payload_bytes
+        // blob (WireFull Gen* table) the generated dispatch hook executes the
+        // complete GL/EGL frontend API surface. Typed legacy commands below
+        // remain the v1 fast path and are still served first when no hook is
+        // installed (e.g. standalone unit tests).
+        Bool wireDispatched = false;
+        if (command->payload_bytes() != nullptr && m_wireDispatch != nullptr) {
+            Vector<const void*> shmPointers;
+            shmPointers.reserve(receivedShm.size());
+            for (const auto& shm : receivedShm) {
+                shmPointers.push_back(shm.mappedAddress);
+            }
+            status = m_wireDispatch(opcode, static_cast<uint32_t>(sessionId),
+                                    command->payload_bytes()->data(),
+                                    command->payload_bytes()->size(),
+                                    shmPointers.empty() ? nullptr : shmPointers.data(),
+                                    static_cast<uint32_t>(shmPointers.size()));
+            wireDispatched = true;
+        }
+
+        if (!wireDispatched) {
         if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLControlOpcode::SessionCreate) &&
             m_vtable->OnSessionCreated != nullptr) {
             status = m_vtable->OnSessionCreated(m_backend, sessionId, nullptr) ? 0 : 1;
@@ -796,6 +818,7 @@ namespace MobileGL::FullServer {
                             : 1;
             }
         }
+        }
 
         for (auto& handle : receivedShm) {
             m_ops->ReleaseSharedMemory(m_transport, &handle);
@@ -807,8 +830,9 @@ namespace MobileGL::FullServer {
             responseString = responseBuilder.CreateString(responseStringValue);
         }
         const auto response = MobileGL::Protocol::Wire::CreateResponse(responseBuilder, status,
-                                                                       command->token(), dataByte,
-                                                                       syncHandle, responseString,
+                                                                       command->token(), sessionId,
+                                                                       dataByte, syncHandle,
+                                                                       responseString,
                                                                        responseShmCount, queryNs);
         responseBuilder.Finish(response);
 
@@ -828,6 +852,10 @@ namespace MobileGL::FullServer {
     void ServerCore::SetSessionListener(SessionListener listener, void* user) {
         m_sessionListener = listener;
         m_sessionUser = user;
+    }
+
+    void ServerCore::SetWireDispatch(WireDispatchFn fn) {
+        m_wireDispatch = fn;
     }
 
     void ServerCore::NotifySessionChanged(MobileGLSessionId sessionId) {

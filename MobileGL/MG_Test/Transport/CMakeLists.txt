@@ -80,6 +80,42 @@ endif()
 gtest_discover_tests(ProtocolOpcodeTest DISCOVERY_TIMEOUT 30 PROPERTIES LABELS unit)
 
 add_executable(
+        ProtocolDispatchCoverageTest
+        ProtocolDispatchCoverageTest.cpp
+)
+
+target_include_directories(ProtocolDispatchCoverageTest PRIVATE
+        ${MGL_ROOT}/include
+        ${MGL_ROOT}/MobileGL
+        ${MGL_ROOT}/3rdparty/xxHash
+        ${MGL_ROOT}/3rdparty/Vulkan-Headers/include
+        ${MGL_ROOT}/3rdparty/SPIRV-Reflect
+        ${MGL_ROOT}/3rdparty/FlatBuffers/include
+)
+
+target_link_libraries(
+        ProtocolDispatchCoverageTest PRIVATE
+        GTest::gtest_main
+        MobileGL_Protocol
+)
+
+if (MSVC)
+        target_compile_options(ProtocolDispatchCoverageTest PRIVATE /Zc:preprocessor)
+endif()
+
+gtest_discover_tests(ProtocolDispatchCoverageTest DISCOVERY_TIMEOUT 30 PROPERTIES LABELS unit)
+
+if (TARGET MG_WireDispatchGen)
+    add_dependencies(ProtocolDispatchCoverageTest MG_WireDispatchGen)
+endif()
+if (TARGET MG_WireClientGen)
+    add_dependencies(ProtocolDispatchCoverageTest MG_WireClientGen)
+endif()
+if (TARGET MG_FlatBuffersGen)
+    add_dependencies(ProtocolDispatchCoverageTest MG_FlatBuffersGen)
+endif()
+
+add_executable(
         ClientServerEndToEndTest
         ClientServerEndToEndTest.cpp
         ${MGL_ROOT}/MobileGL/MG_FullServer/ServerCore.cpp
@@ -1114,6 +1150,70 @@ if (MSVC)
 endif()
 
 gtest_discover_tests(ClientEglCommandsTest DISCOVERY_TIMEOUT 30 PROPERTIES LABELS unit)
+
+add_executable(
+        ClientTokenSessionTest
+        ClientTokenSessionTest.cpp
+        ${MGL_ROOT}/MobileGL/MG_FullServer/ServerCore.cpp
+)
+
+target_include_directories(ClientTokenSessionTest PRIVATE
+        ${MGL_ROOT}/include
+        ${MGL_ROOT}/MobileGL
+        ${MGL_ROOT}/3rdparty/xxHash
+        ${MGL_ROOT}/3rdparty/Vulkan-Headers/include
+        ${MGL_ROOT}/3rdparty/SPIRV-Reflect
+)
+
+target_link_libraries(
+        ClientTokenSessionTest PRIVATE
+        GTest::gtest_main
+        MobileGL_Client
+        MobileGL_Transport
+        MobileGL_BFA
+)
+
+if (MSVC)
+        target_compile_options(ClientTokenSessionTest PRIVATE /Zc:preprocessor)
+endif()
+
+gtest_discover_tests(ClientTokenSessionTest DISCOVERY_TIMEOUT 30 PROPERTIES LABELS unit)
+
+add_executable(
+        ClientWirePayloadTest
+        ClientWirePayloadTest.cpp
+        ${MGL_ROOT}/MobileGL/MG_FullServer/ServerCore.cpp
+)
+
+target_include_directories(ClientWirePayloadTest PRIVATE
+        ${MGL_ROOT}/include
+        ${MGL_ROOT}/MobileGL
+        ${MGL_ROOT}/3rdparty/xxHash
+        ${MGL_ROOT}/3rdparty/Vulkan-Headers/include
+        ${MGL_ROOT}/3rdparty/SPIRV-Reflect
+        ${MGL_ROOT}/3rdparty/FlatBuffers/include
+)
+
+target_link_libraries(
+        ClientWirePayloadTest PRIVATE
+        GTest::gtest_main
+        MobileGL_Client
+        MobileGL_Transport
+        MobileGL_BFA
+)
+
+if (MSVC)
+        target_compile_options(ClientWirePayloadTest PRIVATE /Zc:preprocessor)
+endif()
+
+gtest_discover_tests(ClientWirePayloadTest DISCOVERY_TIMEOUT 30 PROPERTIES LABELS unit)
+
+if (TARGET MG_FlatBuffersGen)
+        add_dependencies(ClientWirePayloadTest MG_FlatBuffersGen)
+endif()
+if (TARGET MG_WireClientGen)
+        add_dependencies(ClientWirePayloadTest MG_WireClientGen)
+endif()
 
 
 
