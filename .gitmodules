@@ -34,3 +34,6 @@
 [submodule "include/ska"]
 	path = include/ska
 	url = https://github.com/MobileGL-Dev/flat_hash_map.git
+[submodule "3rdparty/FlatBuffers"]
+	path = 3rdparty/FlatBuffers
+	url = https://github.com/google/flatbuffers.git

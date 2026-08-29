@@ -32,3 +32,8 @@ __pycache__/
 /.dsh/
 
 C_S_REFACTOR_PLAN.html
+
+# Local-only working notes; never push.
+docs/
+MobileGL/MG_Protocol/gen/python/
+__pycache__/
