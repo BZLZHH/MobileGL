@@ -134,6 +134,7 @@
 
 - [x] 多 Session / 多 Display / share group 回归：`ContextRegistryTest` 6/6 通过（含跨 session 对象可见性、不同 Display 分组隔离）
 - [x] **真实 EGL/GLES 平台初验**：`BackendObject_DirectGLES.so`（自包含 EGL/GLES 加载）经 `libMobileGL_FullServer.so` 的 socket 路径创建真实 session；Python 端 `GetString(GL_VENDOR)` 返回 `NVIDIA Corporation`（真实驱动初始化成功；surfaceless/默认 EGL display 路径工作）
+- [x] **平台环境探测**：`DISPLAY=:0`、`WAYLAND_DISPLAY=wayland-0`；`vulkaninfo --summary`：Vulkan 1.4.341、NVIDIA 独显（vendorID 0x10de / deviceID 0x21c4 / driver 610.57.4.0），`VK_KHR_xcb_surface`、`VK_KHR_wayland_surface`、`VK_KHR_surface` 可用；`/usr/share/vulkan/icd.d/` 含 nvidia/lvp/llvmpipe 等 ICD（真实 X11/Wayland C/S Surface 有硬件基础，DirectVulkan 插件仍是 null 存根待迁移）
 - [x] **命令往返基准**：`scripts/bench_cs_e2e.py`（Python FlatBuffers → socket → FullServer.so → backend），含 SessionCreate/Destroy 生命周期，100 次往返 avg 30.5µs / min 25.2µs / max 107.5µs（null backend）
 - [x] **shm payload 零拷贝基准**：`ShmPayloadBenchmark`（C++：SessionCreate → 100× SubmitDataCommand+fd 回读 → destroy），avg 34.1µs / min 25.8µs / max 83.4µs（含 SCM_RIGHTS fd + mmap 回读）
 - [ ] 命令批处理基准（batch 提交 vs 逐条）；大 payload（DrawElements / DrawRangeElements / BufferSubData）零拷贝基准
@@ -143,5 +144,5 @@
 
 1. **Phase 3（最高优先）**：DirectGLES 真实渲染层迁入 BFA vtable —— OnSessionCreated/Destroyed 用 `ContextRegistry`+`GLState` 建/销真实上下文并 MakeCurrent；Clear/ClearColor/DrawArrays/DrawElements/BufferSubData 调真实 GLES entry points。注意静态库双份 static 状态与 `gBackendFunctionsTable`（MG_Backend 已被核心库排除）的 link 设计，先做符号调研再决定；无 surfaceless EGL 时做最大真实 state-backed 路径并如实记录。DirectVulkan 随后。
 2. Phase 4 剩余：完整 source-list 运行时分发（dispatch/trampoline 全覆盖）、Query/Sync session-private 状态、Token↔session 失效模型。
-3. Phase 6：真实后端基准 + X11/Win32/Android Surface（本机有 lavapipe/lvp 软件光栅，可尝试真实 Vulkan/GLES 初始化）。
+3. Phase 6：DirectVulkan 插件真实迁移 + X11/Win32/Android Surface（本机已实探 NVIDIA Vulkan 1.4.341 + Mesa ICD，GLES 真通道已验，硬件基础已验证）。
 4. 每完成一块：更新本文件 + 提交（`[Feat] (Scope): Subject`）；单线串行推进，不使用 subagent 并行。
