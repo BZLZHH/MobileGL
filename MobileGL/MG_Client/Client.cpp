@@ -25,6 +25,12 @@ namespace MobileGL::Client {
         Uint64 s_lastResponseSync = 0;
         String s_lastResponseString;
         Vector<MobileGLShmHandle> s_lastResponseShm;
+        MobileGLShmHandle s_mappedShm{};
+        Bool s_mappedActive = false;
+        Uint64 s_mappedBuffer = 0;
+        Uint64 s_mappedOffset = 0;
+        Uint64 s_mappedSize = 0;
+        void* s_mappedPtr = nullptr;
 
         Bool SendOpcodesOnly(Uint32 opcode, Uint64 sessionId, Uint64 token) {
             if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
@@ -938,6 +944,110 @@ namespace MobileGL::Client {
         return true;
     }
 
+    Bool MapBufferRange(Uint64 sessionId, uint64_t bufferHandle, uint64_t offset,
+                        uint64_t size, uint32_t access, Uint64 token, void** outMappedPtr) {
+        if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
+            s_lastError = "Client is not initialized.";
+            return false;
+        }
+        if (s_mappedActive) {
+            s_lastError = "A buffer range is already mapped.";
+            return false;
+        }
+        flatbuffers::FlatBufferBuilder builder;
+        const auto mr = MobileGL::Protocol::Wire::CreateMapBufferRange(builder, bufferHandle, offset, size, access);
+        MobileGL::Protocol::Wire::CommandBuilder commandBuilder(builder);
+        commandBuilder.add_opcode(static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glMapBufferRange));
+        commandBuilder.add_session_id(sessionId);
+        commandBuilder.add_token(token);
+        commandBuilder.add_map_buffer_range(mr);
+        const auto command = commandBuilder.Finish();
+        const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 0);
+        builder.Finish(message);
+
+        MobileGLCommandBatch batch{};
+        batch.structSize = sizeof(MobileGLCommandBatch);
+        batch.flatBufferData = builder.GetBufferPointer();
+        batch.flatBufferSize = static_cast<Uint32>(builder.GetSize());
+        if (!s_ops->SubmitCommands(s_transport, &batch)) {
+            s_lastError = s_ops->GetLastError(s_transport);
+            return false;
+        }
+        if (!WaitResponseForToken(token, 0)) {
+            return false;
+        }
+        if (s_lastResponseShm.empty() || s_lastResponseShm[0].mappedAddress == nullptr ||
+            s_lastResponseShm[0].size < size) {
+            s_lastError = "Response did not carry a large enough mapping.";
+            return false;
+        }
+        s_mappedShm = s_lastResponseShm[0];
+        s_lastResponseShm.clear();
+        s_mappedBuffer = bufferHandle;
+        s_mappedOffset = offset;
+        s_mappedSize = size;
+        s_mappedPtr = s_mappedShm.mappedAddress;
+        s_mappedActive = true;
+        if (outMappedPtr != nullptr) {
+            *outMappedPtr = s_mappedPtr;
+        }
+        return true;
+    }
+
+    Bool UnmapBuffer(Uint64 sessionId, Uint64 token) {
+        if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
+            s_lastError = "Client is not initialized.";
+            return false;
+        }
+        if (!s_mappedActive || s_mappedPtr == nullptr || s_ops->OpenSharedMemory == nullptr) {
+            s_lastError = "No active buffer mapping.";
+            return false;
+        }
+        MobileGLShmHandle flush{};
+        if (!s_ops->OpenSharedMemory(s_transport, &flush) || flush.mappedAddress == nullptr) {
+            s_lastError = "Failed to allocate unmap flush shm.";
+            return false;
+        }
+        Memcpy(flush.mappedAddress, s_mappedPtr, static_cast<SizeT>(s_mappedSize));
+
+        flatbuffers::FlatBufferBuilder builder;
+        const auto um = MobileGL::Protocol::Wire::CreateUnmapBuffer(builder, s_mappedBuffer, s_mappedOffset,
+                                                                    s_mappedSize);
+        MobileGL::Protocol::Wire::CommandBuilder commandBuilder(builder);
+        commandBuilder.add_opcode(static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glUnmapBuffer));
+        commandBuilder.add_session_id(sessionId);
+        commandBuilder.add_token(token);
+        commandBuilder.add_unmap_buffer(um);
+        const auto command = commandBuilder.Finish();
+        const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 1);
+        builder.Finish(message);
+
+        MobileGLCommandBatch batch{};
+        batch.structSize = sizeof(MobileGLCommandBatch);
+        batch.flatBufferData = builder.GetBufferPointer();
+        batch.flatBufferSize = static_cast<Uint32>(builder.GetSize());
+        batch.shmHandleCount = 1;
+        batch.shmHandles = &flush;
+        if (!s_ops->SubmitCommands(s_transport, &batch)) {
+            s_lastError = s_ops->GetLastError(s_transport);
+            s_ops->ReleaseSharedMemory(s_transport, &flush);
+            return false;
+        }
+        if (!WaitResponseForToken(token, 0)) {
+            s_ops->ReleaseSharedMemory(s_transport, &flush);
+            return false;
+        }
+        s_ops->ReleaseSharedMemory(s_transport, &flush);
+        s_ops->ReleaseSharedMemory(s_transport, &s_mappedShm);
+        s_mappedActive = false;
+        s_mappedPtr = nullptr;
+        s_mappedBuffer = 0;
+        s_mappedOffset = 0;
+        s_mappedSize = 0;
+        s_mappedShm = {};
+        return true;
+    }
+
     Bool SubmitCommand(Uint32 sessionId, Uint32 opcode, Uint64 token) {
         return SubmitDataCommand(sessionId, opcode, token, 0, 0, nullptr);
     }
@@ -1067,6 +1177,15 @@ namespace MobileGL::Client {
             }
         }
         s_lastResponseShm.clear();
+        if (s_mappedActive && s_ops != nullptr && s_ops->ReleaseSharedMemory != nullptr) {
+            s_ops->ReleaseSharedMemory(s_transport, &s_mappedShm);
+        }
+        s_mappedActive = false;
+        s_mappedPtr = nullptr;
+        s_mappedBuffer = 0;
+        s_mappedOffset = 0;
+        s_mappedSize = 0;
+        s_mappedShm = {};
         if (s_transport != nullptr && s_ownsTransport) {
             Transport::DestroyLocalSocketShmTransport(s_transport);
         }

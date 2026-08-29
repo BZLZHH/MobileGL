@@ -192,6 +192,19 @@ table BufferReadbackFromGpu {
     size: ulong;
 }
 
+table MapBufferRange {
+    buffer_handle: ulong;
+    offset: ulong;
+    size: ulong;
+    access: uint;
+}
+
+table UnmapBuffer {
+    buffer_handle: ulong;
+    offset: ulong;
+    size: ulong;
+}
+
 table DataBlob {
     offset: ulong;
     size: ulong;
@@ -231,6 +244,8 @@ table Command {
     texture_sub_image: TextureSubImage;
     read_pixels: ReadPixels;
     buffer_readback_from_gpu: BufferReadbackFromGpu;
+    map_buffer_range: MapBufferRange;
+    unmap_buffer: UnmapBuffer;
 }
 
 table Message {

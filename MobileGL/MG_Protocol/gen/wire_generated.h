@@ -104,6 +104,12 @@ struct ReadPixelsBuilder;
 struct BufferReadbackFromGpu;
 struct BufferReadbackFromGpuBuilder;
 
+struct MapBufferRange;
+struct MapBufferRangeBuilder;
+
+struct UnmapBuffer;
+struct UnmapBufferBuilder;
+
 struct DataBlob;
 struct DataBlobBuilder;
 
@@ -1984,6 +1990,140 @@ inline ::flatbuffers::Offset<BufferReadbackFromGpu> CreateBufferReadbackFromGpu(
   return builder_.Finish();
 }
 
+struct MapBufferRange FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef MapBufferRangeBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_BUFFER_HANDLE = 4,
+    VT_OFFSET = 6,
+    VT_SIZE = 8,
+    VT_ACCESS = 10
+  };
+  uint64_t buffer_handle() const {
+    return GetField<uint64_t>(VT_BUFFER_HANDLE, 0);
+  }
+  uint64_t offset() const {
+    return GetField<uint64_t>(VT_OFFSET, 0);
+  }
+  uint64_t size() const {
+    return GetField<uint64_t>(VT_SIZE, 0);
+  }
+  uint32_t access() const {
+    return GetField<uint32_t>(VT_ACCESS, 0);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint64_t>(verifier, VT_BUFFER_HANDLE, 8) &&
+           VerifyField<uint64_t>(verifier, VT_OFFSET, 8) &&
+           VerifyField<uint64_t>(verifier, VT_SIZE, 8) &&
+           VerifyField<uint32_t>(verifier, VT_ACCESS, 4) &&
+           verifier.EndTable();
+  }
+};
+
+struct MapBufferRangeBuilder {
+  typedef MapBufferRange Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_buffer_handle(uint64_t buffer_handle) {
+    fbb_.AddElement<uint64_t>(MapBufferRange::VT_BUFFER_HANDLE, buffer_handle, 0);
+  }
+  void add_offset(uint64_t offset) {
+    fbb_.AddElement<uint64_t>(MapBufferRange::VT_OFFSET, offset, 0);
+  }
+  void add_size(uint64_t size) {
+    fbb_.AddElement<uint64_t>(MapBufferRange::VT_SIZE, size, 0);
+  }
+  void add_access(uint32_t access) {
+    fbb_.AddElement<uint32_t>(MapBufferRange::VT_ACCESS, access, 0);
+  }
+  explicit MapBufferRangeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<MapBufferRange> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<MapBufferRange>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<MapBufferRange> CreateMapBufferRange(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint64_t buffer_handle = 0,
+    uint64_t offset = 0,
+    uint64_t size = 0,
+    uint32_t access = 0) {
+  MapBufferRangeBuilder builder_(_fbb);
+  builder_.add_size(size);
+  builder_.add_offset(offset);
+  builder_.add_buffer_handle(buffer_handle);
+  builder_.add_access(access);
+  return builder_.Finish();
+}
+
+struct UnmapBuffer FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef UnmapBufferBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_BUFFER_HANDLE = 4,
+    VT_OFFSET = 6,
+    VT_SIZE = 8
+  };
+  uint64_t buffer_handle() const {
+    return GetField<uint64_t>(VT_BUFFER_HANDLE, 0);
+  }
+  uint64_t offset() const {
+    return GetField<uint64_t>(VT_OFFSET, 0);
+  }
+  uint64_t size() const {
+    return GetField<uint64_t>(VT_SIZE, 0);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint64_t>(verifier, VT_BUFFER_HANDLE, 8) &&
+           VerifyField<uint64_t>(verifier, VT_OFFSET, 8) &&
+           VerifyField<uint64_t>(verifier, VT_SIZE, 8) &&
+           verifier.EndTable();
+  }
+};
+
+struct UnmapBufferBuilder {
+  typedef UnmapBuffer Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_buffer_handle(uint64_t buffer_handle) {
+    fbb_.AddElement<uint64_t>(UnmapBuffer::VT_BUFFER_HANDLE, buffer_handle, 0);
+  }
+  void add_offset(uint64_t offset) {
+    fbb_.AddElement<uint64_t>(UnmapBuffer::VT_OFFSET, offset, 0);
+  }
+  void add_size(uint64_t size) {
+    fbb_.AddElement<uint64_t>(UnmapBuffer::VT_SIZE, size, 0);
+  }
+  explicit UnmapBufferBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<UnmapBuffer> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<UnmapBuffer>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<UnmapBuffer> CreateUnmapBuffer(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint64_t buffer_handle = 0,
+    uint64_t offset = 0,
+    uint64_t size = 0) {
+  UnmapBufferBuilder builder_(_fbb);
+  builder_.add_size(size);
+  builder_.add_offset(offset);
+  builder_.add_buffer_handle(buffer_handle);
+  return builder_.Finish();
+}
+
 struct DataBlob FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef DataBlobBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
@@ -2071,7 +2211,9 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_TEXTURE_RESPECIFY = 62,
     VT_TEXTURE_SUB_IMAGE = 64,
     VT_READ_PIXELS = 66,
-    VT_BUFFER_READBACK_FROM_GPU = 68
+    VT_BUFFER_READBACK_FROM_GPU = 68,
+    VT_MAP_BUFFER_RANGE = 70,
+    VT_UNMAP_BUFFER = 72
   };
   uint32_t opcode() const {
     return GetField<uint32_t>(VT_OPCODE, 0);
@@ -2172,6 +2314,12 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   const MobileGL::Protocol::Wire::BufferReadbackFromGpu *buffer_readback_from_gpu() const {
     return GetPointer<const MobileGL::Protocol::Wire::BufferReadbackFromGpu *>(VT_BUFFER_READBACK_FROM_GPU);
   }
+  const MobileGL::Protocol::Wire::MapBufferRange *map_buffer_range() const {
+    return GetPointer<const MobileGL::Protocol::Wire::MapBufferRange *>(VT_MAP_BUFFER_RANGE);
+  }
+  const MobileGL::Protocol::Wire::UnmapBuffer *unmap_buffer() const {
+    return GetPointer<const MobileGL::Protocol::Wire::UnmapBuffer *>(VT_UNMAP_BUFFER);
+  }
   template <bool B = false>
   bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -2238,6 +2386,10 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            verifier.VerifyTable(read_pixels()) &&
            VerifyOffset(verifier, VT_BUFFER_READBACK_FROM_GPU) &&
            verifier.VerifyTable(buffer_readback_from_gpu()) &&
+           VerifyOffset(verifier, VT_MAP_BUFFER_RANGE) &&
+           verifier.VerifyTable(map_buffer_range()) &&
+           VerifyOffset(verifier, VT_UNMAP_BUFFER) &&
+           verifier.VerifyTable(unmap_buffer()) &&
            verifier.EndTable();
   }
 };
@@ -2345,6 +2497,12 @@ struct CommandBuilder {
   void add_buffer_readback_from_gpu(::flatbuffers::Offset<MobileGL::Protocol::Wire::BufferReadbackFromGpu> buffer_readback_from_gpu) {
     fbb_.AddOffset(Command::VT_BUFFER_READBACK_FROM_GPU, buffer_readback_from_gpu);
   }
+  void add_map_buffer_range(::flatbuffers::Offset<MobileGL::Protocol::Wire::MapBufferRange> map_buffer_range) {
+    fbb_.AddOffset(Command::VT_MAP_BUFFER_RANGE, map_buffer_range);
+  }
+  void add_unmap_buffer(::flatbuffers::Offset<MobileGL::Protocol::Wire::UnmapBuffer> unmap_buffer) {
+    fbb_.AddOffset(Command::VT_UNMAP_BUFFER, unmap_buffer);
+  }
   explicit CommandBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -2390,10 +2548,14 @@ inline ::flatbuffers::Offset<Command> CreateCommand(
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::TextureRespecify> texture_respecify = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::TextureSubImage> texture_sub_image = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::ReadPixels> read_pixels = 0,
-    ::flatbuffers::Offset<MobileGL::Protocol::Wire::BufferReadbackFromGpu> buffer_readback_from_gpu = 0) {
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::BufferReadbackFromGpu> buffer_readback_from_gpu = 0,
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::MapBufferRange> map_buffer_range = 0,
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::UnmapBuffer> unmap_buffer = 0) {
   CommandBuilder builder_(_fbb);
   builder_.add_token(token);
   builder_.add_session_id(session_id);
+  builder_.add_unmap_buffer(unmap_buffer);
+  builder_.add_map_buffer_range(map_buffer_range);
   builder_.add_buffer_readback_from_gpu(buffer_readback_from_gpu);
   builder_.add_read_pixels(read_pixels);
   builder_.add_texture_sub_image(texture_sub_image);

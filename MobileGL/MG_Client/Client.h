@@ -151,6 +151,14 @@ namespace MobileGL::Client {
     Bool SendBufferReadbackFromGpu(Uint64 sessionId, uint64_t bufferHandle, uint64_t offset,
                                    uint64_t size, void* outBytes, Uint64 outSize, Uint64 token);
 
+    // MapBufferRange: server returns buffer bytes via shared memory; outMappedPtr
+    // points into client-local shm until UnmapBuffer flushes it back.
+    Bool MapBufferRange(Uint64 sessionId, uint64_t bufferHandle, uint64_t offset,
+                        uint64_t size, uint32_t access, Uint64 token, void** outMappedPtr);
+
+    // UnmapBuffer: flushes the previously mapped bytes back to the server buffer.
+    Bool UnmapBuffer(Uint64 sessionId, Uint64 token);
+
     // Submits a command without waiting for its response.
     Bool SubmitCommand(Uint32 sessionId, Uint32 opcode, Uint64 token);
 

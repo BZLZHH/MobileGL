@@ -577,6 +577,46 @@ namespace MobileGL::FullServer {
                     status = 1;
                 }
             }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glMapBufferRange) &&
+                   m_vtable->BufferReadbackFromGpu != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else if (m_ops->OpenSharedMemory == nullptr ||
+                       !m_ops->OpenSharedMemory(m_transport, &responseShm.emplace_back())) {
+                responseShm.clear();
+                status = 1;
+            } else {
+                const auto* mr = command->map_buffer_range();
+                const Bool readbackOk = m_vtable->BufferReadbackFromGpu(
+                    m_backend, sessionId,
+                    mr == nullptr ? 0 : mr->buffer_handle(),
+                    mr == nullptr ? 0 : mr->offset(),
+                    mr == nullptr ? 0 : mr->size(),
+                    responseShm.back().mappedAddress);
+                if (readbackOk) {
+                    responseShmCount = 1;
+                    status = 0;
+                } else {
+                    responseShm.clear();
+                    status = 1;
+                }
+            }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glUnmapBuffer) &&
+                   m_vtable->BufferSubData != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else {
+                const auto* um = command->unmap_buffer();
+                const void* data = receivedShm.empty() || receivedShm[0].mappedAddress == nullptr
+                                       ? nullptr
+                                       : receivedShm[0].mappedAddress;
+                m_vtable->BufferSubData(m_backend, sessionId,
+                                        um == nullptr ? 0 : um->buffer_handle(),
+                                        um == nullptr ? 0 : um->offset(),
+                                        um == nullptr ? 0 : um->size(),
+                                        data);
+                status = 0;
+            }
         }
 
         for (auto& handle : receivedShm) {

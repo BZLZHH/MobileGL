@@ -375,8 +375,30 @@ class Command(object):
             return obj
         return None
 
+    # Command
+    def MapBufferRange(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(70))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from MobileGL.Protocol.Wire.MapBufferRange import MapBufferRange
+            obj = MapBufferRange()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # Command
+    def UnmapBuffer(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(72))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from MobileGL.Protocol.Wire.UnmapBuffer import UnmapBuffer
+            obj = UnmapBuffer()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
 def CommandStart(builder):
-    builder.StartObject(33)
+    builder.StartObject(35)
 
 def Start(builder):
     CommandStart(builder)
@@ -578,6 +600,18 @@ def CommandAddBufferReadbackFromGpu(builder, bufferReadbackFromGpu):
 
 def AddBufferReadbackFromGpu(builder, bufferReadbackFromGpu):
     CommandAddBufferReadbackFromGpu(builder, bufferReadbackFromGpu)
+
+def CommandAddMapBufferRange(builder, mapBufferRange):
+    builder.PrependUOffsetTRelativeSlot(33, flatbuffers.number_types.UOffsetTFlags.py_type(mapBufferRange), 0)
+
+def AddMapBufferRange(builder, mapBufferRange):
+    CommandAddMapBufferRange(builder, mapBufferRange)
+
+def CommandAddUnmapBuffer(builder, unmapBuffer):
+    builder.PrependUOffsetTRelativeSlot(34, flatbuffers.number_types.UOffsetTFlags.py_type(unmapBuffer), 0)
+
+def AddUnmapBuffer(builder, unmapBuffer):
+    CommandAddUnmapBuffer(builder, unmapBuffer)
 
 def CommandEnd(builder):
     return builder.EndObject()
