@@ -165,6 +165,10 @@ namespace {
         MOBILEGL_LOAD_GLES(glDispatchCompute);
         MOBILEGL_LOAD_GLES(glDispatchComputeIndirect);
         MOBILEGL_LOAD_GLES(glBlitFramebuffer);
+        MOBILEGL_LOAD_GLES(glTexImage2D);
+        MOBILEGL_LOAD_GLES(glTexImage3D);
+        MOBILEGL_LOAD_GLES(glGenTextures);
+        MOBILEGL_LOAD_GLES(glBindTexture);
         MOBILEGL_LOAD_GLES(glBeginTransformFeedback);
         MOBILEGL_LOAD_GLES(glEndTransformFeedback);
         MOBILEGL_LOAD_GLES(glPauseTransformFeedback);
@@ -424,6 +428,23 @@ namespace {
         return name;
     }
 
+    GLuint GetOrCreateTexture(MobileGLBackend* backend, MobileGLBackendHandle handle) {
+        const auto it = backend->TextureNames.find(handle);
+        if (it != backend->TextureNames.end()) {
+            return it->second;
+        }
+        GLuint name = 0;
+        if (backend->Gl.glGenTextures != nullptr && backend->Gl.glBindTexture != nullptr) {
+            backend->Gl.glGenTextures(1, &name);
+            if (name != 0) {
+                backend->Gl.glBindTexture(GL_TEXTURE_2D, name);
+                backend->Gl.glBindTexture(GL_TEXTURE_2D, 0);
+            }
+        }
+        backend->TextureNames[handle] = name;
+        return name;
+    }
+
     bool InitializeBackend(MobileGLBackend* backend, const MobileGLBackendInitInfo* info) {
         (void)info;
         const std::lock_guard<std::recursive_mutex> lock(backend->Mutex);
@@ -451,6 +472,7 @@ namespace {
         }
         backend->Sessions.clear();
         backend->BufferNames.clear();
+        backend->TextureNames.clear();
         backend->SyncNames.clear();
         if (backend->Display != EGL_NO_DISPLAY && backend->Egl.eglTerminate != nullptr) {
             backend->Egl.eglTerminate(backend->Display);
@@ -776,6 +798,39 @@ namespace {
         backend->Gl.glDrawElementsIndirect(static_cast<GLenum>(mode), static_cast<GLenum>(type), indirect);
     }
 
+    void TextureRespecifyBackend(MobileGLBackend* backend, MobileGLSessionId session, MobileGLBackendHandle texture,
+                                 const MobileGLTextureUpload* levels, uint32_t levelCount) {
+        const std::lock_guard<std::recursive_mutex> lock(backend->Mutex);
+        if (!EnsureCurrent(backend, session) || levels == nullptr || levelCount == 0) {
+            return;
+        }
+        const MobileGLTextureUpload& upload = levels[0];
+        const GLuint name = GetOrCreateTexture(backend, texture);
+        if (name == 0) {
+            return;
+        }
+        if (upload.depth > 1) {
+            if (backend->Gl.glTexImage3D == nullptr) {
+                return;
+            }
+            backend->Gl.glBindTexture(GL_TEXTURE_3D, name);
+            backend->Gl.glTexImage3D(GL_TEXTURE_3D, static_cast<GLint>(upload.level), static_cast<GLint>(upload.format),
+                                     static_cast<GLsizei>(upload.width), static_cast<GLsizei>(upload.height),
+                                     static_cast<GLsizei>(upload.depth), 0, static_cast<GLenum>(upload.format),
+                                     static_cast<GLenum>(upload.type), upload.data);
+            backend->Gl.glBindTexture(GL_TEXTURE_3D, 0);
+        } else {
+            if (backend->Gl.glTexImage2D == nullptr) {
+                return;
+            }
+            backend->Gl.glBindTexture(GL_TEXTURE_2D, name);
+            backend->Gl.glTexImage2D(GL_TEXTURE_2D, static_cast<GLint>(upload.level), static_cast<GLint>(upload.format),
+                                     static_cast<GLsizei>(upload.width), static_cast<GLsizei>(upload.height), 0,
+                                     static_cast<GLenum>(upload.format), static_cast<GLenum>(upload.type), upload.data);
+            backend->Gl.glBindTexture(GL_TEXTURE_2D, 0);
+        }
+    }
+
     void BufferRespecifyBackend(MobileGLBackend* backend, MobileGLSessionId session, MobileGLBackendHandle buffer,
                                 uint64_t size, uint32_t usage, const MobileGLBufferOps* ops) {
         const std::lock_guard<std::recursive_mutex> lock(backend->Mutex);
@@ -1050,6 +1105,7 @@ namespace {
         .BindTransformFeedback = &BindTransformFeedbackBackend,
         .BufferRespecify = &BufferRespecifyBackend,
         .BufferSubData = &BufferSubDataBackend,
+        .TextureRespecify = &TextureRespecifyBackend,
         .FenceSync = &FenceSyncBackend,
         .ClientWaitSync = &ClientWaitSyncBackend,
         .WaitSync = &WaitSyncBackend,

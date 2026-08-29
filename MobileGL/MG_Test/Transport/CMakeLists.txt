@@ -835,6 +835,118 @@ endif()
 
 gtest_discover_tests(ClientDrawRangeElementsTest DISCOVERY_TIMEOUT 30 PROPERTIES LABELS unit)
 
+add_executable(
+        ClientBufferRespecifyTest
+        ClientBufferRespecifyTest.cpp
+        ${MGL_ROOT}/MobileGL/MG_FullServer/ServerCore.cpp
+)
+
+target_include_directories(ClientBufferRespecifyTest PRIVATE
+        ${MGL_ROOT}/include
+        ${MGL_ROOT}/MobileGL
+        ${MGL_ROOT}/3rdparty/xxHash
+        ${MGL_ROOT}/3rdparty/Vulkan-Headers/include
+        ${MGL_ROOT}/3rdparty/SPIRV-Reflect
+)
+
+target_link_libraries(
+        ClientBufferRespecifyTest PRIVATE
+        GTest::gtest_main
+        MobileGL_Client
+        MobileGL_Transport
+        MobileGL_BFA
+)
+
+if (MSVC)
+        target_compile_options(ClientBufferRespecifyTest PRIVATE /Zc:preprocessor)
+endif()
+
+gtest_discover_tests(ClientBufferRespecifyTest DISCOVERY_TIMEOUT 30 PROPERTIES LABELS unit)
+
+add_executable(
+        ClientIndirectDrawsTest
+        ClientIndirectDrawsTest.cpp
+        ${MGL_ROOT}/MobileGL/MG_FullServer/ServerCore.cpp
+)
+
+target_include_directories(ClientIndirectDrawsTest PRIVATE
+        ${MGL_ROOT}/include
+        ${MGL_ROOT}/MobileGL
+        ${MGL_ROOT}/3rdparty/xxHash
+        ${MGL_ROOT}/3rdparty/Vulkan-Headers/include
+        ${MGL_ROOT}/3rdparty/SPIRV-Reflect
+)
+
+target_link_libraries(
+        ClientIndirectDrawsTest PRIVATE
+        GTest::gtest_main
+        MobileGL_Client
+        MobileGL_Transport
+        MobileGL_BFA
+)
+
+if (MSVC)
+        target_compile_options(ClientIndirectDrawsTest PRIVATE /Zc:preprocessor)
+endif()
+
+gtest_discover_tests(ClientIndirectDrawsTest DISCOVERY_TIMEOUT 30 PROPERTIES LABELS unit)
+
+add_executable(
+        ClientGetStringTest
+        ClientGetStringTest.cpp
+        ${MGL_ROOT}/MobileGL/MG_FullServer/ServerCore.cpp
+)
+
+target_include_directories(ClientGetStringTest PRIVATE
+        ${MGL_ROOT}/include
+        ${MGL_ROOT}/MobileGL
+        ${MGL_ROOT}/3rdparty/xxHash
+        ${MGL_ROOT}/3rdparty/Vulkan-Headers/include
+        ${MGL_ROOT}/3rdparty/SPIRV-Reflect
+)
+
+target_link_libraries(
+        ClientGetStringTest PRIVATE
+        GTest::gtest_main
+        MobileGL_Client
+        MobileGL_Transport
+        MobileGL_BFA
+)
+
+if (MSVC)
+        target_compile_options(ClientGetStringTest PRIVATE /Zc:preprocessor)
+endif()
+
+gtest_discover_tests(ClientGetStringTest DISCOVERY_TIMEOUT 30 PROPERTIES LABELS unit)
+
+add_executable(
+        ClientTextureRespecifyTest
+        ClientTextureRespecifyTest.cpp
+        ${MGL_ROOT}/MobileGL/MG_FullServer/ServerCore.cpp
+)
+
+target_include_directories(ClientTextureRespecifyTest PRIVATE
+        ${MGL_ROOT}/include
+        ${MGL_ROOT}/MobileGL
+        ${MGL_ROOT}/3rdparty/xxHash
+        ${MGL_ROOT}/3rdparty/Vulkan-Headers/include
+        ${MGL_ROOT}/3rdparty/SPIRV-Reflect
+)
+
+target_link_libraries(
+        ClientTextureRespecifyTest PRIVATE
+        GTest::gtest_main
+        MobileGL_Client
+        MobileGL_Transport
+        MobileGL_BFA
+)
+
+if (MSVC)
+        target_compile_options(ClientTextureRespecifyTest PRIVATE /Zc:preprocessor)
+endif()
+
+gtest_discover_tests(ClientTextureRespecifyTest DISCOVERY_TIMEOUT 30 PROPERTIES LABELS unit)
+
 
 
 

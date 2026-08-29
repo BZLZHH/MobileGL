@@ -23,6 +23,7 @@ namespace MobileGL::Client {
         const MobileGLTransportOps* s_ops = nullptr;
         Uint32 s_lastResponseByte = 0;
         Uint64 s_lastResponseSync = 0;
+        String s_lastResponseString;
 
         Bool SendOpcodesOnly(Uint32 opcode, Uint64 sessionId, Uint64 token) {
             if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
@@ -641,10 +642,12 @@ namespace MobileGL::Client {
         flatbuffers::FlatBufferBuilder builder;
         const auto dre = MobileGL::Protocol::Wire::CreateDrawRangeElements(
             builder, mode, start, end, count, type, shmOffset);
-        const auto command = MobileGL::Protocol::Wire::CreateCommand(
-            builder,
-            static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glDrawRangeElements),
-            sessionId, token, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, dre);
+        MobileGL::Protocol::Wire::CommandBuilder commandBuilder(builder);
+        commandBuilder.add_opcode(static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glDrawRangeElements));
+        commandBuilder.add_session_id(sessionId);
+        commandBuilder.add_token(token);
+        commandBuilder.add_draw_range_elements(dre);
+        const auto command = commandBuilder.Finish();
         const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 1);
         builder.Finish(message);
 
@@ -653,6 +656,163 @@ namespace MobileGL::Client {
         batch.flatBufferData = builder.GetBufferPointer();
         batch.flatBufferSize = static_cast<Uint32>(builder.GetSize());
         batch.shmHandleCount = 1;
+        batch.shmHandles = shm;
+        if (!s_ops->SubmitCommands(s_transport, &batch)) {
+            s_lastError = s_ops->GetLastError(s_transport);
+            return false;
+        }
+        return WaitResponseForToken(token, 0);
+    }
+
+    Bool SendBufferRespecify(Uint64 sessionId, uint64_t bufferHandle, uint64_t size,
+                             uint32_t usage, MobileGLShmHandle* shm, Uint64 token) {
+        if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
+            s_lastError = "Client is not initialized.";
+            return false;
+        }
+        flatbuffers::FlatBufferBuilder builder;
+        const auto br = MobileGL::Protocol::Wire::CreateBufferRespecify(builder, bufferHandle, size, usage);
+        MobileGL::Protocol::Wire::CommandBuilder commandBuilder(builder);
+        commandBuilder.add_opcode(static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glBufferData));
+        commandBuilder.add_session_id(sessionId);
+        commandBuilder.add_token(token);
+        commandBuilder.add_buffer_respecify(br);
+        const auto command = commandBuilder.Finish();
+        const auto message =
+            MobileGL::Protocol::Wire::CreateMessage(builder, command, shm == nullptr ? 0 : 1);
+        builder.Finish(message);
+
+        MobileGLCommandBatch batch{};
+        batch.structSize = sizeof(MobileGLCommandBatch);
+        batch.flatBufferData = builder.GetBufferPointer();
+        batch.flatBufferSize = static_cast<Uint32>(builder.GetSize());
+        batch.shmHandleCount = shm == nullptr ? 0 : 1;
+        batch.shmHandles = shm;
+        if (!s_ops->SubmitCommands(s_transport, &batch)) {
+            s_lastError = s_ops->GetLastError(s_transport);
+            return false;
+        }
+        return WaitResponseForToken(token, 0);
+    }
+
+    Bool SendDrawArraysIndirect(Uint64 sessionId, uint32_t mode, uint64_t shmOffset,
+                                MobileGLShmHandle* shm, Uint64 token) {
+        if (!s_initialized || s_transport == nullptr || s_ops == nullptr || shm == nullptr) {
+            s_lastError = "Client is not initialized or shm missing.";
+            return false;
+        }
+        flatbuffers::FlatBufferBuilder builder;
+        const auto indirect = MobileGL::Protocol::Wire::CreateDrawArraysIndirect(builder, mode, shmOffset);
+        MobileGL::Protocol::Wire::CommandBuilder commandBuilder(builder);
+        commandBuilder.add_opcode(static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glDrawArraysIndirect));
+        commandBuilder.add_session_id(sessionId);
+        commandBuilder.add_token(token);
+        commandBuilder.add_draw_arrays_indirect(indirect);
+        const auto command = commandBuilder.Finish();
+        const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 1);
+        builder.Finish(message);
+
+        MobileGLCommandBatch batch{};
+        batch.structSize = sizeof(MobileGLCommandBatch);
+        batch.flatBufferData = builder.GetBufferPointer();
+        batch.flatBufferSize = static_cast<Uint32>(builder.GetSize());
+        batch.shmHandleCount = 1;
+        batch.shmHandles = shm;
+        if (!s_ops->SubmitCommands(s_transport, &batch)) {
+            s_lastError = s_ops->GetLastError(s_transport);
+            return false;
+        }
+        return WaitResponseForToken(token, 0);
+    }
+
+    Bool SendDrawElementsIndirect(Uint64 sessionId, uint32_t mode, uint32_t type,
+                                  uint64_t shmOffset, MobileGLShmHandle* shm, Uint64 token) {
+        if (!s_initialized || s_transport == nullptr || s_ops == nullptr || shm == nullptr) {
+            s_lastError = "Client is not initialized or shm missing.";
+            return false;
+        }
+        flatbuffers::FlatBufferBuilder builder;
+        const auto indirect = MobileGL::Protocol::Wire::CreateDrawElementsIndirect(builder, mode, type, shmOffset);
+        MobileGL::Protocol::Wire::CommandBuilder commandBuilder(builder);
+        commandBuilder.add_opcode(static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glDrawElementsIndirect));
+        commandBuilder.add_session_id(sessionId);
+        commandBuilder.add_token(token);
+        commandBuilder.add_draw_elements_indirect(indirect);
+        const auto command = commandBuilder.Finish();
+        const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 1);
+        builder.Finish(message);
+
+        MobileGLCommandBatch batch{};
+        batch.structSize = sizeof(MobileGLCommandBatch);
+        batch.flatBufferData = builder.GetBufferPointer();
+        batch.flatBufferSize = static_cast<Uint32>(builder.GetSize());
+        batch.shmHandleCount = 1;
+        batch.shmHandles = shm;
+        if (!s_ops->SubmitCommands(s_transport, &batch)) {
+            s_lastError = s_ops->GetLastError(s_transport);
+            return false;
+        }
+        return WaitResponseForToken(token, 0);
+    }
+
+    Bool SendGetString(Uint64 sessionId, uint32_t pname, Uint64 token, String* outString) {
+        if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
+            s_lastError = "Client is not initialized.";
+            return false;
+        }
+        flatbuffers::FlatBufferBuilder builder;
+        const auto gs = MobileGL::Protocol::Wire::CreateGetString(builder, pname);
+        MobileGL::Protocol::Wire::CommandBuilder commandBuilder(builder);
+        commandBuilder.add_opcode(static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glGetString));
+        commandBuilder.add_session_id(sessionId);
+        commandBuilder.add_token(token);
+        commandBuilder.add_get_string(gs);
+        const auto command = commandBuilder.Finish();
+        const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 0);
+        builder.Finish(message);
+
+        MobileGLCommandBatch batch{};
+        batch.structSize = sizeof(MobileGLCommandBatch);
+        batch.flatBufferData = builder.GetBufferPointer();
+        batch.flatBufferSize = static_cast<Uint32>(builder.GetSize());
+        if (!s_ops->SubmitCommands(s_transport, &batch)) {
+            s_lastError = s_ops->GetLastError(s_transport);
+            return false;
+        }
+        if (!WaitResponseForToken(token, 0)) {
+            return false;
+        }
+        if (outString != nullptr) {
+            *outString = s_lastResponseString;
+        }
+        return true;
+    }
+
+    Bool SendTextureRespecify(Uint64 sessionId, uint64_t texture, uint32_t level, uint32_t format,
+                              uint32_t type, uint32_t width, uint32_t height, uint32_t depth,
+                              uint64_t dataSize, MobileGLShmHandle* shm, Uint64 token) {
+        if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
+            s_lastError = "Client is not initialized.";
+            return false;
+        }
+        flatbuffers::FlatBufferBuilder builder;
+        const auto tr = MobileGL::Protocol::Wire::CreateTextureRespecify(
+            builder, texture, level, format, type, width, height, depth, dataSize);
+        MobileGL::Protocol::Wire::CommandBuilder commandBuilder(builder);
+        commandBuilder.add_opcode(static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glTexImage2D));
+        commandBuilder.add_session_id(sessionId);
+        commandBuilder.add_token(token);
+        commandBuilder.add_texture_respecify(tr);
+        const auto command = commandBuilder.Finish();
+        const auto message =
+            MobileGL::Protocol::Wire::CreateMessage(builder, command, shm == nullptr ? 0 : 1);
+        builder.Finish(message);
+
+        MobileGLCommandBatch batch{};
+        batch.structSize = sizeof(MobileGLCommandBatch);
+        batch.flatBufferData = builder.GetBufferPointer();
+        batch.flatBufferSize = static_cast<Uint32>(builder.GetSize());
+        batch.shmHandleCount = shm == nullptr ? 0 : 1;
         batch.shmHandles = shm;
         if (!s_ops->SubmitCommands(s_transport, &batch)) {
             s_lastError = s_ops->GetLastError(s_transport);
@@ -743,12 +903,21 @@ namespace MobileGL::Client {
         }
         s_lastResponseByte = parsed->data_byte();
         s_lastResponseSync = parsed->sync();
+        if (parsed->string_value() != nullptr) {
+            s_lastResponseString = parsed->string_value()->str();
+        } else {
+            s_lastResponseString.clear();
+        }
         s_lastError.clear();
         return parsed->status() == 0;
     }
 
     Uint64 GetLastResponseSync() {
         return s_lastResponseSync;
+    }
+
+    const String& GetLastResponseString() {
+        return s_lastResponseString;
     }
 
     Uint32 GetLastResponseDataByte() {

@@ -54,6 +54,7 @@ namespace MobileGL::FullServer {
 
         uint32_t dataByte = 0;
         uint64_t syncHandle = 0;
+        String responseStringValue;
         Vector<MobileGLShmHandle> receivedShm;
         const uint32_t shmCount = message->shm_count();
         if (shmCount > 0) {
@@ -401,6 +402,111 @@ namespace MobileGL::FullServer {
                                             indices);
                 status = 0;
             }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glBufferData) &&
+                   m_vtable->BufferRespecify != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else {
+                const auto* br = command->buffer_respecify();
+                const void* data = receivedShm.empty() || receivedShm[0].mappedAddress == nullptr
+                                       ? nullptr
+                                       : receivedShm[0].mappedAddress;
+                MobileGLBufferOps ops{data, br == nullptr ? 0 : br->size()};
+                m_vtable->BufferRespecify(m_backend, sessionId,
+                                          br == nullptr ? 0 : br->buffer_handle(),
+                                          br == nullptr ? 0 : br->size(),
+                                          br == nullptr ? 0 : br->usage(),
+                                          data == nullptr ? nullptr : &ops);
+                status = 0;
+            }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glDrawArraysIndirect) &&
+                   m_vtable->DrawArraysIndirect != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else {
+                const auto* dai = command->draw_arrays_indirect();
+                const void* indirect = nullptr;
+                if (!receivedShm.empty() && receivedShm[0].mappedAddress != nullptr) {
+                    const auto* base = static_cast<const Uint8*>(receivedShm[0].mappedAddress);
+                    indirect = base + (dai == nullptr ? 0 : dai->shm_offset());
+                }
+                m_vtable->DrawArraysIndirect(m_backend, sessionId,
+                                             dai == nullptr ? 0 : dai->mode(), indirect);
+                status = 0;
+            }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glDrawElementsIndirect) &&
+                   m_vtable->DrawElementsIndirect != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else {
+                const auto* dei = command->draw_elements_indirect();
+                const void* indirect = nullptr;
+                if (!receivedShm.empty() && receivedShm[0].mappedAddress != nullptr) {
+                    const auto* base = static_cast<const Uint8*>(receivedShm[0].mappedAddress);
+                    indirect = base + (dei == nullptr ? 0 : dei->shm_offset());
+                }
+                m_vtable->DrawElementsIndirect(m_backend, sessionId,
+                                               dei == nullptr ? 0 : dei->mode(),
+                                               dei == nullptr ? 0 : dei->type(),
+                                               indirect);
+                status = 0;
+            }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glGetString) &&
+                   m_vtable->GetRendererInfo != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else {
+                const auto* gs = command->get_string();
+                const auto* info = m_vtable->GetRendererInfo(m_backend, sessionId);
+                const char* value = nullptr;
+                if (info != nullptr && gs != nullptr) {
+                    switch (gs->pname()) {
+                    case GL_VENDOR:
+                        value = info->vendor;
+                        break;
+                    case GL_RENDERER:
+                        value = info->name;
+                        break;
+                    case GL_VERSION:
+                        value = info->version;
+                        break;
+                    case GL_SHADING_LANGUAGE_VERSION:
+                        value = info->shaderLanguageVersion;
+                        break;
+                    default:
+                        break;
+                    }
+                }
+                if (value == nullptr) {
+                    status = 1;
+                } else {
+                    responseStringValue = value;
+                    status = 0;
+                }
+            }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glTexImage2D) &&
+                   m_vtable->TextureRespecify != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else {
+                const auto* tr = command->texture_respecify();
+                const void* data = receivedShm.empty() || receivedShm[0].mappedAddress == nullptr
+                                       ? nullptr
+                                       : receivedShm[0].mappedAddress;
+                MobileGLTextureUpload upload{};
+                upload.level = tr == nullptr ? 0 : tr->level();
+                upload.layer = 0;
+                upload.format = tr == nullptr ? 0 : tr->format();
+                upload.type = tr == nullptr ? 0 : tr->type();
+                upload.width = tr == nullptr ? 0 : tr->width();
+                upload.height = tr == nullptr ? 0 : tr->height();
+                upload.depth = tr == nullptr ? 1 : tr->depth();
+                upload.data = data;
+                upload.dataSize = tr == nullptr ? 0 : tr->data_size();
+                m_vtable->TextureRespecify(m_backend, sessionId,
+                                           tr == nullptr ? 0 : tr->texture(), &upload, 1);
+                status = 0;
+            }
         }
 
         for (auto& handle : receivedShm) {
@@ -408,9 +514,13 @@ namespace MobileGL::FullServer {
         }
 
         flatbuffers::FlatBufferBuilder responseBuilder;
+        flatbuffers::Offset<flatbuffers::String> responseString = 0;
+        if (!responseStringValue.empty()) {
+            responseString = responseBuilder.CreateString(responseStringValue);
+        }
         const auto response = MobileGL::Protocol::Wire::CreateResponse(responseBuilder, status,
                                                                        command->token(), dataByte,
-                                                                       syncHandle);
+                                                                       syncHandle, responseString);
         responseBuilder.Finish(response);
 
         MobileGLCommandBatch out{};

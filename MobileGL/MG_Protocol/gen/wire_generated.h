@@ -80,6 +80,21 @@ struct DrawElementsInstancedBuilder;
 struct DrawRangeElements;
 struct DrawRangeElementsBuilder;
 
+struct BufferRespecify;
+struct BufferRespecifyBuilder;
+
+struct DrawArraysIndirect;
+struct DrawArraysIndirectBuilder;
+
+struct DrawElementsIndirect;
+struct DrawElementsIndirectBuilder;
+
+struct GetString;
+struct GetStringBuilder;
+
+struct TextureRespecify;
+struct TextureRespecifyBuilder;
+
 struct DataBlob;
 struct DataBlobBuilder;
 
@@ -1364,6 +1379,336 @@ inline ::flatbuffers::Offset<DrawRangeElements> CreateDrawRangeElements(
   return builder_.Finish();
 }
 
+struct BufferRespecify FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef BufferRespecifyBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_BUFFER_HANDLE = 4,
+    VT_SIZE = 6,
+    VT_USAGE = 8
+  };
+  uint64_t buffer_handle() const {
+    return GetField<uint64_t>(VT_BUFFER_HANDLE, 0);
+  }
+  uint64_t size() const {
+    return GetField<uint64_t>(VT_SIZE, 0);
+  }
+  uint32_t usage() const {
+    return GetField<uint32_t>(VT_USAGE, 0);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint64_t>(verifier, VT_BUFFER_HANDLE, 8) &&
+           VerifyField<uint64_t>(verifier, VT_SIZE, 8) &&
+           VerifyField<uint32_t>(verifier, VT_USAGE, 4) &&
+           verifier.EndTable();
+  }
+};
+
+struct BufferRespecifyBuilder {
+  typedef BufferRespecify Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_buffer_handle(uint64_t buffer_handle) {
+    fbb_.AddElement<uint64_t>(BufferRespecify::VT_BUFFER_HANDLE, buffer_handle, 0);
+  }
+  void add_size(uint64_t size) {
+    fbb_.AddElement<uint64_t>(BufferRespecify::VT_SIZE, size, 0);
+  }
+  void add_usage(uint32_t usage) {
+    fbb_.AddElement<uint32_t>(BufferRespecify::VT_USAGE, usage, 0);
+  }
+  explicit BufferRespecifyBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<BufferRespecify> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<BufferRespecify>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<BufferRespecify> CreateBufferRespecify(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint64_t buffer_handle = 0,
+    uint64_t size = 0,
+    uint32_t usage = 0) {
+  BufferRespecifyBuilder builder_(_fbb);
+  builder_.add_size(size);
+  builder_.add_buffer_handle(buffer_handle);
+  builder_.add_usage(usage);
+  return builder_.Finish();
+}
+
+struct DrawArraysIndirect FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef DrawArraysIndirectBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_MODE = 4,
+    VT_SHM_OFFSET = 6
+  };
+  uint32_t mode() const {
+    return GetField<uint32_t>(VT_MODE, 0);
+  }
+  uint64_t shm_offset() const {
+    return GetField<uint64_t>(VT_SHM_OFFSET, 0);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint32_t>(verifier, VT_MODE, 4) &&
+           VerifyField<uint64_t>(verifier, VT_SHM_OFFSET, 8) &&
+           verifier.EndTable();
+  }
+};
+
+struct DrawArraysIndirectBuilder {
+  typedef DrawArraysIndirect Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_mode(uint32_t mode) {
+    fbb_.AddElement<uint32_t>(DrawArraysIndirect::VT_MODE, mode, 0);
+  }
+  void add_shm_offset(uint64_t shm_offset) {
+    fbb_.AddElement<uint64_t>(DrawArraysIndirect::VT_SHM_OFFSET, shm_offset, 0);
+  }
+  explicit DrawArraysIndirectBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<DrawArraysIndirect> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<DrawArraysIndirect>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<DrawArraysIndirect> CreateDrawArraysIndirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint32_t mode = 0,
+    uint64_t shm_offset = 0) {
+  DrawArraysIndirectBuilder builder_(_fbb);
+  builder_.add_shm_offset(shm_offset);
+  builder_.add_mode(mode);
+  return builder_.Finish();
+}
+
+struct DrawElementsIndirect FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef DrawElementsIndirectBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_MODE = 4,
+    VT_TYPE = 6,
+    VT_SHM_OFFSET = 8
+  };
+  uint32_t mode() const {
+    return GetField<uint32_t>(VT_MODE, 0);
+  }
+  uint32_t type() const {
+    return GetField<uint32_t>(VT_TYPE, 0);
+  }
+  uint64_t shm_offset() const {
+    return GetField<uint64_t>(VT_SHM_OFFSET, 0);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint32_t>(verifier, VT_MODE, 4) &&
+           VerifyField<uint32_t>(verifier, VT_TYPE, 4) &&
+           VerifyField<uint64_t>(verifier, VT_SHM_OFFSET, 8) &&
+           verifier.EndTable();
+  }
+};
+
+struct DrawElementsIndirectBuilder {
+  typedef DrawElementsIndirect Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_mode(uint32_t mode) {
+    fbb_.AddElement<uint32_t>(DrawElementsIndirect::VT_MODE, mode, 0);
+  }
+  void add_type(uint32_t type) {
+    fbb_.AddElement<uint32_t>(DrawElementsIndirect::VT_TYPE, type, 0);
+  }
+  void add_shm_offset(uint64_t shm_offset) {
+    fbb_.AddElement<uint64_t>(DrawElementsIndirect::VT_SHM_OFFSET, shm_offset, 0);
+  }
+  explicit DrawElementsIndirectBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<DrawElementsIndirect> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<DrawElementsIndirect>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<DrawElementsIndirect> CreateDrawElementsIndirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint32_t mode = 0,
+    uint32_t type = 0,
+    uint64_t shm_offset = 0) {
+  DrawElementsIndirectBuilder builder_(_fbb);
+  builder_.add_shm_offset(shm_offset);
+  builder_.add_type(type);
+  builder_.add_mode(mode);
+  return builder_.Finish();
+}
+
+struct GetString FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef GetStringBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_PNAME = 4
+  };
+  uint32_t pname() const {
+    return GetField<uint32_t>(VT_PNAME, 0);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint32_t>(verifier, VT_PNAME, 4) &&
+           verifier.EndTable();
+  }
+};
+
+struct GetStringBuilder {
+  typedef GetString Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_pname(uint32_t pname) {
+    fbb_.AddElement<uint32_t>(GetString::VT_PNAME, pname, 0);
+  }
+  explicit GetStringBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<GetString> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<GetString>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<GetString> CreateGetString(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint32_t pname = 0) {
+  GetStringBuilder builder_(_fbb);
+  builder_.add_pname(pname);
+  return builder_.Finish();
+}
+
+struct TextureRespecify FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef TextureRespecifyBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_TEXTURE = 4,
+    VT_LEVEL = 6,
+    VT_FORMAT = 8,
+    VT_TYPE = 10,
+    VT_WIDTH = 12,
+    VT_HEIGHT = 14,
+    VT_DEPTH = 16,
+    VT_DATA_SIZE = 18
+  };
+  uint64_t texture() const {
+    return GetField<uint64_t>(VT_TEXTURE, 0);
+  }
+  uint32_t level() const {
+    return GetField<uint32_t>(VT_LEVEL, 0);
+  }
+  uint32_t format() const {
+    return GetField<uint32_t>(VT_FORMAT, 0);
+  }
+  uint32_t type() const {
+    return GetField<uint32_t>(VT_TYPE, 0);
+  }
+  uint32_t width() const {
+    return GetField<uint32_t>(VT_WIDTH, 0);
+  }
+  uint32_t height() const {
+    return GetField<uint32_t>(VT_HEIGHT, 0);
+  }
+  uint32_t depth() const {
+    return GetField<uint32_t>(VT_DEPTH, 0);
+  }
+  uint64_t data_size() const {
+    return GetField<uint64_t>(VT_DATA_SIZE, 0);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint64_t>(verifier, VT_TEXTURE, 8) &&
+           VerifyField<uint32_t>(verifier, VT_LEVEL, 4) &&
+           VerifyField<uint32_t>(verifier, VT_FORMAT, 4) &&
+           VerifyField<uint32_t>(verifier, VT_TYPE, 4) &&
+           VerifyField<uint32_t>(verifier, VT_WIDTH, 4) &&
+           VerifyField<uint32_t>(verifier, VT_HEIGHT, 4) &&
+           VerifyField<uint32_t>(verifier, VT_DEPTH, 4) &&
+           VerifyField<uint64_t>(verifier, VT_DATA_SIZE, 8) &&
+           verifier.EndTable();
+  }
+};
+
+struct TextureRespecifyBuilder {
+  typedef TextureRespecify Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_texture(uint64_t texture) {
+    fbb_.AddElement<uint64_t>(TextureRespecify::VT_TEXTURE, texture, 0);
+  }
+  void add_level(uint32_t level) {
+    fbb_.AddElement<uint32_t>(TextureRespecify::VT_LEVEL, level, 0);
+  }
+  void add_format(uint32_t format) {
+    fbb_.AddElement<uint32_t>(TextureRespecify::VT_FORMAT, format, 0);
+  }
+  void add_type(uint32_t type) {
+    fbb_.AddElement<uint32_t>(TextureRespecify::VT_TYPE, type, 0);
+  }
+  void add_width(uint32_t width) {
+    fbb_.AddElement<uint32_t>(TextureRespecify::VT_WIDTH, width, 0);
+  }
+  void add_height(uint32_t height) {
+    fbb_.AddElement<uint32_t>(TextureRespecify::VT_HEIGHT, height, 0);
+  }
+  void add_depth(uint32_t depth) {
+    fbb_.AddElement<uint32_t>(TextureRespecify::VT_DEPTH, depth, 0);
+  }
+  void add_data_size(uint64_t data_size) {
+    fbb_.AddElement<uint64_t>(TextureRespecify::VT_DATA_SIZE, data_size, 0);
+  }
+  explicit TextureRespecifyBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<TextureRespecify> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<TextureRespecify>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<TextureRespecify> CreateTextureRespecify(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint64_t texture = 0,
+    uint32_t level = 0,
+    uint32_t format = 0,
+    uint32_t type = 0,
+    uint32_t width = 0,
+    uint32_t height = 0,
+    uint32_t depth = 0,
+    uint64_t data_size = 0) {
+  TextureRespecifyBuilder builder_(_fbb);
+  builder_.add_data_size(data_size);
+  builder_.add_texture(texture);
+  builder_.add_depth(depth);
+  builder_.add_height(height);
+  builder_.add_width(width);
+  builder_.add_type(type);
+  builder_.add_format(format);
+  builder_.add_level(level);
+  return builder_.Finish();
+}
+
 struct DataBlob FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef DataBlobBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
@@ -1443,7 +1788,12 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_WAIT_SYNC = 46,
     VT_DRAW_ARRAYS_INSTANCED = 48,
     VT_DRAW_ELEMENTS_INSTANCED = 50,
-    VT_DRAW_RANGE_ELEMENTS = 52
+    VT_DRAW_RANGE_ELEMENTS = 52,
+    VT_BUFFER_RESPECIFY = 54,
+    VT_DRAW_ARRAYS_INDIRECT = 56,
+    VT_DRAW_ELEMENTS_INDIRECT = 58,
+    VT_GET_STRING = 60,
+    VT_TEXTURE_RESPECIFY = 62
   };
   uint32_t opcode() const {
     return GetField<uint32_t>(VT_OPCODE, 0);
@@ -1520,6 +1870,21 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   const MobileGL::Protocol::Wire::DrawRangeElements *draw_range_elements() const {
     return GetPointer<const MobileGL::Protocol::Wire::DrawRangeElements *>(VT_DRAW_RANGE_ELEMENTS);
   }
+  const MobileGL::Protocol::Wire::BufferRespecify *buffer_respecify() const {
+    return GetPointer<const MobileGL::Protocol::Wire::BufferRespecify *>(VT_BUFFER_RESPECIFY);
+  }
+  const MobileGL::Protocol::Wire::DrawArraysIndirect *draw_arrays_indirect() const {
+    return GetPointer<const MobileGL::Protocol::Wire::DrawArraysIndirect *>(VT_DRAW_ARRAYS_INDIRECT);
+  }
+  const MobileGL::Protocol::Wire::DrawElementsIndirect *draw_elements_indirect() const {
+    return GetPointer<const MobileGL::Protocol::Wire::DrawElementsIndirect *>(VT_DRAW_ELEMENTS_INDIRECT);
+  }
+  const MobileGL::Protocol::Wire::GetString *get_string() const {
+    return GetPointer<const MobileGL::Protocol::Wire::GetString *>(VT_GET_STRING);
+  }
+  const MobileGL::Protocol::Wire::TextureRespecify *texture_respecify() const {
+    return GetPointer<const MobileGL::Protocol::Wire::TextureRespecify *>(VT_TEXTURE_RESPECIFY);
+  }
   template <bool B = false>
   bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -1570,6 +1935,16 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            verifier.VerifyTable(draw_elements_instanced()) &&
            VerifyOffset(verifier, VT_DRAW_RANGE_ELEMENTS) &&
            verifier.VerifyTable(draw_range_elements()) &&
+           VerifyOffset(verifier, VT_BUFFER_RESPECIFY) &&
+           verifier.VerifyTable(buffer_respecify()) &&
+           VerifyOffset(verifier, VT_DRAW_ARRAYS_INDIRECT) &&
+           verifier.VerifyTable(draw_arrays_indirect()) &&
+           VerifyOffset(verifier, VT_DRAW_ELEMENTS_INDIRECT) &&
+           verifier.VerifyTable(draw_elements_indirect()) &&
+           VerifyOffset(verifier, VT_GET_STRING) &&
+           verifier.VerifyTable(get_string()) &&
+           VerifyOffset(verifier, VT_TEXTURE_RESPECIFY) &&
+           verifier.VerifyTable(texture_respecify()) &&
            verifier.EndTable();
   }
 };
@@ -1653,6 +2028,21 @@ struct CommandBuilder {
   void add_draw_range_elements(::flatbuffers::Offset<MobileGL::Protocol::Wire::DrawRangeElements> draw_range_elements) {
     fbb_.AddOffset(Command::VT_DRAW_RANGE_ELEMENTS, draw_range_elements);
   }
+  void add_buffer_respecify(::flatbuffers::Offset<MobileGL::Protocol::Wire::BufferRespecify> buffer_respecify) {
+    fbb_.AddOffset(Command::VT_BUFFER_RESPECIFY, buffer_respecify);
+  }
+  void add_draw_arrays_indirect(::flatbuffers::Offset<MobileGL::Protocol::Wire::DrawArraysIndirect> draw_arrays_indirect) {
+    fbb_.AddOffset(Command::VT_DRAW_ARRAYS_INDIRECT, draw_arrays_indirect);
+  }
+  void add_draw_elements_indirect(::flatbuffers::Offset<MobileGL::Protocol::Wire::DrawElementsIndirect> draw_elements_indirect) {
+    fbb_.AddOffset(Command::VT_DRAW_ELEMENTS_INDIRECT, draw_elements_indirect);
+  }
+  void add_get_string(::flatbuffers::Offset<MobileGL::Protocol::Wire::GetString> get_string) {
+    fbb_.AddOffset(Command::VT_GET_STRING, get_string);
+  }
+  void add_texture_respecify(::flatbuffers::Offset<MobileGL::Protocol::Wire::TextureRespecify> texture_respecify) {
+    fbb_.AddOffset(Command::VT_TEXTURE_RESPECIFY, texture_respecify);
+  }
   explicit CommandBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -1690,10 +2080,20 @@ inline ::flatbuffers::Offset<Command> CreateCommand(
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::WaitSync> wait_sync = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::DrawArraysInstanced> draw_arrays_instanced = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::DrawElementsInstanced> draw_elements_instanced = 0,
-    ::flatbuffers::Offset<MobileGL::Protocol::Wire::DrawRangeElements> draw_range_elements = 0) {
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::DrawRangeElements> draw_range_elements = 0,
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::BufferRespecify> buffer_respecify = 0,
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::DrawArraysIndirect> draw_arrays_indirect = 0,
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::DrawElementsIndirect> draw_elements_indirect = 0,
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::GetString> get_string = 0,
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::TextureRespecify> texture_respecify = 0) {
   CommandBuilder builder_(_fbb);
   builder_.add_token(token);
   builder_.add_session_id(session_id);
+  builder_.add_texture_respecify(texture_respecify);
+  builder_.add_get_string(get_string);
+  builder_.add_draw_elements_indirect(draw_elements_indirect);
+  builder_.add_draw_arrays_indirect(draw_arrays_indirect);
+  builder_.add_buffer_respecify(buffer_respecify);
   builder_.add_draw_range_elements(draw_range_elements);
   builder_.add_draw_elements_instanced(draw_elements_instanced);
   builder_.add_draw_arrays_instanced(draw_arrays_instanced);
@@ -1779,7 +2179,8 @@ struct Response FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_STATUS = 4,
     VT_TOKEN = 6,
     VT_DATA_BYTE = 8,
-    VT_SYNC = 10
+    VT_SYNC = 10,
+    VT_STRING_VALUE = 12
   };
   uint32_t status() const {
     return GetField<uint32_t>(VT_STATUS, 0);
@@ -1793,6 +2194,9 @@ struct Response FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   uint64_t sync() const {
     return GetField<uint64_t>(VT_SYNC, 0);
   }
+  const ::flatbuffers::String *string_value() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_STRING_VALUE);
+  }
   template <bool B = false>
   bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -1800,6 +2204,8 @@ struct Response FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            VerifyField<uint64_t>(verifier, VT_TOKEN, 8) &&
            VerifyField<uint32_t>(verifier, VT_DATA_BYTE, 4) &&
            VerifyField<uint64_t>(verifier, VT_SYNC, 8) &&
+           VerifyOffset(verifier, VT_STRING_VALUE) &&
+           verifier.VerifyString(string_value()) &&
            verifier.EndTable();
   }
 };
@@ -1820,6 +2226,9 @@ struct ResponseBuilder {
   void add_sync(uint64_t sync) {
     fbb_.AddElement<uint64_t>(Response::VT_SYNC, sync, 0);
   }
+  void add_string_value(::flatbuffers::Offset<::flatbuffers::String> string_value) {
+    fbb_.AddOffset(Response::VT_STRING_VALUE, string_value);
+  }
   explicit ResponseBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -1836,13 +2245,32 @@ inline ::flatbuffers::Offset<Response> CreateResponse(
     uint32_t status = 0,
     uint64_t token = 0,
     uint32_t data_byte = 0,
-    uint64_t sync = 0) {
+    uint64_t sync = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> string_value = 0) {
   ResponseBuilder builder_(_fbb);
   builder_.add_sync(sync);
   builder_.add_token(token);
+  builder_.add_string_value(string_value);
   builder_.add_data_byte(data_byte);
   builder_.add_status(status);
   return builder_.Finish();
+}
+
+inline ::flatbuffers::Offset<Response> CreateResponseDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint32_t status = 0,
+    uint64_t token = 0,
+    uint32_t data_byte = 0,
+    uint64_t sync = 0,
+    const char *string_value = nullptr) {
+  auto string_value__ = string_value ? _fbb.CreateString(string_value) : 0;
+  return MobileGL::Protocol::Wire::CreateResponse(
+      _fbb,
+      status,
+      token,
+      data_byte,
+      sync,
+      string_value__);
 }
 
 inline const MobileGL::Protocol::Wire::Message *GetMessage(const void *buf) {

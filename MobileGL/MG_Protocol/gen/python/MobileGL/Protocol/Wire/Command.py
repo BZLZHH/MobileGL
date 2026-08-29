@@ -287,8 +287,63 @@ class Command(object):
             return obj
         return None
 
+    # Command
+    def BufferRespecify(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(54))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from MobileGL.Protocol.Wire.BufferRespecify import BufferRespecify
+            obj = BufferRespecify()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # Command
+    def DrawArraysIndirect(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(56))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from MobileGL.Protocol.Wire.DrawArraysIndirect import DrawArraysIndirect
+            obj = DrawArraysIndirect()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # Command
+    def DrawElementsIndirect(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(58))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from MobileGL.Protocol.Wire.DrawElementsIndirect import DrawElementsIndirect
+            obj = DrawElementsIndirect()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # Command
+    def GetString(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(60))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from MobileGL.Protocol.Wire.GetString import GetString
+            obj = GetString()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # Command
+    def TextureRespecify(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(62))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from MobileGL.Protocol.Wire.TextureRespecify import TextureRespecify
+            obj = TextureRespecify()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
 def CommandStart(builder):
-    builder.StartObject(25)
+    builder.StartObject(30)
 
 def Start(builder):
     CommandStart(builder)
@@ -442,6 +497,36 @@ def CommandAddDrawRangeElements(builder, drawRangeElements):
 
 def AddDrawRangeElements(builder, drawRangeElements):
     CommandAddDrawRangeElements(builder, drawRangeElements)
+
+def CommandAddBufferRespecify(builder, bufferRespecify):
+    builder.PrependUOffsetTRelativeSlot(25, flatbuffers.number_types.UOffsetTFlags.py_type(bufferRespecify), 0)
+
+def AddBufferRespecify(builder, bufferRespecify):
+    CommandAddBufferRespecify(builder, bufferRespecify)
+
+def CommandAddDrawArraysIndirect(builder, drawArraysIndirect):
+    builder.PrependUOffsetTRelativeSlot(26, flatbuffers.number_types.UOffsetTFlags.py_type(drawArraysIndirect), 0)
+
+def AddDrawArraysIndirect(builder, drawArraysIndirect):
+    CommandAddDrawArraysIndirect(builder, drawArraysIndirect)
+
+def CommandAddDrawElementsIndirect(builder, drawElementsIndirect):
+    builder.PrependUOffsetTRelativeSlot(27, flatbuffers.number_types.UOffsetTFlags.py_type(drawElementsIndirect), 0)
+
+def AddDrawElementsIndirect(builder, drawElementsIndirect):
+    CommandAddDrawElementsIndirect(builder, drawElementsIndirect)
+
+def CommandAddGetString(builder, getString):
+    builder.PrependUOffsetTRelativeSlot(28, flatbuffers.number_types.UOffsetTFlags.py_type(getString), 0)
+
+def AddGetString(builder, getString):
+    CommandAddGetString(builder, getString)
+
+def CommandAddTextureRespecify(builder, textureRespecify):
+    builder.PrependUOffsetTRelativeSlot(29, flatbuffers.number_types.UOffsetTFlags.py_type(textureRespecify), 0)
+
+def AddTextureRespecify(builder, textureRespecify):
+    CommandAddTextureRespecify(builder, textureRespecify)
 
 def CommandEnd(builder):
     return builder.EndObject()

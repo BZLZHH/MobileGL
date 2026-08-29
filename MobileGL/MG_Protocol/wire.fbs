@@ -134,6 +134,38 @@ table DrawRangeElements {
     indices_offset: ulong;
 }
 
+table BufferRespecify {
+    buffer_handle: ulong;
+    size: ulong;
+    usage: uint;
+}
+
+table DrawArraysIndirect {
+    mode: uint;
+    shm_offset: ulong;
+}
+
+table DrawElementsIndirect {
+    mode: uint;
+    type: uint;
+    shm_offset: ulong;
+}
+
+table GetString {
+    pname: uint;
+}
+
+table TextureRespecify {
+    texture: ulong;
+    level: uint;
+    format: uint;
+    type: uint;
+    width: uint;
+    height: uint;
+    depth: uint;
+    data_size: ulong;
+}
+
 table DataBlob {
     offset: ulong;
     size: ulong;
@@ -165,6 +197,11 @@ table Command {
     draw_arrays_instanced: DrawArraysInstanced;
     draw_elements_instanced: DrawElementsInstanced;
     draw_range_elements: DrawRangeElements;
+    buffer_respecify: BufferRespecify;
+    draw_arrays_indirect: DrawArraysIndirect;
+    draw_elements_indirect: DrawElementsIndirect;
+    get_string: GetString;
+    texture_respecify: TextureRespecify;
 }
 
 table Message {
@@ -177,6 +214,7 @@ table Response {
     token: ulong;
     data_byte: uint;
     sync: ulong;
+    string_value: string;
 }
 
 root_type Message;

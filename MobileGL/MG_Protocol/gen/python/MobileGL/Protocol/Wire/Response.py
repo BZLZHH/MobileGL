@@ -52,8 +52,15 @@ class Response(object):
             return self._tab.Get(flatbuffers.number_types.Uint64Flags, o + self._tab.Pos)
         return 0
 
+    # Response
+    def StringValue(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
+        if o != 0:
+            return self._tab.String(o + self._tab.Pos)
+        return None
+
 def ResponseStart(builder):
-    builder.StartObject(4)
+    builder.StartObject(5)
 
 def Start(builder):
     ResponseStart(builder)
@@ -81,6 +88,12 @@ def ResponseAddSync(builder, sync):
 
 def AddSync(builder, sync):
     ResponseAddSync(builder, sync)
+
+def ResponseAddStringValue(builder, stringValue):
+    builder.PrependUOffsetTRelativeSlot(4, flatbuffers.number_types.UOffsetTFlags.py_type(stringValue), 0)
+
+def AddStringValue(builder, stringValue):
+    ResponseAddStringValue(builder, stringValue)
 
 def ResponseEnd(builder):
     return builder.EndObject()

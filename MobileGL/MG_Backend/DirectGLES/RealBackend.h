@@ -51,6 +51,7 @@ struct MobileGLBackend {
     // Handle -> native name maps. The BFA passes opaque handles; a real GL
     // driver addresses objects by its own name, so the plugin owns the mapping.
     MobileGL::UnorderedMap<MobileGLBackendHandle, GLuint> BufferNames;
+    MobileGL::UnorderedMap<MobileGLBackendHandle, GLuint> TextureNames;
     MobileGL::UnorderedMap<MobileGLBackendHandle, GLsync> SyncNames;
 
     // Renderer / capability answers owned by the plugin.

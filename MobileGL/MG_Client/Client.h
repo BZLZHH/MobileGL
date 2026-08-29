@@ -114,6 +114,27 @@ namespace MobileGL::Client {
                                int32_t count, uint32_t type, uint64_t shmOffset,
                                MobileGLShmHandle* shm, Uint64 token);
 
+    // Sends a typed glBufferRespecify command; initial data, when present, comes
+    // from shared memory.
+    Bool SendBufferRespecify(Uint64 sessionId, uint64_t bufferHandle, uint64_t size,
+                             uint32_t usage, MobileGLShmHandle* shm, Uint64 token);
+
+    // Sends typed glDrawArraysIndirect / glDrawElementsIndirect commands whose
+    // indirect command is provided through shared memory.
+    Bool SendDrawArraysIndirect(Uint64 sessionId, uint32_t mode, uint64_t shmOffset,
+                                MobileGLShmHandle* shm, Uint64 token);
+    Bool SendDrawElementsIndirect(Uint64 sessionId, uint32_t mode, uint32_t type,
+                                  uint64_t shmOffset, MobileGLShmHandle* shm, Uint64 token);
+
+    // Sends a typed glGetString query and copies the returned string into outString.
+    Bool SendGetString(Uint64 sessionId, uint32_t pname, Uint64 token, String* outString);
+
+    // Sends a typed TextureRespecify upload; pixel data comes from shared memory.
+    Bool SendTextureRespecify(Uint64 sessionId, uint64_t texture, uint32_t level,
+                              uint32_t format, uint32_t type, uint32_t width,
+                              uint32_t height, uint32_t depth, uint64_t dataSize,
+                              MobileGLShmHandle* shm, Uint64 token);
+
     // Submits a command without waiting for its response.
     Bool SubmitCommand(Uint32 sessionId, Uint32 opcode, Uint64 token);
 
@@ -140,6 +161,9 @@ namespace MobileGL::Client {
 
     // Sync handle echoed back by the server's response sync field.
     Uint64 GetLastResponseSync();
+
+    // String echoed back by the server's response string_value field.
+    const String& GetLastResponseString();
 
     void Shutdown();
     const String& GetLastError();

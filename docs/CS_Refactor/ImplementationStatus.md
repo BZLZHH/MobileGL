@@ -68,7 +68,8 @@
 - [x] `StateBackendObjectRegistry` 增加 handle-key 并行查找：`RegisterHandle` / `FindByHandle` / `UnregisterHandle`（主 map 仍按 state 指针走热路径；原生 Monolith 编译通过）
 - [x] **Display / SharedGroup 生命周期控制**：`control.h` 增加 `DisplayCreate/Destroy` + `SharedGroupCreate/Destroy`；`Client::SubmitDisplayControl/SubmitSharedGroupControl`；`ServerCore` 调 `OnDisplayCreated/Destroyed/OnSharedGroupCreated/Destroyed`；`ClientHierarchyLifecycleTest` 1/1 通过
 - [x] **DirectGLES 真实 BFA 插件初版**：`RealBackend.h/.cpp` 自包含 dlopen `libEGL`/`libGLESv2` + `eglGetProcAddress` 解析；`OnDisplayCreated` 初始化 surfaceless/默认 EGLDisplay 并选 config；`OnSessionCreated` 创建真实 EGLContext（ES3→ES2 fallback）+ pbuffer（失败退 surfaceless no-surface）并 `eglMakeCurrent`；`OnSessionDestroyed` 释放；Clear/ClearColor/DrawArrays/DrawElements/BufferSubData/DrawRangeElements/DrawArraysInstanced/DrawElementsInstanced/MemoryBarrier/MemoryBarrierByRegion/PatchParameteri/GenerateMipmap/DispatchCompute/DispatchComputeIndirect/TransformFeedback 全链/BlitFramebuffer/SwapBuffers/FenceSync/DeleteSync/WaitSync 走真实 GLES/EGL entry points（缺失入口安全 no-op）；Buffer handle→GLuint、Sync handle→GLsync 映射；`GetRendererInfo/GetDynamicParameters` 由真实 `glGetString/glGetIntegerv` 回填
-- [ ] 符号/link 调研（nm 核心库与插件 .so）与最终 link 方案结论；FullServer 侧 BFA→旧 `BackendObject`/`gBackendFunctionsTable` shim（把 MG_Impl/MG_State 前端接入 BFA）待做
+- [x] **符号/link 调研结论**：`nm -u -C BackendObject_DirectGLES.so` 仅 libc/libstdc++/libm 未定义符号，`ldd` 无任何 MobileGL_* 依赖；`libMobileGL_MG_FullServerCore.a` 里对 `gBackendFunctionsTable`/`pActiveBackendObject` 的引用由 `GlobalObjects.cpp` 定义、MG_Backend 实现源码未进核心库；link 方案 = **插件自包含真实 BFA 适配器**（方案 A），不链接前端静态库，无双份 static 状态问题
+- [ ] FullServer 侧 BFA→旧 `BackendObject`/`gBackendFunctionsTable` shim（把 MG_Impl/MG_State 前端接入 BFA）待做
 - [ ] DirectVulkan 后端迁移到 BFA vtable（device/sharedgroup/session 三层）
 
 ## Phase 4 — 外部协议落地（进行中）
@@ -100,6 +101,11 @@
 - [x] `ProtocolOpcodeTest` 增加 dispatch 元数据校验，2/2 通过
 - [ ] 完整 source-list 运行时分发（trampoline / dispatch / 分类表）
 - [x] **异步命令提交 + 按 token 等待**（`Client::SubmitCommand` / `WaitResponseForToken`；`ClientAsyncBatchTest` 1/1 通过）
+- [x] **BufferRespecify 数据通路**：wire 增加 `BufferRespecify{buffer_handle,size,usage}`；`Client::SendBufferRespecify`（shm 初始数据可选）；`ServerCore` 调 BFA `BufferRespecify`（`MobileGLBufferOps` 携带 shm 指针）；`ClientBufferRespecifyTest` 1/1 通过（handle/size/usage/首字节 0xAB 精确回查）
+- [x] **间接绘制 shm 通路**：wire 增加 `DrawArraysIndirect` / `DrawElementsIndirect`（shm_offset）；`Client::SendDrawArraysIndirect/SendDrawElementsIndirect`；`ServerCore` 解包 shm 指针后调 BFA `DrawArraysIndirect/DrawElementsIndirect`；`ClientIndirectDrawsTest` 2/2 通过（mode/type/offset 处首字节精确回查）
+- [x] **GetString 字符串返回**：wire `Response` 增加 `string_value`；`Client::SendGetString` + `GetLastResponseString`；`ServerCore` 调 BFA `GetRendererInfo` 并按 `GL_VENDOR/GL_RENDERER/GL_VERSION/GL_SHADING_LANGUAGE_VERSION` 回填；`ClientGetStringTest` 4 项字符串精确校验 1/1 通过
+- [x] **TextureRespecify 单级上传**：wire 增加 `TextureRespecify{texture,level,format,type,width,height,depth,data_size}`；`Client::SendTextureRespecify`（shm 像素数据）；`ServerCore` 组装 `MobileGLTextureUpload` 调 BFA；真实插件懒建 GL 纹理名并调 `glTexImage2D/3D`；`ClientTextureRespecifyTest` 1/1 通过
+- [ ] TextureSubImage / ReadPixels / Map-Unmap / shm 服务端→客户端回读（下一轮）
 - [x] **Token 透传**：`Command.token` / `Response.token`；`Client::SendCommand` 校验回显 token；Python 跨进程 E2E 仍 status=0
 - [x] **shm payload 回读**：`ClientShmPayloadTest` 已验证（0xAB 写入 → fd → server 读回 → data_byte=0xAB）
 - [x] **会话生命周期**：`control.h` 定义 `SessionCreate/Destroy` 控制 opcode；`Client::SubmitSessionControl` + `ServerCore` 调 `OnSessionCreated/OnSessionDestroyed`；ServerCore 维护 live-session 集合，destroy 后同一 session 命令被拒绝（status!=0）；`ClientSessionLifecycleTest` 1/1 通过
@@ -124,6 +130,7 @@
 ## Phase 6 — 正确性 / 性能 / 平台
 
 - [x] 多 Session / 多 Display / share group 回归：`ContextRegistryTest` 6/6 通过（含跨 session 对象可见性、不同 Display 分组隔离）
+- [x] **真实 EGL/GLES 平台初验**：`BackendObject_DirectGLES.so`（自包含 EGL/GLES 加载）经 `libMobileGL_FullServer.so` 的 socket 路径创建真实 session；Python 端 `GetString(GL_VENDOR)` 返回 `NVIDIA Corporation`（真实驱动初始化成功；surfaceless/默认 EGL display 路径工作）
 - [x] **命令往返基准**：`scripts/bench_cs_e2e.py`（Python FlatBuffers → socket → FullServer.so → backend），含 SessionCreate/Destroy 生命周期，100 次往返 avg 30.5µs / min 25.2µs / max 107.5µs（null backend）
 - [x] **shm payload 零拷贝基准**：`ShmPayloadBenchmark`（C++：SessionCreate → 100× SubmitDataCommand+fd 回读 → destroy），avg 34.1µs / min 25.8µs / max 83.4µs（含 SCM_RIGHTS fd + mmap 回读）
 - [ ] 命令批处理基准（batch 提交 vs 逐条）；大 payload（DrawElements / DrawRangeElements / BufferSubData）零拷贝基准
