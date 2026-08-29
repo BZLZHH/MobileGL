@@ -166,6 +166,15 @@ table TextureRespecify {
     data_size: ulong;
 }
 
+table ReadPixels {
+    x: int;
+    y: int;
+    width: int;
+    height: int;
+    format: uint;
+    type: uint;
+}
+
 table DataBlob {
     offset: ulong;
     size: ulong;
@@ -202,6 +211,7 @@ table Command {
     draw_elements_indirect: DrawElementsIndirect;
     get_string: GetString;
     texture_respecify: TextureRespecify;
+    read_pixels: ReadPixels;
 }
 
 table Message {
@@ -215,6 +225,7 @@ table Response {
     data_byte: uint;
     sync: ulong;
     string_value: string;
+    ret_shm_count: uint;
 }
 
 root_type Message;

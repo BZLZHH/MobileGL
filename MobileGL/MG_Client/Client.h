@@ -135,6 +135,11 @@ namespace MobileGL::Client {
                               uint32_t height, uint32_t depth, uint64_t dataSize,
                               MobileGLShmHandle* shm, Uint64 token);
 
+    // Sends a typed glReadPixels query; server returns pixels via shared memory.
+    Bool SendReadPixels(Uint64 sessionId, int32_t x, int32_t y, int32_t width,
+                        int32_t height, uint32_t format, uint32_t type,
+                        void* outPixels, Uint64 outSize, Uint64 token);
+
     // Submits a command without waiting for its response.
     Bool SubmitCommand(Uint32 sessionId, Uint32 opcode, Uint64 token);
 

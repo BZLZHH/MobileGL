@@ -8,6 +8,7 @@
 
 #include "LocalSocketShmTransport.h"
 #include "MG_Transport/TransportInternal.h"
+#include "MG_Protocol/gen/wire_generated.h"
 
 #if defined(__linux__) || defined(__APPLE__) || defined(__ANDROID__)
 #include <sys/mman.h>
@@ -222,23 +223,53 @@ namespace MobileGL::Transport {
                 out->count = 1;
                 out->flatBufferData = m_received.data();
                 out->flatBufferSize = payloadSize;
+
+                m_receivedShmHandles.clear();
+                Uint32 shmCount = 0;
+                if (payloadSize >= sizeof(flatbuffers::uoffset_t) + sizeof(flatbuffers::voffset_t)) {
+                    flatbuffers::uoffset_t rootOffset = 0;
+                    memcpy(&rootOffset, m_received.data(), sizeof(rootOffset));
+                    if (rootOffset + sizeof(flatbuffers::uoffset_t) <= payloadSize) {
+                        const auto* response =
+                            flatbuffers::GetRoot<MobileGL::Protocol::Wire::Response>(m_received.data());
+                        flatbuffers::Verifier verifier(m_received.data(), payloadSize);
+                        if (response != nullptr && response->Verify(verifier)) {
+                            shmCount = response->ret_shm_count();
+                        }
+                    }
+                }
+                if (shmCount > 0) {
+                    m_receivedShmHandles.resize(shmCount);
+                    for (Uint32 i = 0; i < shmCount; ++i) {
+                        MobileGLShmHandle handle{};
+                        if (!RecvShmHandle(&handle)) {
+                            m_receivedShmHandles.clear();
+                            m_lastError = "response shm receive failed.";
+                            return false;
+                        }
+                        m_receivedShmHandles[i] = handle;
+                    }
+                    out->shmHandleCount = shmCount;
+                    out->shmHandles = m_receivedShmHandles.data();
+                }
                 m_lastError.clear();
                 return true;
             }
 
             Bool OpenSharedMemory(MobileGLShmHandle* out) {
-                if (out == nullptr || m_socketFd < 0 || m_maxShmArenaSize == 0) {
-                    m_lastError = "OpenSharedMemory requires a connected transport and arena size.";
+                if (out == nullptr || m_socketFd < 0) {
+                    m_lastError = "OpenSharedMemory requires a connected transport.";
                     return false;
                 }
 #if defined(__linux__)
+                const Uint32 arenaSize = m_maxShmArenaSize != 0 ? m_maxShmArenaSize : (64u * 1024u * 1024u);
                 const int fd = memfd_create("mobilegl_shm", MFD_CLOEXEC);
-                if (fd < 0 || ftruncate(fd, m_maxShmArenaSize) != 0) {
+                if (fd < 0 || ftruncate(fd, arenaSize) != 0) {
                     if (fd >= 0) close(fd);
                     m_lastError = "memfd_create/ftruncate failed.";
                     return false;
                 }
-                auto* address = mmap(nullptr, m_maxShmArenaSize, PROT_READ | PROT_WRITE,
+                auto* address = mmap(nullptr, arenaSize, PROT_READ | PROT_WRITE,
                                      MAP_SHARED, fd, 0);
                 if (address == MAP_FAILED) {
                     close(fd);
@@ -250,8 +281,8 @@ namespace MobileGL::Transport {
                 out->structSize = sizeof(MobileGLShmHandle);
                 out->platformHandle = fd;
                 out->offset = 0;
-                out->size = m_maxShmArenaSize;
-                out->capacity = m_maxShmArenaSize;
+                out->size = arenaSize;
+                out->capacity = arenaSize;
                 out->mappedAddress = address;
                 m_lastError.clear();
                 return true;
@@ -375,6 +406,7 @@ namespace MobileGL::Transport {
             Uint32 m_maxShmArenaSize = 0;
             String m_serverEndpoint;
             Vector<Uint8> m_received;
+            Vector<MobileGLShmHandle> m_receivedShmHandles;
             String m_lastError;
         };
 

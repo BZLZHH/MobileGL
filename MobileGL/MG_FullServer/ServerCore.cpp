@@ -56,6 +56,8 @@ namespace MobileGL::FullServer {
         uint64_t syncHandle = 0;
         String responseStringValue;
         Vector<MobileGLShmHandle> receivedShm;
+        Vector<MobileGLShmHandle> responseShm;
+        Uint32 responseShmCount = 0;
         const uint32_t shmCount = message->shm_count();
         if (shmCount > 0) {
             if (m_ops->ReceiveShmHandle == nullptr) {
@@ -507,6 +509,27 @@ namespace MobileGL::FullServer {
                                            tr == nullptr ? 0 : tr->texture(), &upload, 1);
                 status = 0;
             }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glReadPixels) &&
+                   m_vtable->ReadPixels != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else if (m_ops->OpenSharedMemory == nullptr ||
+                       !m_ops->OpenSharedMemory(m_transport, &responseShm.emplace_back())) {
+                responseShm.clear();
+                status = 1;
+            } else {
+                const auto* rp = command->read_pixels();
+                m_vtable->ReadPixels(m_backend, sessionId,
+                                     rp == nullptr ? 0 : rp->x(),
+                                     rp == nullptr ? 0 : rp->y(),
+                                     rp == nullptr ? 0 : rp->width(),
+                                     rp == nullptr ? 0 : rp->height(),
+                                     rp == nullptr ? 0 : rp->format(),
+                                     rp == nullptr ? 0 : rp->type(),
+                                     responseShm.back().mappedAddress);
+                responseShmCount = 1;
+                status = 0;
+            }
         }
 
         for (auto& handle : receivedShm) {
@@ -520,14 +543,21 @@ namespace MobileGL::FullServer {
         }
         const auto response = MobileGL::Protocol::Wire::CreateResponse(responseBuilder, status,
                                                                        command->token(), dataByte,
-                                                                       syncHandle, responseString);
+                                                                       syncHandle, responseString,
+                                                                       responseShmCount);
         responseBuilder.Finish(response);
 
         MobileGLCommandBatch out{};
         out.structSize = sizeof(MobileGLCommandBatch);
         out.flatBufferData = responseBuilder.GetBufferPointer();
         out.flatBufferSize = static_cast<Uint32>(responseBuilder.GetSize());
-        return m_ops->SubmitCommands(m_transport, &out);
+        out.shmHandleCount = responseShmCount;
+        out.shmHandles = responseShmCount > 0 ? responseShm.data() : nullptr;
+        const Bool submitted = m_ops->SubmitCommands(m_transport, &out);
+        for (auto& handle : responseShm) {
+            m_ops->ReleaseSharedMemory(m_transport, &handle);
+        }
+        return submitted;
     }
 
     void ServerCore::Shutdown() {

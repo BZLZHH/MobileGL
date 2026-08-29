@@ -24,6 +24,7 @@ namespace MobileGL::Client {
         Uint32 s_lastResponseByte = 0;
         Uint64 s_lastResponseSync = 0;
         String s_lastResponseString;
+        Vector<MobileGLShmHandle> s_lastResponseShm;
 
         Bool SendOpcodesOnly(Uint32 opcode, Uint64 sessionId, Uint64 token) {
             if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
@@ -821,6 +822,48 @@ namespace MobileGL::Client {
         return WaitResponseForToken(token, 0);
     }
 
+    Bool SendReadPixels(Uint64 sessionId, int32_t x, int32_t y, int32_t width, int32_t height,
+                        uint32_t format, uint32_t type, void* outPixels, Uint64 outSize,
+                        Uint64 token) {
+        if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
+            s_lastError = "Client is not initialized.";
+            return false;
+        }
+        flatbuffers::FlatBufferBuilder builder;
+        const auto rp = MobileGL::Protocol::Wire::CreateReadPixels(builder, x, y, width, height, format, type);
+        MobileGL::Protocol::Wire::CommandBuilder commandBuilder(builder);
+        commandBuilder.add_opcode(static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glReadPixels));
+        commandBuilder.add_session_id(sessionId);
+        commandBuilder.add_token(token);
+        commandBuilder.add_read_pixels(rp);
+        const auto command = commandBuilder.Finish();
+        const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 0);
+        builder.Finish(message);
+
+        MobileGLCommandBatch batch{};
+        batch.structSize = sizeof(MobileGLCommandBatch);
+        batch.flatBufferData = builder.GetBufferPointer();
+        batch.flatBufferSize = static_cast<Uint32>(builder.GetSize());
+        if (!s_ops->SubmitCommands(s_transport, &batch)) {
+            s_lastError = s_ops->GetLastError(s_transport);
+            return false;
+        }
+        if (!WaitResponseForToken(token, 0)) {
+            return false;
+        }
+        if (s_lastResponseShm.empty() || s_lastResponseShm[0].mappedAddress == nullptr) {
+            s_lastError = "Response did not carry pixel data.";
+            return false;
+        }
+        const Uint64 available = s_lastResponseShm[0].size;
+        if (outPixels == nullptr || outSize > available) {
+            s_lastError = "Pixel buffer too small for server response.";
+            return false;
+        }
+        Memcpy(outPixels, s_lastResponseShm[0].mappedAddress, static_cast<SizeT>(outSize));
+        return true;
+    }
+
     Bool SubmitCommand(Uint32 sessionId, Uint32 opcode, Uint64 token) {
         return SubmitDataCommand(sessionId, opcode, token, 0, 0, nullptr);
     }
@@ -884,6 +927,12 @@ namespace MobileGL::Client {
             s_lastError = "Client is not initialized.";
             return false;
         }
+        for (auto& handle : s_lastResponseShm) {
+            if (s_ops->ReleaseSharedMemory != nullptr) {
+                s_ops->ReleaseSharedMemory(s_transport, &handle);
+            }
+        }
+        s_lastResponseShm.clear();
 
         MobileGLResponseQueue response{};
         if (!s_ops->WaitResponses(s_transport, &response, timeoutMs)) {
@@ -907,6 +956,12 @@ namespace MobileGL::Client {
             s_lastResponseString = parsed->string_value()->str();
         } else {
             s_lastResponseString.clear();
+        }
+        if (response.shmHandleCount > 0 && response.shmHandles != nullptr) {
+            s_lastResponseShm.reserve(response.shmHandleCount);
+            for (Uint32 i = 0; i < response.shmHandleCount; ++i) {
+                s_lastResponseShm.push_back(response.shmHandles[i]);
+            }
         }
         s_lastError.clear();
         return parsed->status() == 0;
@@ -932,6 +987,12 @@ namespace MobileGL::Client {
     }
 
     void Shutdown() {
+        for (auto& handle : s_lastResponseShm) {
+            if (s_ops != nullptr && s_ops->ReleaseSharedMemory != nullptr) {
+                s_ops->ReleaseSharedMemory(s_transport, &handle);
+            }
+        }
+        s_lastResponseShm.clear();
         if (s_transport != nullptr && s_ownsTransport) {
             Transport::DestroyLocalSocketShmTransport(s_transport);
         }

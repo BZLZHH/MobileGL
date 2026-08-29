@@ -59,8 +59,15 @@ class Response(object):
             return self._tab.String(o + self._tab.Pos)
         return None
 
+    # Response
+    def RetShmCount(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Uint32Flags, o + self._tab.Pos)
+        return 0
+
 def ResponseStart(builder):
-    builder.StartObject(5)
+    builder.StartObject(6)
 
 def Start(builder):
     ResponseStart(builder)
@@ -94,6 +101,12 @@ def ResponseAddStringValue(builder, stringValue):
 
 def AddStringValue(builder, stringValue):
     ResponseAddStringValue(builder, stringValue)
+
+def ResponseAddRetShmCount(builder, retShmCount):
+    builder.PrependUint32Slot(5, retShmCount, 0)
+
+def AddRetShmCount(builder, retShmCount):
+    ResponseAddRetShmCount(builder, retShmCount)
 
 def ResponseEnd(builder):
     return builder.EndObject()

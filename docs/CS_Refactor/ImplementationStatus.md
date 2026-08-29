@@ -1,8 +1,8 @@
 # C/S Refactor Implementation Status
 
-> 更新：Phase 0-2 完成；Phase 3 后端迁移未完成（插件仍为 null 存根）；Phase 4 大部分完成（24 类 C/S 命令，含 shm 零拷贝 / 句柄闭环）；Phase 5 插件链路已通；Phase 6 部分完成（全量 ctest 1428/1428，基准已跑）。
+> 更新：Phase 0-2 完成；Phase 3 DirectGLES 真实 BFA 插件已接入（EGL/GLES 自包含，24+ 类命令真实 entry point）；Phase 4 覆盖 24 类原始命令 + BufferRespecify/Indirect/GetString/TextureRespecify/ReadPixels（含服务端→客户端 shm 回读）；Phase 5 插件链路已通；Phase 6 真实 EGL/GLES 平台初验（NVIDIA 驱动）。
 > 分支：`Feat/cs-refactor`（从 `dev@81b17c0` 创建）
-> 最新 HEAD：`2ae39c3d [Docs] (All): Record 1428/1428 ctest unit pass.`（工作区干净）
+> 最新 HEAD：`a235f3c1 [Feat] (MG_Protocol, MG_Client, MG_FullServer, DirectGLES): Add BufferRespecify, indirect draws, GetString and TextureRespecify C/S commands.`（ReadPixels 提交前）
 > 首次提交：`9be8bcff [Feat] (All): Add C/S refactor Phase 0-5 scaffolding and state/handle registry.`
 > 源码目录约定：新 C/S 模块统一使用项目原有的 `MG_*` 前缀（`MG_Protocol` / `MG_Client` / `MG_FullServer` / `MG_Transport` / `MG_UtilRuntime`），保持 `MobileGL/` 下模块分层一致。
 
@@ -13,7 +13,7 @@
 - C/S 目标编译通过：`libMobileGL_FullServer.so`（链接 `libMobileGL_MG_FullServerCore.a`）、`libMobileGL_Client.so`、`libMobileGL_UtilRuntime.so`、`BackendObject_DirectGLES.so`、`BackendObject_DirectVulkan.so`、`libMobileGL_Transport.a` ✅
 - 单元测试：`ContextRegistryTest` 5/5、`HandleRegistryTest` 5/5 通过 ✅
 - **目录重构后全量验证**：C/S 目标与全部相关测试重编译通过；`SanityTest` 82/82、`InProcessTransportTest` 1/1、`BigServerE2ETest` 1/1 通过；`libMobileGL_FullServer.so` 构建成功
-- **全量 ctest（unit）**：1428/1428 通过（3 skipped）✅（含 ClientDrawRangeElements 等新测试）
+- **全量 ctest（unit）**：1434/1434 通过（3 skipped）✅（含 BufferRespecify / Indirect / GetString / TextureRespecify / ReadPixels 服务端→客户端 shm 新测试）
 - 第二次构建（共享 Buffer 表迁移后）：`BufferState` 委托 group 级 `SharedBufferObjectTable`，跨 session 可见性测试通过 ✅
 
 ## Phase 0 — 契约定稿 ✅
@@ -105,7 +105,8 @@
 - [x] **间接绘制 shm 通路**：wire 增加 `DrawArraysIndirect` / `DrawElementsIndirect`（shm_offset）；`Client::SendDrawArraysIndirect/SendDrawElementsIndirect`；`ServerCore` 解包 shm 指针后调 BFA `DrawArraysIndirect/DrawElementsIndirect`；`ClientIndirectDrawsTest` 2/2 通过（mode/type/offset 处首字节精确回查）
 - [x] **GetString 字符串返回**：wire `Response` 增加 `string_value`；`Client::SendGetString` + `GetLastResponseString`；`ServerCore` 调 BFA `GetRendererInfo` 并按 `GL_VENDOR/GL_RENDERER/GL_VERSION/GL_SHADING_LANGUAGE_VERSION` 回填；`ClientGetStringTest` 4 项字符串精确校验 1/1 通过
 - [x] **TextureRespecify 单级上传**：wire 增加 `TextureRespecify{texture,level,format,type,width,height,depth,data_size}`；`Client::SendTextureRespecify`（shm 像素数据）；`ServerCore` 组装 `MobileGLTextureUpload` 调 BFA；真实插件懒建 GL 纹理名并调 `glTexImage2D/3D`；`ClientTextureRespecifyTest` 1/1 通过
-- [ ] TextureSubImage / ReadPixels / Map-Unmap / shm 服务端→客户端回读（下一轮）
+- [x] **ReadPixels 服务端→客户端 shm 回读**：wire `Response` 增加 `ret_shm_count`；`LocalSocketShmTransport::WaitResponses` 按 count 接收 SCM_RIGHTS shm fd；`ServerCore` 在 ReadPixels 分支 `OpenSharedMemory` 分配 arena、BFA 回填、`SubmitCommands` 携带 handle；`Client::SendReadPixels` 从响应 handle 拷回像素；`ClientReadPixelsTest` 1/1 通过（0xDEADBEEF 精确回查）
+- [ ] TextureSubImage / Map-Unmap / 批量零拷贝（下一轮）
 - [x] **Token 透传**：`Command.token` / `Response.token`；`Client::SendCommand` 校验回显 token；Python 跨进程 E2E 仍 status=0
 - [x] **shm payload 回读**：`ClientShmPayloadTest` 已验证（0xAB 写入 → fd → server 读回 → data_byte=0xAB）
 - [x] **会话生命周期**：`control.h` 定义 `SessionCreate/Destroy` 控制 opcode；`Client::SubmitSessionControl` + `ServerCore` 调 `OnSessionCreated/OnSessionDestroyed`；ServerCore 维护 live-session 集合，destroy 后同一 session 命令被拒绝（status!=0）；`ClientSessionLifecycleTest` 1/1 通过

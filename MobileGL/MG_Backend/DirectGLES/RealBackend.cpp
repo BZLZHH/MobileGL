@@ -165,6 +165,7 @@ namespace {
         MOBILEGL_LOAD_GLES(glDispatchCompute);
         MOBILEGL_LOAD_GLES(glDispatchComputeIndirect);
         MOBILEGL_LOAD_GLES(glBlitFramebuffer);
+        MOBILEGL_LOAD_GLES(glReadPixels);
         MOBILEGL_LOAD_GLES(glTexImage2D);
         MOBILEGL_LOAD_GLES(glTexImage3D);
         MOBILEGL_LOAD_GLES(glGenTextures);
@@ -937,6 +938,16 @@ namespace {
                                       static_cast<GLbitfield>(mask), static_cast<GLenum>(filter));
     }
 
+    void ReadPixelsBackend(MobileGLBackend* backend, MobileGLSessionId session, int32_t x, int32_t y,
+                           int32_t width, int32_t height, uint32_t format, uint32_t type, void* pixels) {
+        const std::lock_guard<std::recursive_mutex> lock(backend->Mutex);
+        if (!EnsureCurrent(backend, session) || backend->Gl.glReadPixels == nullptr || pixels == nullptr) {
+            return;
+        }
+        backend->Gl.glReadPixels(x, y, width, height, static_cast<GLenum>(format),
+                                 static_cast<GLenum>(type), pixels);
+    }
+
     void BeginTransformFeedbackBackend(MobileGLBackend* backend, MobileGLSessionId session, uint32_t primitiveMode) {
         const std::lock_guard<std::recursive_mutex> lock(backend->Mutex);
         if (!EnsureCurrent(backend, session) || backend->Gl.glBeginTransformFeedback == nullptr) {
@@ -1093,6 +1104,7 @@ namespace {
         .ClearColor = &ClearColorBackend,
         .BlitFramebuffer = &BlitFramebufferBackend,
         .GenerateMipmap = &GenerateMipmapBackend,
+        .ReadPixels = &ReadPixelsBackend,
         .DispatchCompute = &DispatchComputeBackend,
         .DispatchComputeIndirect = &DispatchComputeIndirectBackend,
         .MemoryBarrier = &MemoryBarrierBackend,
