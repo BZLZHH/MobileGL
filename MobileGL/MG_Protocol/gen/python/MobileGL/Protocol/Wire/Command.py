@@ -452,8 +452,52 @@ class Command(object):
             return obj
         return None
 
+    # Command
+    def ClientWaitSync(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(84))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from MobileGL.Protocol.Wire.ClientWaitSync import ClientWaitSync
+            obj = ClientWaitSync()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # Command
+    def BeginTimeElapsedQuery(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(86))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from MobileGL.Protocol.Wire.BeginTimeElapsedQuery import BeginTimeElapsedQuery
+            obj = BeginTimeElapsedQuery()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # Command
+    def EndTimeElapsedQuery(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(88))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from MobileGL.Protocol.Wire.EndTimeElapsedQuery import EndTimeElapsedQuery
+            obj = EndTimeElapsedQuery()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # Command
+    def DeleteBackendQuery(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(90))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from MobileGL.Protocol.Wire.DeleteBackendQuery import DeleteBackendQuery
+            obj = DeleteBackendQuery()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
 def CommandStart(builder):
-    builder.StartObject(40)
+    builder.StartObject(44)
 
 def Start(builder):
     CommandStart(builder)
@@ -697,6 +741,30 @@ def CommandAddEglResizeSurface(builder, eglResizeSurface):
 
 def AddEglResizeSurface(builder, eglResizeSurface):
     CommandAddEglResizeSurface(builder, eglResizeSurface)
+
+def CommandAddClientWaitSync(builder, clientWaitSync):
+    builder.PrependUOffsetTRelativeSlot(40, flatbuffers.number_types.UOffsetTFlags.py_type(clientWaitSync), 0)
+
+def AddClientWaitSync(builder, clientWaitSync):
+    CommandAddClientWaitSync(builder, clientWaitSync)
+
+def CommandAddBeginTimeElapsedQuery(builder, beginTimeElapsedQuery):
+    builder.PrependUOffsetTRelativeSlot(41, flatbuffers.number_types.UOffsetTFlags.py_type(beginTimeElapsedQuery), 0)
+
+def AddBeginTimeElapsedQuery(builder, beginTimeElapsedQuery):
+    CommandAddBeginTimeElapsedQuery(builder, beginTimeElapsedQuery)
+
+def CommandAddEndTimeElapsedQuery(builder, endTimeElapsedQuery):
+    builder.PrependUOffsetTRelativeSlot(42, flatbuffers.number_types.UOffsetTFlags.py_type(endTimeElapsedQuery), 0)
+
+def AddEndTimeElapsedQuery(builder, endTimeElapsedQuery):
+    CommandAddEndTimeElapsedQuery(builder, endTimeElapsedQuery)
+
+def CommandAddDeleteBackendQuery(builder, deleteBackendQuery):
+    builder.PrependUOffsetTRelativeSlot(43, flatbuffers.number_types.UOffsetTFlags.py_type(deleteBackendQuery), 0)
+
+def AddDeleteBackendQuery(builder, deleteBackendQuery):
+    CommandAddDeleteBackendQuery(builder, deleteBackendQuery)
 
 def CommandEnd(builder):
     return builder.EndObject()

@@ -234,6 +234,23 @@ table EglResizeSurface {
     height: uint;
 }
 
+table ClientWaitSync {
+    sync: ulong;
+    flags: uint;
+    timeout: ulong;
+}
+
+table BeginTimeElapsedQuery {
+}
+
+table EndTimeElapsedQuery {
+    query: ulong;
+}
+
+table DeleteBackendQuery {
+    query: ulong;
+}
+
 table DataBlob {
     offset: ulong;
     size: ulong;
@@ -280,6 +297,10 @@ table Command {
     egl_make_current: EglMakeCurrent;
     egl_swap_interval: EglSwapInterval;
     egl_resize_surface: EglResizeSurface;
+    client_wait_sync: ClientWaitSync;
+    begin_time_elapsed_query: BeginTimeElapsedQuery;
+    end_time_elapsed_query: EndTimeElapsedQuery;
+    delete_backend_query: DeleteBackendQuery;
 }
 
 table Message {

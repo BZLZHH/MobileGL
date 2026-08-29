@@ -125,6 +125,18 @@ struct EglSwapIntervalBuilder;
 struct EglResizeSurface;
 struct EglResizeSurfaceBuilder;
 
+struct ClientWaitSync;
+struct ClientWaitSyncBuilder;
+
+struct BeginTimeElapsedQuery;
+struct BeginTimeElapsedQueryBuilder;
+
+struct EndTimeElapsedQuery;
+struct EndTimeElapsedQueryBuilder;
+
+struct DeleteBackendQuery;
+struct DeleteBackendQueryBuilder;
+
 struct DataBlob;
 struct DataBlobBuilder;
 
@@ -2439,6 +2451,182 @@ inline ::flatbuffers::Offset<EglResizeSurface> CreateEglResizeSurface(
   return builder_.Finish();
 }
 
+struct ClientWaitSync FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ClientWaitSyncBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_SYNC = 4,
+    VT_FLAGS = 6,
+    VT_TIMEOUT = 8
+  };
+  uint64_t sync() const {
+    return GetField<uint64_t>(VT_SYNC, 0);
+  }
+  uint32_t flags() const {
+    return GetField<uint32_t>(VT_FLAGS, 0);
+  }
+  uint64_t timeout() const {
+    return GetField<uint64_t>(VT_TIMEOUT, 0);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint64_t>(verifier, VT_SYNC, 8) &&
+           VerifyField<uint32_t>(verifier, VT_FLAGS, 4) &&
+           VerifyField<uint64_t>(verifier, VT_TIMEOUT, 8) &&
+           verifier.EndTable();
+  }
+};
+
+struct ClientWaitSyncBuilder {
+  typedef ClientWaitSync Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_sync(uint64_t sync) {
+    fbb_.AddElement<uint64_t>(ClientWaitSync::VT_SYNC, sync, 0);
+  }
+  void add_flags(uint32_t flags) {
+    fbb_.AddElement<uint32_t>(ClientWaitSync::VT_FLAGS, flags, 0);
+  }
+  void add_timeout(uint64_t timeout) {
+    fbb_.AddElement<uint64_t>(ClientWaitSync::VT_TIMEOUT, timeout, 0);
+  }
+  explicit ClientWaitSyncBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<ClientWaitSync> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<ClientWaitSync>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<ClientWaitSync> CreateClientWaitSync(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint64_t sync = 0,
+    uint32_t flags = 0,
+    uint64_t timeout = 0) {
+  ClientWaitSyncBuilder builder_(_fbb);
+  builder_.add_timeout(timeout);
+  builder_.add_sync(sync);
+  builder_.add_flags(flags);
+  return builder_.Finish();
+}
+
+struct BeginTimeElapsedQuery FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef BeginTimeElapsedQueryBuilder Builder;
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           verifier.EndTable();
+  }
+};
+
+struct BeginTimeElapsedQueryBuilder {
+  typedef BeginTimeElapsedQuery Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  explicit BeginTimeElapsedQueryBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<BeginTimeElapsedQuery> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<BeginTimeElapsedQuery>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<BeginTimeElapsedQuery> CreateBeginTimeElapsedQuery(
+    ::flatbuffers::FlatBufferBuilder &_fbb) {
+  BeginTimeElapsedQueryBuilder builder_(_fbb);
+  return builder_.Finish();
+}
+
+struct EndTimeElapsedQuery FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef EndTimeElapsedQueryBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_QUERY = 4
+  };
+  uint64_t query() const {
+    return GetField<uint64_t>(VT_QUERY, 0);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint64_t>(verifier, VT_QUERY, 8) &&
+           verifier.EndTable();
+  }
+};
+
+struct EndTimeElapsedQueryBuilder {
+  typedef EndTimeElapsedQuery Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_query(uint64_t query) {
+    fbb_.AddElement<uint64_t>(EndTimeElapsedQuery::VT_QUERY, query, 0);
+  }
+  explicit EndTimeElapsedQueryBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<EndTimeElapsedQuery> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<EndTimeElapsedQuery>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<EndTimeElapsedQuery> CreateEndTimeElapsedQuery(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint64_t query = 0) {
+  EndTimeElapsedQueryBuilder builder_(_fbb);
+  builder_.add_query(query);
+  return builder_.Finish();
+}
+
+struct DeleteBackendQuery FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef DeleteBackendQueryBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_QUERY = 4
+  };
+  uint64_t query() const {
+    return GetField<uint64_t>(VT_QUERY, 0);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint64_t>(verifier, VT_QUERY, 8) &&
+           verifier.EndTable();
+  }
+};
+
+struct DeleteBackendQueryBuilder {
+  typedef DeleteBackendQuery Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_query(uint64_t query) {
+    fbb_.AddElement<uint64_t>(DeleteBackendQuery::VT_QUERY, query, 0);
+  }
+  explicit DeleteBackendQueryBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<DeleteBackendQuery> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<DeleteBackendQuery>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<DeleteBackendQuery> CreateDeleteBackendQuery(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint64_t query = 0) {
+  DeleteBackendQueryBuilder builder_(_fbb);
+  builder_.add_query(query);
+  return builder_.Finish();
+}
+
 struct DataBlob FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef DataBlobBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
@@ -2533,7 +2721,11 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_EGL_DESTROY_SURFACE = 76,
     VT_EGL_MAKE_CURRENT = 78,
     VT_EGL_SWAP_INTERVAL = 80,
-    VT_EGL_RESIZE_SURFACE = 82
+    VT_EGL_RESIZE_SURFACE = 82,
+    VT_CLIENT_WAIT_SYNC = 84,
+    VT_BEGIN_TIME_ELAPSED_QUERY = 86,
+    VT_END_TIME_ELAPSED_QUERY = 88,
+    VT_DELETE_BACKEND_QUERY = 90
   };
   uint32_t opcode() const {
     return GetField<uint32_t>(VT_OPCODE, 0);
@@ -2655,6 +2847,18 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   const MobileGL::Protocol::Wire::EglResizeSurface *egl_resize_surface() const {
     return GetPointer<const MobileGL::Protocol::Wire::EglResizeSurface *>(VT_EGL_RESIZE_SURFACE);
   }
+  const MobileGL::Protocol::Wire::ClientWaitSync *client_wait_sync() const {
+    return GetPointer<const MobileGL::Protocol::Wire::ClientWaitSync *>(VT_CLIENT_WAIT_SYNC);
+  }
+  const MobileGL::Protocol::Wire::BeginTimeElapsedQuery *begin_time_elapsed_query() const {
+    return GetPointer<const MobileGL::Protocol::Wire::BeginTimeElapsedQuery *>(VT_BEGIN_TIME_ELAPSED_QUERY);
+  }
+  const MobileGL::Protocol::Wire::EndTimeElapsedQuery *end_time_elapsed_query() const {
+    return GetPointer<const MobileGL::Protocol::Wire::EndTimeElapsedQuery *>(VT_END_TIME_ELAPSED_QUERY);
+  }
+  const MobileGL::Protocol::Wire::DeleteBackendQuery *delete_backend_query() const {
+    return GetPointer<const MobileGL::Protocol::Wire::DeleteBackendQuery *>(VT_DELETE_BACKEND_QUERY);
+  }
   template <bool B = false>
   bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -2735,6 +2939,14 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            verifier.VerifyTable(egl_swap_interval()) &&
            VerifyOffset(verifier, VT_EGL_RESIZE_SURFACE) &&
            verifier.VerifyTable(egl_resize_surface()) &&
+           VerifyOffset(verifier, VT_CLIENT_WAIT_SYNC) &&
+           verifier.VerifyTable(client_wait_sync()) &&
+           VerifyOffset(verifier, VT_BEGIN_TIME_ELAPSED_QUERY) &&
+           verifier.VerifyTable(begin_time_elapsed_query()) &&
+           VerifyOffset(verifier, VT_END_TIME_ELAPSED_QUERY) &&
+           verifier.VerifyTable(end_time_elapsed_query()) &&
+           VerifyOffset(verifier, VT_DELETE_BACKEND_QUERY) &&
+           verifier.VerifyTable(delete_backend_query()) &&
            verifier.EndTable();
   }
 };
@@ -2863,6 +3075,18 @@ struct CommandBuilder {
   void add_egl_resize_surface(::flatbuffers::Offset<MobileGL::Protocol::Wire::EglResizeSurface> egl_resize_surface) {
     fbb_.AddOffset(Command::VT_EGL_RESIZE_SURFACE, egl_resize_surface);
   }
+  void add_client_wait_sync(::flatbuffers::Offset<MobileGL::Protocol::Wire::ClientWaitSync> client_wait_sync) {
+    fbb_.AddOffset(Command::VT_CLIENT_WAIT_SYNC, client_wait_sync);
+  }
+  void add_begin_time_elapsed_query(::flatbuffers::Offset<MobileGL::Protocol::Wire::BeginTimeElapsedQuery> begin_time_elapsed_query) {
+    fbb_.AddOffset(Command::VT_BEGIN_TIME_ELAPSED_QUERY, begin_time_elapsed_query);
+  }
+  void add_end_time_elapsed_query(::flatbuffers::Offset<MobileGL::Protocol::Wire::EndTimeElapsedQuery> end_time_elapsed_query) {
+    fbb_.AddOffset(Command::VT_END_TIME_ELAPSED_QUERY, end_time_elapsed_query);
+  }
+  void add_delete_backend_query(::flatbuffers::Offset<MobileGL::Protocol::Wire::DeleteBackendQuery> delete_backend_query) {
+    fbb_.AddOffset(Command::VT_DELETE_BACKEND_QUERY, delete_backend_query);
+  }
   explicit CommandBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -2915,10 +3139,18 @@ inline ::flatbuffers::Offset<Command> CreateCommand(
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::EglDestroySurface> egl_destroy_surface = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::EglMakeCurrent> egl_make_current = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::EglSwapInterval> egl_swap_interval = 0,
-    ::flatbuffers::Offset<MobileGL::Protocol::Wire::EglResizeSurface> egl_resize_surface = 0) {
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::EglResizeSurface> egl_resize_surface = 0,
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::ClientWaitSync> client_wait_sync = 0,
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::BeginTimeElapsedQuery> begin_time_elapsed_query = 0,
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::EndTimeElapsedQuery> end_time_elapsed_query = 0,
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::DeleteBackendQuery> delete_backend_query = 0) {
   CommandBuilder builder_(_fbb);
   builder_.add_token(token);
   builder_.add_session_id(session_id);
+  builder_.add_delete_backend_query(delete_backend_query);
+  builder_.add_end_time_elapsed_query(end_time_elapsed_query);
+  builder_.add_begin_time_elapsed_query(begin_time_elapsed_query);
+  builder_.add_client_wait_sync(client_wait_sync);
   builder_.add_egl_resize_surface(egl_resize_surface);
   builder_.add_egl_swap_interval(egl_swap_interval);
   builder_.add_egl_make_current(egl_make_current);

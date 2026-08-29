@@ -100,6 +100,15 @@ namespace MobileGL::Client {
     Bool SendWaitSync(Uint64 sessionId, uint64_t sync, uint32_t flags, uint64_t timeout,
                       Uint64 token);
 
+    // Sends a glClientWaitSync command; returns the backend result code.
+    Bool SendClientWaitSync(Uint64 sessionId, uint64_t sync, uint32_t flags, uint64_t timeout,
+                            Uint64 token, uint32_t* outResult);
+
+    // Sends time-elapsed query lifecycle commands.
+    Bool SendBeginTimeElapsedQuery(Uint64 sessionId, Uint64 token, uint64_t* outHandle);
+    Bool SendEndTimeElapsedQuery(Uint64 sessionId, uint64_t query, Uint64 token);
+    Bool SendDeleteBackendQuery(Uint64 sessionId, uint64_t query, Uint64 token);
+
     // Sends a typed glDrawArraysInstanced command (awaits response).
     Bool SendDrawArraysInstanced(Uint64 sessionId, uint32_t mode, int32_t first, int32_t count,
                                  int32_t primcount, Uint64 token);

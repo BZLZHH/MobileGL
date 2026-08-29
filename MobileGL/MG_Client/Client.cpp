@@ -53,6 +53,22 @@ namespace MobileGL::Client {
             }
             return WaitResponseForToken(token, 0);
         }
+
+        Bool SubmitFlatBuffer(const uint8_t* data, Uint32 size, Uint64 token) {
+            if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
+                s_lastError = "Client is not initialized.";
+                return false;
+            }
+            MobileGLCommandBatch batch{};
+            batch.structSize = sizeof(MobileGLCommandBatch);
+            batch.flatBufferData = const_cast<uint8_t*>(data);
+            batch.flatBufferSize = size;
+            if (!s_ops->SubmitCommands(s_transport, &batch)) {
+                s_lastError = s_ops->GetLastError(s_transport);
+                return false;
+            }
+            return WaitResponseForToken(token, 0);
+        }
     } // namespace
 
     Bool Initialize(const ClientConfig& config) {
@@ -580,6 +596,82 @@ namespace MobileGL::Client {
             return false;
         }
         return WaitResponseForToken(token, 0);
+    }
+
+    Bool SendClientWaitSync(Uint64 sessionId, uint64_t sync, uint32_t flags, uint64_t timeout,
+                            Uint64 token, uint32_t* outResult) {
+        if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
+            s_lastError = "Client is not initialized.";
+            return false;
+        }
+        flatbuffers::FlatBufferBuilder builder;
+        const auto cws = MobileGL::Protocol::Wire::CreateClientWaitSync(builder, sync, flags, timeout);
+        MobileGL::Protocol::Wire::CommandBuilder cb(builder);
+        cb.add_opcode(static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glClientWaitSync));
+        cb.add_session_id(sessionId);
+        cb.add_token(token);
+        cb.add_client_wait_sync(cws);
+        const auto command = cb.Finish();
+        const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 0);
+        builder.Finish(message);
+        if (!SubmitFlatBuffer(builder.GetBufferPointer(), static_cast<Uint32>(builder.GetSize()),
+                              token)) {
+            return false;
+        }
+        if (outResult != nullptr) {
+            *outResult = static_cast<uint32_t>(GetLastResponseSync());
+        }
+        return true;
+    }
+
+    Bool SendBeginTimeElapsedQuery(Uint64 sessionId, Uint64 token, uint64_t* outHandle) {
+        if (!SendOpcodesOnly(
+                static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glBeginQueryIndexed),
+                sessionId, token)) {
+            return false;
+        }
+        if (outHandle != nullptr) {
+            *outHandle = GetLastResponseSync();
+        }
+        return true;
+    }
+
+    Bool SendEndTimeElapsedQuery(Uint64 sessionId, uint64_t query, Uint64 token) {
+        if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
+            s_lastError = "Client is not initialized.";
+            return false;
+        }
+        flatbuffers::FlatBufferBuilder builder;
+        const auto eq = MobileGL::Protocol::Wire::CreateEndTimeElapsedQuery(builder, query);
+        MobileGL::Protocol::Wire::CommandBuilder cb(builder);
+        cb.add_opcode(static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glEndQueryIndexed));
+        cb.add_session_id(sessionId);
+        cb.add_token(token);
+        cb.add_end_time_elapsed_query(eq);
+        const auto command = cb.Finish();
+        const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 0);
+        builder.Finish(message);
+        return SubmitFlatBuffer(builder.GetBufferPointer(), static_cast<Uint32>(builder.GetSize()),
+                                token);
+    }
+
+    Bool SendDeleteBackendQuery(Uint64 sessionId, uint64_t query, Uint64 token) {
+        if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
+            s_lastError = "Client is not initialized.";
+            return false;
+        }
+        flatbuffers::FlatBufferBuilder builder;
+        const auto dq = MobileGL::Protocol::Wire::CreateDeleteBackendQuery(builder, query);
+        MobileGL::Protocol::Wire::CommandBuilder cb(builder);
+        cb.add_opcode(static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glDeleteQueries));
+        cb.add_session_id(sessionId);
+        cb.add_token(token);
+        cb.add_delete_backend_query(dq);
+        const auto command = cb.Finish();
+        const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 0);
+        builder.Finish(message);
+        return SubmitFlatBuffer(builder.GetBufferPointer(), static_cast<Uint32>(builder.GetSize()),
+                                token);
     }
 
     Bool SendDrawArraysInstanced(Uint64 sessionId, uint32_t mode, int32_t first, int32_t count,

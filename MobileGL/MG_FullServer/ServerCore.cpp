@@ -354,6 +354,48 @@ namespace MobileGL::FullServer {
                                    ws == nullptr ? 0 : ws->timeout());
                 status = 0;
             }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glClientWaitSync) &&
+                   m_vtable->ClientWaitSync != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else {
+                const auto* cws = command->client_wait_sync();
+                syncHandle = m_vtable->ClientWaitSync(
+                    m_backend, sessionId,
+                    reinterpret_cast<void*>(cws == nullptr ? 0 : cws->sync()),
+                    cws == nullptr ? 0 : cws->flags(),
+                    cws == nullptr ? 0 : cws->timeout());
+                status = 0;
+            }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glBeginQueryIndexed) &&
+                   m_vtable->BeginTimeElapsedQuery != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else {
+                syncHandle = reinterpret_cast<uint64_t>(
+                    m_vtable->BeginTimeElapsedQuery(m_backend, sessionId));
+                status = 0;
+            }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glEndQueryIndexed) &&
+                   m_vtable->EndTimeElapsedQuery != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else {
+                const auto* eq = command->end_time_elapsed_query();
+                m_vtable->EndTimeElapsedQuery(m_backend, sessionId,
+                                              reinterpret_cast<void*>(eq == nullptr ? 0 : eq->query()));
+                status = 0;
+            }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glDeleteQueries) &&
+                   m_vtable->DeleteBackendQuery != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else {
+                const auto* dq = command->delete_backend_query();
+                m_vtable->DeleteBackendQuery(m_backend, sessionId,
+                                             reinterpret_cast<void*>(dq == nullptr ? 0 : dq->query()));
+                status = 0;
+            }
         } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glDrawArraysInstanced) &&
                    m_vtable->DrawArraysInstanced != nullptr) {
             if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
