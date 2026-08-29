@@ -92,9 +92,10 @@ int main(int argc, char** argv) {
 
     const uint32_t commandsPerIteration = useBatch ? batchSize : 1;
     const uint32_t totalCommands = iterations * commandsPerIteration;
+    const uint32_t totalServerCalls = useBatch ? iterations + 1 : totalCommands + 1;
     bool serverOk = false;
     std::thread serverThread([&] {
-        for (uint32_t i = 0; i < totalCommands + 1; ++i) {
+        for (uint32_t i = 0; i < totalServerCalls; ++i) {
             if (!core.ServiceOnce()) return;
         }
         serverOk = true;
@@ -110,15 +111,26 @@ int main(int argc, char** argv) {
     uint64_t nextToken = 1;
     for (uint32_t i = 0; i < iterations; ++i) {
         const auto started = std::chrono::steady_clock::now();
-        for (uint32_t j = 0; j < commandsPerIteration; ++j) {
-            if (!MobileGL::Client::SubmitDataCommand(
-                    static_cast<uint32_t>(sessionId),
+        if (useBatch) {
+            if (!MobileGL::Client::SubmitDataCommandBatch(
+                    sessionId,
                     static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glClear),
-                    nextToken, 0, payloadSize, &shm)) {
-                printf("iteration %u submit failed\n", i);
+                    nextToken, commandsPerIteration, 0, payloadSize, &shm)) {
+                printf("iteration %u batch submit failed\n", i);
                 return 1;
             }
-            ++nextToken;
+            nextToken += commandsPerIteration;
+        } else {
+            for (uint32_t j = 0; j < commandsPerIteration; ++j) {
+                if (!MobileGL::Client::SubmitDataCommand(
+                        static_cast<uint32_t>(sessionId),
+                        static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glClear),
+                        nextToken, 0, payloadSize, &shm)) {
+                    printf("iteration %u submit failed\n", i);
+                    return 1;
+                }
+                ++nextToken;
+            }
         }
         for (uint32_t j = 0; j < commandsPerIteration; ++j) {
             const uint64_t token = nextToken - commandsPerIteration + j;

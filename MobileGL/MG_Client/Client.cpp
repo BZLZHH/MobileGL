@@ -1431,6 +1431,51 @@ namespace MobileGL::Client {
         return SubmitDataCommand(sessionId, opcode, token, 0, 0, nullptr);
     }
 
+    Bool SubmitDataCommandBatch(Uint64 sessionId, Uint32 opcode, Uint64 tokenBase,
+                                Uint32 count, Uint64 shmOffset, Uint64 shmSize,
+                                MobileGLShmHandle* shm) {
+        if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
+            s_lastError = "Client is not initialized.";
+            return false;
+        }
+        if (count == 0) {
+            return true;
+        }
+        for (Uint32 i = 0; i < count; ++i) {
+            RegisterToken(tokenBase + i, sessionId);
+        }
+
+        flatbuffers::FlatBufferBuilder builder;
+        std::vector<flatbuffers::Offset<MobileGL::Protocol::Wire::Command>> commands;
+        commands.reserve(count);
+        for (Uint32 i = 0; i < count; ++i) {
+            const auto clear = MobileGL::Protocol::Wire::CreateGlClear(builder, 0);
+            flatbuffers::Offset<MobileGL::Protocol::Wire::DataBlob> data = 0;
+            if (shm != nullptr) {
+                data = MobileGL::Protocol::Wire::CreateDataBlob(builder, shmOffset, shmSize);
+            }
+            commands.push_back(MobileGL::Protocol::Wire::CreateCommand(
+                builder, opcode, static_cast<Uint32>(sessionId), tokenBase + i, clear, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, data));
+        }
+        const auto commandVector = builder.CreateVector(commands);
+        const auto message = MobileGL::Protocol::Wire::CreateMessage(
+            builder, 0, shm == nullptr ? 0 : 1, commandVector);
+        builder.Finish(message);
+
+        MobileGLCommandBatch batch{};
+        batch.structSize = sizeof(MobileGLCommandBatch);
+        batch.flatBufferData = builder.GetBufferPointer();
+        batch.flatBufferSize = static_cast<Uint32>(builder.GetSize());
+        batch.shmHandleCount = shm == nullptr ? 0 : 1;
+        batch.shmHandles = shm;
+        if (!s_ops->SubmitCommands(s_transport, &batch)) {
+            s_lastError = s_ops->GetLastError(s_transport);
+            return false;
+        }
+        return true;
+    }
+
     Bool SendWirePayload(Uint64 sessionId, Uint32 opcode, Uint64 token,
                          const uint8_t* payloadBytes, Uint32 payloadSize,
                          MobileGLShmHandle* shm) {

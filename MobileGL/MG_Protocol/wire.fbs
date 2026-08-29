@@ -337,6 +337,7 @@ table Command {
 table Message {
     command: Command;
     shm_count: uint;
+    commands: [Command];
 }
 
 table Response {

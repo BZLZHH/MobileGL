@@ -32,6 +32,13 @@ namespace MobileGL::Client {
     // echoed token matches `token`.
     Bool SendCommand(Uint32 sessionId, Uint32 opcode, Uint64 token = 0);
 
+    // Submits `count` commands in one Message frame (zero-copy batch path).
+    // Tokens tokenBase .. tokenBase+count-1 are registered; the caller drains
+    // them with WaitResponseForToken in the same order.
+    Bool SubmitDataCommandBatch(Uint64 sessionId, Uint32 opcode, Uint64 tokenBase,
+                                Uint32 count, Uint64 shmOffset, Uint64 shmSize,
+                                MobileGLShmHandle* shm);
+
     // Sends a typed glClearColor command (awaits response).
     Bool SendClearColor(Uint64 sessionId, float red, float green, float blue, float alpha,
                         Uint64 token);

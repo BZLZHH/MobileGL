@@ -47,10 +47,15 @@ namespace MobileGL::FullServer {
         }
 
         const auto* message = MobileGL::Protocol::Wire::GetMessage(in.flatBufferData);
-        if (message == nullptr || message->command() == nullptr) {
+        if (message == nullptr) {
             return false;
         }
-        const auto* command = message->command();
+        const auto* primaryCommand = message->command();
+        const bool hasBatch = message->commands() != nullptr && message->commands()->size() > 0;
+        if (primaryCommand == nullptr && !hasBatch) {
+            return false;
+        }
+        const auto* command = primaryCommand != nullptr ? primaryCommand : message->commands()->Get(0);
 
         uint32_t dataByte = 0;
         uint64_t syncHandle = 0;
@@ -76,7 +81,13 @@ namespace MobileGL::FullServer {
             }
         }
 
+        auto processSingle = [&](const MobileGL::Protocol::Wire::Command* command) -> Bool {
         uint32_t status = 1;
+        syncHandle = 0;
+        queryNs = 0;
+        responseStringValue.clear();
+        responseShm.clear();
+        responseShmCount = 0;
         const uint32_t opcode = command->opcode();
         const auto sessionId = static_cast<MobileGLSessionId>(command->session_id());
 
@@ -847,6 +858,20 @@ namespace MobileGL::FullServer {
             m_ops->ReleaseSharedMemory(m_transport, &handle);
         }
         return submitted;
+        }; // lambda processSingle
+
+        // Batch frame: one Message may carry a vector of Command tables. All
+        // commands share the received shm handles and each gets its own
+        // response, so the client can pipeline N commands in one submit.
+        if (message->commands() != nullptr && message->commands()->size() > 0) {
+            for (const auto* cmd : *message->commands()) {
+                if (cmd == nullptr || !processSingle(cmd)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return processSingle(message->command());
     }
 
     void ServerCore::SetSessionListener(SessionListener listener, void* user) {
