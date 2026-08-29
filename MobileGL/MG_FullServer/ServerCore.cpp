@@ -644,6 +644,41 @@ namespace MobileGL::FullServer {
                                             ds == nullptr ? 0 : ds->surface());
                 status = 0;
             }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::eglMakeCurrent) &&
+                   m_vtable->MakeEGLCurrent != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else {
+                const auto* mc = command->egl_make_current();
+                status = m_vtable->MakeEGLCurrent(m_backend, sessionId,
+                                                  mc == nullptr ? 0 : mc->draw(),
+                                                  mc == nullptr ? 0 : mc->read())
+                            ? 0
+                            : 1;
+            }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::eglSwapInterval) &&
+                   m_vtable->SetSwapInterval != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else {
+                const auto* si = command->egl_swap_interval();
+                m_vtable->SetSwapInterval(m_backend, sessionId, si == nullptr ? 0 : si->interval());
+                status = 0;
+            }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::eglSurfaceAttrib) &&
+                   m_vtable->ResizeSurface != nullptr) {
+            const auto* rs = command->egl_resize_surface();
+            const auto displayId = static_cast<MobileGLDisplayId>(rs == nullptr ? 0 : rs->display());
+            if (m_liveDisplays.find(displayId) == m_liveDisplays.end()) {
+                status = 1;
+            } else {
+                status = m_vtable->ResizeSurface(m_backend, displayId,
+                                                 rs == nullptr ? 0 : rs->surface(),
+                                                 rs == nullptr ? 0 : rs->width(),
+                                                 rs == nullptr ? 0 : rs->height())
+                            ? 0
+                            : 1;
+            }
         }
 
         for (auto& handle : receivedShm) {

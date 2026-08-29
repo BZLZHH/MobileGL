@@ -1103,6 +1103,88 @@ namespace MobileGL::Client {
         return WaitResponseForToken(token, 0);
     }
 
+    Bool SendEglMakeCurrent(Uint64 sessionId, uint64_t draw, uint64_t read, Uint64 token) {
+        if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
+            s_lastError = "Client is not initialized.";
+            return false;
+        }
+        flatbuffers::FlatBufferBuilder builder;
+        const auto mc = MobileGL::Protocol::Wire::CreateEglMakeCurrent(builder, sessionId, draw, read);
+        MobileGL::Protocol::Wire::CommandBuilder commandBuilder(builder);
+        commandBuilder.add_opcode(static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::eglMakeCurrent));
+        commandBuilder.add_session_id(sessionId);
+        commandBuilder.add_token(token);
+        commandBuilder.add_egl_make_current(mc);
+        const auto command = commandBuilder.Finish();
+        const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 0);
+        builder.Finish(message);
+
+        MobileGLCommandBatch batch{};
+        batch.structSize = sizeof(MobileGLCommandBatch);
+        batch.flatBufferData = builder.GetBufferPointer();
+        batch.flatBufferSize = static_cast<Uint32>(builder.GetSize());
+        if (!s_ops->SubmitCommands(s_transport, &batch)) {
+            s_lastError = s_ops->GetLastError(s_transport);
+            return false;
+        }
+        return WaitResponseForToken(token, 0);
+    }
+
+    Bool SendEglSetSwapInterval(Uint64 sessionId, int32_t interval, Uint64 token) {
+        if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
+            s_lastError = "Client is not initialized.";
+            return false;
+        }
+        flatbuffers::FlatBufferBuilder builder;
+        const auto si = MobileGL::Protocol::Wire::CreateEglSwapInterval(builder, interval);
+        MobileGL::Protocol::Wire::CommandBuilder commandBuilder(builder);
+        commandBuilder.add_opcode(static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::eglSwapInterval));
+        commandBuilder.add_session_id(sessionId);
+        commandBuilder.add_token(token);
+        commandBuilder.add_egl_swap_interval(si);
+        const auto command = commandBuilder.Finish();
+        const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 0);
+        builder.Finish(message);
+
+        MobileGLCommandBatch batch{};
+        batch.structSize = sizeof(MobileGLCommandBatch);
+        batch.flatBufferData = builder.GetBufferPointer();
+        batch.flatBufferSize = static_cast<Uint32>(builder.GetSize());
+        if (!s_ops->SubmitCommands(s_transport, &batch)) {
+            s_lastError = s_ops->GetLastError(s_transport);
+            return false;
+        }
+        return WaitResponseForToken(token, 0);
+    }
+
+    Bool SendEglResizeSurface(Uint64 displayId, uint64_t surface, uint32_t width,
+                              uint32_t height, Uint64 token) {
+        if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
+            s_lastError = "Client is not initialized.";
+            return false;
+        }
+        flatbuffers::FlatBufferBuilder builder;
+        const auto rs = MobileGL::Protocol::Wire::CreateEglResizeSurface(builder, displayId, surface, width, height);
+        MobileGL::Protocol::Wire::CommandBuilder commandBuilder(builder);
+        commandBuilder.add_opcode(static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::eglSurfaceAttrib));
+        commandBuilder.add_session_id(displayId);
+        commandBuilder.add_token(token);
+        commandBuilder.add_egl_resize_surface(rs);
+        const auto command = commandBuilder.Finish();
+        const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 0);
+        builder.Finish(message);
+
+        MobileGLCommandBatch batch{};
+        batch.structSize = sizeof(MobileGLCommandBatch);
+        batch.flatBufferData = builder.GetBufferPointer();
+        batch.flatBufferSize = static_cast<Uint32>(builder.GetSize());
+        if (!s_ops->SubmitCommands(s_transport, &batch)) {
+            s_lastError = s_ops->GetLastError(s_transport);
+            return false;
+        }
+        return WaitResponseForToken(token, 0);
+    }
+
     Bool SubmitCommand(Uint32 sessionId, Uint32 opcode, Uint64 token) {
         return SubmitDataCommand(sessionId, opcode, token, 0, 0, nullptr);
     }

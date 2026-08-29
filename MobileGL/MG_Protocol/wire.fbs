@@ -217,6 +217,23 @@ table EglDestroySurface {
     surface: ulong;
 }
 
+table EglMakeCurrent {
+    session: ulong;
+    draw: ulong;
+    read: ulong;
+}
+
+table EglSwapInterval {
+    interval: int;
+}
+
+table EglResizeSurface {
+    display: ulong;
+    surface: ulong;
+    width: uint;
+    height: uint;
+}
+
 table DataBlob {
     offset: ulong;
     size: ulong;
@@ -260,6 +277,9 @@ table Command {
     unmap_buffer: UnmapBuffer;
     egl_create_pbuffer_surface: EglCreatePbufferSurface;
     egl_destroy_surface: EglDestroySurface;
+    egl_make_current: EglMakeCurrent;
+    egl_swap_interval: EglSwapInterval;
+    egl_resize_surface: EglResizeSurface;
 }
 
 table Message {

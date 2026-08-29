@@ -419,8 +419,41 @@ class Command(object):
             return obj
         return None
 
+    # Command
+    def EglMakeCurrent(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(78))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from MobileGL.Protocol.Wire.EglMakeCurrent import EglMakeCurrent
+            obj = EglMakeCurrent()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # Command
+    def EglSwapInterval(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(80))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from MobileGL.Protocol.Wire.EglSwapInterval import EglSwapInterval
+            obj = EglSwapInterval()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # Command
+    def EglResizeSurface(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(82))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from MobileGL.Protocol.Wire.EglResizeSurface import EglResizeSurface
+            obj = EglResizeSurface()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
 def CommandStart(builder):
-    builder.StartObject(37)
+    builder.StartObject(40)
 
 def Start(builder):
     CommandStart(builder)
@@ -646,6 +679,24 @@ def CommandAddEglDestroySurface(builder, eglDestroySurface):
 
 def AddEglDestroySurface(builder, eglDestroySurface):
     CommandAddEglDestroySurface(builder, eglDestroySurface)
+
+def CommandAddEglMakeCurrent(builder, eglMakeCurrent):
+    builder.PrependUOffsetTRelativeSlot(37, flatbuffers.number_types.UOffsetTFlags.py_type(eglMakeCurrent), 0)
+
+def AddEglMakeCurrent(builder, eglMakeCurrent):
+    CommandAddEglMakeCurrent(builder, eglMakeCurrent)
+
+def CommandAddEglSwapInterval(builder, eglSwapInterval):
+    builder.PrependUOffsetTRelativeSlot(38, flatbuffers.number_types.UOffsetTFlags.py_type(eglSwapInterval), 0)
+
+def AddEglSwapInterval(builder, eglSwapInterval):
+    CommandAddEglSwapInterval(builder, eglSwapInterval)
+
+def CommandAddEglResizeSurface(builder, eglResizeSurface):
+    builder.PrependUOffsetTRelativeSlot(39, flatbuffers.number_types.UOffsetTFlags.py_type(eglResizeSurface), 0)
+
+def AddEglResizeSurface(builder, eglResizeSurface):
+    CommandAddEglResizeSurface(builder, eglResizeSurface)
 
 def CommandEnd(builder):
     return builder.EndObject()

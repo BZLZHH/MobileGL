@@ -163,6 +163,10 @@ namespace MobileGL::Client {
     Bool SendEglCreatePbufferSurface(Uint64 displayId, uint64_t surface, int32_t width,
                                      int32_t height, Uint64 token);
     Bool SendEglDestroySurface(Uint64 displayId, uint64_t surface, Uint64 token);
+    Bool SendEglMakeCurrent(Uint64 sessionId, uint64_t draw, uint64_t read, Uint64 token);
+    Bool SendEglSetSwapInterval(Uint64 sessionId, int32_t interval, Uint64 token);
+    Bool SendEglResizeSurface(Uint64 displayId, uint64_t surface, uint32_t width,
+                              uint32_t height, Uint64 token);
 
     // Submits a command without waiting for its response.
     Bool SubmitCommand(Uint32 sessionId, Uint32 opcode, Uint64 token);

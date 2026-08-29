@@ -116,6 +116,15 @@ struct EglCreatePbufferSurfaceBuilder;
 struct EglDestroySurface;
 struct EglDestroySurfaceBuilder;
 
+struct EglMakeCurrent;
+struct EglMakeCurrentBuilder;
+
+struct EglSwapInterval;
+struct EglSwapIntervalBuilder;
+
+struct EglResizeSurface;
+struct EglResizeSurfaceBuilder;
+
 struct DataBlob;
 struct DataBlobBuilder;
 
@@ -2254,6 +2263,182 @@ inline ::flatbuffers::Offset<EglDestroySurface> CreateEglDestroySurface(
   return builder_.Finish();
 }
 
+struct EglMakeCurrent FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef EglMakeCurrentBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_SESSION = 4,
+    VT_DRAW = 6,
+    VT_READ = 8
+  };
+  uint64_t session() const {
+    return GetField<uint64_t>(VT_SESSION, 0);
+  }
+  uint64_t draw() const {
+    return GetField<uint64_t>(VT_DRAW, 0);
+  }
+  uint64_t read() const {
+    return GetField<uint64_t>(VT_READ, 0);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint64_t>(verifier, VT_SESSION, 8) &&
+           VerifyField<uint64_t>(verifier, VT_DRAW, 8) &&
+           VerifyField<uint64_t>(verifier, VT_READ, 8) &&
+           verifier.EndTable();
+  }
+};
+
+struct EglMakeCurrentBuilder {
+  typedef EglMakeCurrent Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_session(uint64_t session) {
+    fbb_.AddElement<uint64_t>(EglMakeCurrent::VT_SESSION, session, 0);
+  }
+  void add_draw(uint64_t draw) {
+    fbb_.AddElement<uint64_t>(EglMakeCurrent::VT_DRAW, draw, 0);
+  }
+  void add_read(uint64_t read) {
+    fbb_.AddElement<uint64_t>(EglMakeCurrent::VT_READ, read, 0);
+  }
+  explicit EglMakeCurrentBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<EglMakeCurrent> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<EglMakeCurrent>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<EglMakeCurrent> CreateEglMakeCurrent(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint64_t session = 0,
+    uint64_t draw = 0,
+    uint64_t read = 0) {
+  EglMakeCurrentBuilder builder_(_fbb);
+  builder_.add_read(read);
+  builder_.add_draw(draw);
+  builder_.add_session(session);
+  return builder_.Finish();
+}
+
+struct EglSwapInterval FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef EglSwapIntervalBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_INTERVAL = 4
+  };
+  int32_t interval() const {
+    return GetField<int32_t>(VT_INTERVAL, 0);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<int32_t>(verifier, VT_INTERVAL, 4) &&
+           verifier.EndTable();
+  }
+};
+
+struct EglSwapIntervalBuilder {
+  typedef EglSwapInterval Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_interval(int32_t interval) {
+    fbb_.AddElement<int32_t>(EglSwapInterval::VT_INTERVAL, interval, 0);
+  }
+  explicit EglSwapIntervalBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<EglSwapInterval> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<EglSwapInterval>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<EglSwapInterval> CreateEglSwapInterval(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    int32_t interval = 0) {
+  EglSwapIntervalBuilder builder_(_fbb);
+  builder_.add_interval(interval);
+  return builder_.Finish();
+}
+
+struct EglResizeSurface FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef EglResizeSurfaceBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_DISPLAY = 4,
+    VT_SURFACE = 6,
+    VT_WIDTH = 8,
+    VT_HEIGHT = 10
+  };
+  uint64_t display() const {
+    return GetField<uint64_t>(VT_DISPLAY, 0);
+  }
+  uint64_t surface() const {
+    return GetField<uint64_t>(VT_SURFACE, 0);
+  }
+  uint32_t width() const {
+    return GetField<uint32_t>(VT_WIDTH, 0);
+  }
+  uint32_t height() const {
+    return GetField<uint32_t>(VT_HEIGHT, 0);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint64_t>(verifier, VT_DISPLAY, 8) &&
+           VerifyField<uint64_t>(verifier, VT_SURFACE, 8) &&
+           VerifyField<uint32_t>(verifier, VT_WIDTH, 4) &&
+           VerifyField<uint32_t>(verifier, VT_HEIGHT, 4) &&
+           verifier.EndTable();
+  }
+};
+
+struct EglResizeSurfaceBuilder {
+  typedef EglResizeSurface Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_display(uint64_t display) {
+    fbb_.AddElement<uint64_t>(EglResizeSurface::VT_DISPLAY, display, 0);
+  }
+  void add_surface(uint64_t surface) {
+    fbb_.AddElement<uint64_t>(EglResizeSurface::VT_SURFACE, surface, 0);
+  }
+  void add_width(uint32_t width) {
+    fbb_.AddElement<uint32_t>(EglResizeSurface::VT_WIDTH, width, 0);
+  }
+  void add_height(uint32_t height) {
+    fbb_.AddElement<uint32_t>(EglResizeSurface::VT_HEIGHT, height, 0);
+  }
+  explicit EglResizeSurfaceBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<EglResizeSurface> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<EglResizeSurface>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<EglResizeSurface> CreateEglResizeSurface(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint64_t display = 0,
+    uint64_t surface = 0,
+    uint32_t width = 0,
+    uint32_t height = 0) {
+  EglResizeSurfaceBuilder builder_(_fbb);
+  builder_.add_surface(surface);
+  builder_.add_display(display);
+  builder_.add_height(height);
+  builder_.add_width(width);
+  return builder_.Finish();
+}
+
 struct DataBlob FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef DataBlobBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
@@ -2345,7 +2530,10 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_MAP_BUFFER_RANGE = 70,
     VT_UNMAP_BUFFER = 72,
     VT_EGL_CREATE_PBUFFER_SURFACE = 74,
-    VT_EGL_DESTROY_SURFACE = 76
+    VT_EGL_DESTROY_SURFACE = 76,
+    VT_EGL_MAKE_CURRENT = 78,
+    VT_EGL_SWAP_INTERVAL = 80,
+    VT_EGL_RESIZE_SURFACE = 82
   };
   uint32_t opcode() const {
     return GetField<uint32_t>(VT_OPCODE, 0);
@@ -2458,6 +2646,15 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   const MobileGL::Protocol::Wire::EglDestroySurface *egl_destroy_surface() const {
     return GetPointer<const MobileGL::Protocol::Wire::EglDestroySurface *>(VT_EGL_DESTROY_SURFACE);
   }
+  const MobileGL::Protocol::Wire::EglMakeCurrent *egl_make_current() const {
+    return GetPointer<const MobileGL::Protocol::Wire::EglMakeCurrent *>(VT_EGL_MAKE_CURRENT);
+  }
+  const MobileGL::Protocol::Wire::EglSwapInterval *egl_swap_interval() const {
+    return GetPointer<const MobileGL::Protocol::Wire::EglSwapInterval *>(VT_EGL_SWAP_INTERVAL);
+  }
+  const MobileGL::Protocol::Wire::EglResizeSurface *egl_resize_surface() const {
+    return GetPointer<const MobileGL::Protocol::Wire::EglResizeSurface *>(VT_EGL_RESIZE_SURFACE);
+  }
   template <bool B = false>
   bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -2532,6 +2729,12 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            verifier.VerifyTable(egl_create_pbuffer_surface()) &&
            VerifyOffset(verifier, VT_EGL_DESTROY_SURFACE) &&
            verifier.VerifyTable(egl_destroy_surface()) &&
+           VerifyOffset(verifier, VT_EGL_MAKE_CURRENT) &&
+           verifier.VerifyTable(egl_make_current()) &&
+           VerifyOffset(verifier, VT_EGL_SWAP_INTERVAL) &&
+           verifier.VerifyTable(egl_swap_interval()) &&
+           VerifyOffset(verifier, VT_EGL_RESIZE_SURFACE) &&
+           verifier.VerifyTable(egl_resize_surface()) &&
            verifier.EndTable();
   }
 };
@@ -2651,6 +2854,15 @@ struct CommandBuilder {
   void add_egl_destroy_surface(::flatbuffers::Offset<MobileGL::Protocol::Wire::EglDestroySurface> egl_destroy_surface) {
     fbb_.AddOffset(Command::VT_EGL_DESTROY_SURFACE, egl_destroy_surface);
   }
+  void add_egl_make_current(::flatbuffers::Offset<MobileGL::Protocol::Wire::EglMakeCurrent> egl_make_current) {
+    fbb_.AddOffset(Command::VT_EGL_MAKE_CURRENT, egl_make_current);
+  }
+  void add_egl_swap_interval(::flatbuffers::Offset<MobileGL::Protocol::Wire::EglSwapInterval> egl_swap_interval) {
+    fbb_.AddOffset(Command::VT_EGL_SWAP_INTERVAL, egl_swap_interval);
+  }
+  void add_egl_resize_surface(::flatbuffers::Offset<MobileGL::Protocol::Wire::EglResizeSurface> egl_resize_surface) {
+    fbb_.AddOffset(Command::VT_EGL_RESIZE_SURFACE, egl_resize_surface);
+  }
   explicit CommandBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -2700,10 +2912,16 @@ inline ::flatbuffers::Offset<Command> CreateCommand(
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::MapBufferRange> map_buffer_range = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::UnmapBuffer> unmap_buffer = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::EglCreatePbufferSurface> egl_create_pbuffer_surface = 0,
-    ::flatbuffers::Offset<MobileGL::Protocol::Wire::EglDestroySurface> egl_destroy_surface = 0) {
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::EglDestroySurface> egl_destroy_surface = 0,
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::EglMakeCurrent> egl_make_current = 0,
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::EglSwapInterval> egl_swap_interval = 0,
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::EglResizeSurface> egl_resize_surface = 0) {
   CommandBuilder builder_(_fbb);
   builder_.add_token(token);
   builder_.add_session_id(session_id);
+  builder_.add_egl_resize_surface(egl_resize_surface);
+  builder_.add_egl_swap_interval(egl_swap_interval);
+  builder_.add_egl_make_current(egl_make_current);
   builder_.add_egl_destroy_surface(egl_destroy_surface);
   builder_.add_egl_create_pbuffer_surface(egl_create_pbuffer_surface);
   builder_.add_unmap_buffer(unmap_buffer);
