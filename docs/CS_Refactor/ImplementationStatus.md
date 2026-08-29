@@ -123,7 +123,7 @@
 - [x] `MobileGL/MG_FullServer/UtilRuntimeLoader.h/.cpp` — dlopen `MobileGL_UtilRuntime.so` + ABI 握手
 - [x] `MobileGL/MG_FullServer/BackendPluginLoader.h/.cpp` — dlopen BackendObject + manifest 协商 + Create
 - [x] `MobileGL/MG_FullServer/BackendHost.h/.cpp` — Host vtable 注入
-- [x] `MobileGL/MG_FullServer/Main.cpp` — 启动流程接线（UtilRuntime→BackendPlugin→Create→Initialize→Shutdown）
+- [x] ~~`MobileGL/MG_FullServer/Main.cpp`~~ — 启动流程接线（UtilRuntime→BackendPlugin→Create→Initialize→Shutdown）；**已移除**（scaffold 遗留；FullServer 以 SHARED .so + C ABI 交付，启动由 `FullServerEntry` 承担）
 - [x] **插件生命周期链路（组件级验证）**：`UtilRuntimeLoader` / `BackendPluginLoader` / `ServerCore` 在 `libMobileGL_FullServer.so` 内编译通过；`BigServerE2ETest` 覆盖 Create→Initialize→command dispatch→Shutdown
 - [x] **DrawElements + shm indices（零拷贝 draw 数据路径）**：wire 增加 `DrawElements{mode,count,type,indices_offset}`；`Client::SendDrawElements` 携带 shm fd；`ServerCore` 接收并映射后把 indices 指针传给 BFA `DrawElements`；`ClientDrawElementsShmTest` 1/1 通过（offset=1 读到 0x2B）
 - [x] **BufferSubData + shm data（buffer 数据通路）**：wire 增加 `BufferSubData{buffer_handle,offset,size}`；`Client::SendBufferSubData` 携带 shm fd；`ServerCore` 把 shm 指针传给 BFA `BufferSubData`；`ClientBufferSubDataShmTest` 1/1 通过（handle/offset/size/首字节 0x44 精确回查）
@@ -141,7 +141,7 @@
 - [x] **平台环境探测**：`DISPLAY=:0`、`WAYLAND_DISPLAY=wayland-0`；`vulkaninfo --summary`：Vulkan 1.4.341、NVIDIA 独显（vendorID 0x10de / deviceID 0x21c4 / driver 610.57.4.0），`VK_KHR_xcb_surface`、`VK_KHR_wayland_surface`、`VK_KHR_surface` 可用；`/usr/share/vulkan/icd.d/` 含 nvidia/lvp/llvmpipe 等 ICD（真实 X11/Wayland C/S Surface 有硬件基础，DirectVulkan 插件仍是 null 存根待迁移）
 - [x] **EGL pbuffer surface 生命周期**：wire 增加 `EglCreatePbufferSurface{display,surface,width,height}` + `EglDestroySurface{display,surface}`；`Client::SendEglCreatePbufferSurface/SendEglDestroySurface`；`ServerCore` 分发到 BFA `CreatePbufferSurface/ReleaseEGLSurface`（按 live display 校验）；真实插件已实现 pbuffer surface 创建/释放；`ClientEglSurfaceTest` 1/1 通过（display/surface/64x48/释放回查）
 - [x] **EGL MakeCurrent / SwapInterval / ResizeSurface**：wire 增加 `EglMakeCurrent{session,draw,read}` + `EglSwapInterval{interval}` + `EglResizeSurface{display,surface,width,height}`；Client/ServerCore 分发到 BFA `MakeEGLCurrent/SetSwapInterval/ResizeSurface`（按 live session/display 校验）；`ClientEglCommandsTest` 1/1 通过
-- [x] **命令往返基准**：`scripts/bench_cs_e2e.py`（Python FlatBuffers → socket → FullServer.so → backend），含 SessionCreate/Destroy 生命周期，100 次往返 avg 30.5µs / min 25.2µs / max 107.5µs（null backend）；**真实 DirectGLES 插件重测**：avg 62.5µs / min 23.9µs / max 1644.1µs
+- [x] **命令往返基准**：`MobileGL/MG_Benchmark/Transport/CsRoundTripBench.cpp`（mg_bench 原生 C++：FlatBuffers → socket → FullServer.so → backend；原 `scripts/bench_cs_e2e.py` 已并入并删除），含 SessionCreate/Destroy 生命周期，100 次往返 avg 30.5µs / min 25.2µs / max 107.5µs（null backend）；**真实 DirectGLES 插件重测**：avg 62.5µs / min 23.9µs / max 1644.1µs
 - [x] **shm payload 零拷贝基准**：`ShmPayloadBenchmark`（C++：SessionCreate → 100× SubmitDataCommand+fd 回读 → destroy），avg 34.1µs / min 25.8µs / max 83.4µs（含 SCM_RIGHTS fd + mmap 回读）；**当前重测**：avg 36.1µs / min 23.8µs / max 185.2µs（serverOk=1）
 - [ ] 命令批处理基准（batch 提交 vs 逐条）；大 payload（DrawElements / DrawRangeElements / BufferSubData）零拷贝基准
 - [ ] 平台 Surface：X11 → Win32 → Android Binder
