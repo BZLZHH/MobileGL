@@ -138,8 +138,8 @@
 - [x] **平台环境探测**：`DISPLAY=:0`、`WAYLAND_DISPLAY=wayland-0`；`vulkaninfo --summary`：Vulkan 1.4.341、NVIDIA 独显（vendorID 0x10de / deviceID 0x21c4 / driver 610.57.4.0），`VK_KHR_xcb_surface`、`VK_KHR_wayland_surface`、`VK_KHR_surface` 可用；`/usr/share/vulkan/icd.d/` 含 nvidia/lvp/llvmpipe 等 ICD（真实 X11/Wayland C/S Surface 有硬件基础，DirectVulkan 插件仍是 null 存根待迁移）
 - [x] **EGL pbuffer surface 生命周期**：wire 增加 `EglCreatePbufferSurface{display,surface,width,height}` + `EglDestroySurface{display,surface}`；`Client::SendEglCreatePbufferSurface/SendEglDestroySurface`；`ServerCore` 分发到 BFA `CreatePbufferSurface/ReleaseEGLSurface`（按 live display 校验）；真实插件已实现 pbuffer surface 创建/释放；`ClientEglSurfaceTest` 1/1 通过（display/surface/64x48/释放回查）
 - [x] **EGL MakeCurrent / SwapInterval / ResizeSurface**：wire 增加 `EglMakeCurrent{session,draw,read}` + `EglSwapInterval{interval}` + `EglResizeSurface{display,surface,width,height}`；Client/ServerCore 分发到 BFA `MakeEGLCurrent/SetSwapInterval/ResizeSurface`（按 live session/display 校验）；`ClientEglCommandsTest` 1/1 通过
-- [x] **命令往返基准**：`scripts/bench_cs_e2e.py`（Python FlatBuffers → socket → FullServer.so → backend），含 SessionCreate/Destroy 生命周期，100 次往返 avg 30.5µs / min 25.2µs / max 107.5µs（null backend）
-- [x] **shm payload 零拷贝基准**：`ShmPayloadBenchmark`（C++：SessionCreate → 100× SubmitDataCommand+fd 回读 → destroy），avg 34.1µs / min 25.8µs / max 83.4µs（含 SCM_RIGHTS fd + mmap 回读）
+- [x] **命令往返基准**：`scripts/bench_cs_e2e.py`（Python FlatBuffers → socket → FullServer.so → backend），含 SessionCreate/Destroy 生命周期，100 次往返 avg 30.5µs / min 25.2µs / max 107.5µs（null backend）；**真实 DirectGLES 插件重测**：avg 62.5µs / min 23.9µs / max 1644.1µs
+- [x] **shm payload 零拷贝基准**：`ShmPayloadBenchmark`（C++：SessionCreate → 100× SubmitDataCommand+fd 回读 → destroy），avg 34.1µs / min 25.8µs / max 83.4µs（含 SCM_RIGHTS fd + mmap 回读）；**当前重测**：avg 36.1µs / min 23.8µs / max 185.2µs（serverOk=1）
 - [ ] 命令批处理基准（batch 提交 vs 逐条）；大 payload（DrawElements / DrawRangeElements / BufferSubData）零拷贝基准
 - [ ] 平台 Surface：X11 → Win32 → Android Binder
 
