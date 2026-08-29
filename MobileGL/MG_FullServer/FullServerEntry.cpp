@@ -12,6 +12,7 @@
 #include "BfaFrontendShim.h"
 #include "ServerCore.h"
 #include "UtilRuntimeLoader.h"
+#include "MG_State/GLState/ContextRegistry.h"
 #include "MG_Transport/LocalSocketShmTransport.h"
 
 namespace MobileGL::FullServer {
@@ -23,9 +24,32 @@ namespace MobileGL::FullServer {
         ServerCore* core = nullptr;
     };
 
+    MobileGLSessionId s_frontendSession = 0;
+
     void OnSessionChanged(MobileGLSessionId sessionId, void* user) {
         (void)user;
         BfaFrontendShim::Get().SetCurrentSession(sessionId);
+        if (sessionId == 0) {
+            if (s_frontendSession != 0) {
+                MobileGL::MG_State::GLState::GLContextRegistry::DestroySession(s_frontendSession);
+                s_frontendSession = 0;
+            }
+            return;
+        }
+        const auto group =
+            MobileGL::MG_State::GLState::GLContextRegistry::GetOrCreateSharedGroup(0, 0);
+        MobileGL::MG_State::GLState::GLContextRegistry::CreateSession(0, group, sessionId);
+        MobileGL::MG_State::GLState::GLContextRegistry::SetCurrent(
+            static_cast<Uint64>(std::hash<std::thread::id>{}(std::this_thread::get_id())),
+            sessionId);
+        s_frontendSession = sessionId;
+    }
+
+    MobileGLSessionId CurrentFrontendSession() {
+        const auto threadId =
+            static_cast<Uint64>(std::hash<std::thread::id>{}(std::this_thread::get_id()));
+        auto* context = MobileGL::MG_State::GLState::GLContextRegistry::GetCurrentGLContext(threadId);
+        return context == nullptr ? 0 : context->GetSessionId();
     }
 } // namespace MobileGL::FullServer
 
@@ -76,6 +100,8 @@ extern "C" int mobilegl_fullserver_start(MobileGLFullServerHandle handle) {
     }
     MobileGL::FullServer::BfaFrontendShim::Get().Install(instance->backendObject, instance->vtable,
                                                          nullptr);
+    MobileGL::FullServer::BfaFrontendShim::Get().m_state.SessionProvider =
+        &MobileGL::FullServer::CurrentFrontendSession;
     return 0;
 }
 

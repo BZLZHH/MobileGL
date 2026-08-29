@@ -20,7 +20,11 @@ namespace MobileGL::FullServer {
             return BfaFrontendShim::Get().m_state.VTable;
         }
         MobileGLSessionId Session() {
-            return BfaFrontendShim::Get().m_state.Session;
+            auto& state = BfaFrontendShim::Get().m_state;
+            if (state.Session != 0) {
+                return state.Session;
+            }
+            return state.SessionProvider != nullptr ? state.SessionProvider() : 0;
         }
 
         void ThunkClear(GLbitfield mask) {

@@ -40,6 +40,10 @@ namespace MobileGL::FullServer {
             const MobileGLBackendVTable* VTable = nullptr;
             MG_Backend::GlobalBackendFunctionsTable* Table = nullptr;
             MobileGLSessionId Session = 0;
+            // Optional fallback: derives the current BFA session from the
+            // frontend's current GL context (used when ServerCore has not
+            // reported a session yet). Set by FullServerEntry.
+            MobileGLSessionId (*SessionProvider)() = nullptr;
         };
 
         State m_state{};
