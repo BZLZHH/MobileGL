@@ -109,6 +109,17 @@ namespace MobileGL::Client {
     Bool SendEndTimeElapsedQuery(Uint64 sessionId, uint64_t query, Uint64 token);
     Bool SendDeleteBackendQuery(Uint64 sessionId, uint64_t query, Uint64 token);
 
+    // Query result / occlusion / XFB-primitives query commands.
+    Bool SendIsQueryResultAvailable(Uint64 sessionId, uint64_t query, Uint64 token,
+                                    Bool* outAvailable);
+    Bool SendGetQueryResult64(Uint64 sessionId, uint64_t query, Bool wait, Uint64 token,
+                              Bool* outAvailable, uint64_t* outNanoseconds);
+    Bool SendBeginOcclusionQuery(Uint64 sessionId, Uint64 token, uint64_t* outHandle);
+    Bool SendEndOcclusionQuery(Uint64 sessionId, uint64_t query, Uint64 token);
+    Bool SendBeginXfbPrimitivesQuery(Uint64 sessionId, Bool generated, Uint64 token,
+                                     uint64_t* outHandle);
+    Bool SendEndXfbPrimitivesQuery(Uint64 sessionId, uint64_t query, Uint64 token);
+
     // Sends a typed glDrawArraysInstanced command (awaits response).
     Bool SendDrawArraysInstanced(Uint64 sessionId, uint32_t mode, int32_t first, int32_t count,
                                  int32_t primcount, Uint64 token);
@@ -203,6 +214,9 @@ namespace MobileGL::Client {
 
     // Sync handle echoed back by the server's response sync field.
     Uint64 GetLastResponseSync();
+
+    // Query nanoseconds echoed back by the server's response query_ns field.
+    Uint64 GetLastResponseQueryNs();
 
     // String echoed back by the server's response string_value field.
     const String& GetLastResponseString();

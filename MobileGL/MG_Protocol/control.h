@@ -20,6 +20,12 @@ namespace MobileGL::Protocol {
         DisplayDestroy = 1'000'003,
         SharedGroupCreate = 1'000'004,
         SharedGroupDestroy = 1'000'005,
+        QueryResultAvailable = 1'000'020,
+        QueryResult64 = 1'000'021,
+        BeginOcclusionQuery = 1'000'022,
+        EndOcclusionQuery = 1'000'023,
+        BeginXfbPrimitivesQuery = 1'000'024,
+        EndXfbPrimitivesQuery = 1'000'025,
     };
 } // namespace MobileGL::Protocol
 

@@ -66,8 +66,15 @@ class Response(object):
             return self._tab.Get(flatbuffers.number_types.Uint32Flags, o + self._tab.Pos)
         return 0
 
+    # Response
+    def QueryNs(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(16))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Uint64Flags, o + self._tab.Pos)
+        return 0
+
 def ResponseStart(builder):
-    builder.StartObject(6)
+    builder.StartObject(7)
 
 def Start(builder):
     ResponseStart(builder)
@@ -107,6 +114,12 @@ def ResponseAddRetShmCount(builder, retShmCount):
 
 def AddRetShmCount(builder, retShmCount):
     ResponseAddRetShmCount(builder, retShmCount)
+
+def ResponseAddQueryNs(builder, queryNs):
+    builder.PrependUint64Slot(6, queryNs, 0)
+
+def AddQueryNs(builder, queryNs):
+    ResponseAddQueryNs(builder, queryNs)
 
 def ResponseEnd(builder):
     return builder.EndObject()

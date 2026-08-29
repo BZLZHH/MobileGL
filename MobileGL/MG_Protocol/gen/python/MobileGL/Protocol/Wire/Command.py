@@ -496,8 +496,74 @@ class Command(object):
             return obj
         return None
 
+    # Command
+    def IsQueryResultAvailable(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(92))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from MobileGL.Protocol.Wire.IsQueryResultAvailable import IsQueryResultAvailable
+            obj = IsQueryResultAvailable()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # Command
+    def GetQueryResult64(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(94))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from MobileGL.Protocol.Wire.GetQueryResult64 import GetQueryResult64
+            obj = GetQueryResult64()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # Command
+    def BeginOcclusionQuery(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(96))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from MobileGL.Protocol.Wire.BeginOcclusionQuery import BeginOcclusionQuery
+            obj = BeginOcclusionQuery()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # Command
+    def EndOcclusionQuery(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(98))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from MobileGL.Protocol.Wire.EndOcclusionQuery import EndOcclusionQuery
+            obj = EndOcclusionQuery()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # Command
+    def BeginXfbPrimitivesQuery(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(100))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from MobileGL.Protocol.Wire.BeginXfbPrimitivesQuery import BeginXfbPrimitivesQuery
+            obj = BeginXfbPrimitivesQuery()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # Command
+    def EndXfbPrimitivesQuery(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(102))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from MobileGL.Protocol.Wire.EndXfbPrimitivesQuery import EndXfbPrimitivesQuery
+            obj = EndXfbPrimitivesQuery()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
 def CommandStart(builder):
-    builder.StartObject(44)
+    builder.StartObject(50)
 
 def Start(builder):
     CommandStart(builder)
@@ -765,6 +831,42 @@ def CommandAddDeleteBackendQuery(builder, deleteBackendQuery):
 
 def AddDeleteBackendQuery(builder, deleteBackendQuery):
     CommandAddDeleteBackendQuery(builder, deleteBackendQuery)
+
+def CommandAddIsQueryResultAvailable(builder, isQueryResultAvailable):
+    builder.PrependUOffsetTRelativeSlot(44, flatbuffers.number_types.UOffsetTFlags.py_type(isQueryResultAvailable), 0)
+
+def AddIsQueryResultAvailable(builder, isQueryResultAvailable):
+    CommandAddIsQueryResultAvailable(builder, isQueryResultAvailable)
+
+def CommandAddGetQueryResult64(builder, getQueryResult64):
+    builder.PrependUOffsetTRelativeSlot(45, flatbuffers.number_types.UOffsetTFlags.py_type(getQueryResult64), 0)
+
+def AddGetQueryResult64(builder, getQueryResult64):
+    CommandAddGetQueryResult64(builder, getQueryResult64)
+
+def CommandAddBeginOcclusionQuery(builder, beginOcclusionQuery):
+    builder.PrependUOffsetTRelativeSlot(46, flatbuffers.number_types.UOffsetTFlags.py_type(beginOcclusionQuery), 0)
+
+def AddBeginOcclusionQuery(builder, beginOcclusionQuery):
+    CommandAddBeginOcclusionQuery(builder, beginOcclusionQuery)
+
+def CommandAddEndOcclusionQuery(builder, endOcclusionQuery):
+    builder.PrependUOffsetTRelativeSlot(47, flatbuffers.number_types.UOffsetTFlags.py_type(endOcclusionQuery), 0)
+
+def AddEndOcclusionQuery(builder, endOcclusionQuery):
+    CommandAddEndOcclusionQuery(builder, endOcclusionQuery)
+
+def CommandAddBeginXfbPrimitivesQuery(builder, beginXfbPrimitivesQuery):
+    builder.PrependUOffsetTRelativeSlot(48, flatbuffers.number_types.UOffsetTFlags.py_type(beginXfbPrimitivesQuery), 0)
+
+def AddBeginXfbPrimitivesQuery(builder, beginXfbPrimitivesQuery):
+    CommandAddBeginXfbPrimitivesQuery(builder, beginXfbPrimitivesQuery)
+
+def CommandAddEndXfbPrimitivesQuery(builder, endXfbPrimitivesQuery):
+    builder.PrependUOffsetTRelativeSlot(49, flatbuffers.number_types.UOffsetTFlags.py_type(endXfbPrimitivesQuery), 0)
+
+def AddEndXfbPrimitivesQuery(builder, endXfbPrimitivesQuery):
+    CommandAddEndXfbPrimitivesQuery(builder, endXfbPrimitivesQuery)
 
 def CommandEnd(builder):
     return builder.EndObject()

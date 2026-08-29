@@ -137,6 +137,24 @@ struct EndTimeElapsedQueryBuilder;
 struct DeleteBackendQuery;
 struct DeleteBackendQueryBuilder;
 
+struct IsQueryResultAvailable;
+struct IsQueryResultAvailableBuilder;
+
+struct GetQueryResult64;
+struct GetQueryResult64Builder;
+
+struct BeginOcclusionQuery;
+struct BeginOcclusionQueryBuilder;
+
+struct EndOcclusionQuery;
+struct EndOcclusionQueryBuilder;
+
+struct BeginXfbPrimitivesQuery;
+struct BeginXfbPrimitivesQueryBuilder;
+
+struct EndXfbPrimitivesQuery;
+struct EndXfbPrimitivesQueryBuilder;
+
 struct DataBlob;
 struct DataBlobBuilder;
 
@@ -2627,6 +2645,256 @@ inline ::flatbuffers::Offset<DeleteBackendQuery> CreateDeleteBackendQuery(
   return builder_.Finish();
 }
 
+struct IsQueryResultAvailable FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef IsQueryResultAvailableBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_QUERY = 4
+  };
+  uint64_t query() const {
+    return GetField<uint64_t>(VT_QUERY, 0);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint64_t>(verifier, VT_QUERY, 8) &&
+           verifier.EndTable();
+  }
+};
+
+struct IsQueryResultAvailableBuilder {
+  typedef IsQueryResultAvailable Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_query(uint64_t query) {
+    fbb_.AddElement<uint64_t>(IsQueryResultAvailable::VT_QUERY, query, 0);
+  }
+  explicit IsQueryResultAvailableBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<IsQueryResultAvailable> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<IsQueryResultAvailable>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<IsQueryResultAvailable> CreateIsQueryResultAvailable(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint64_t query = 0) {
+  IsQueryResultAvailableBuilder builder_(_fbb);
+  builder_.add_query(query);
+  return builder_.Finish();
+}
+
+struct GetQueryResult64 FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef GetQueryResult64Builder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_QUERY = 4,
+    VT_WAIT = 6
+  };
+  uint64_t query() const {
+    return GetField<uint64_t>(VT_QUERY, 0);
+  }
+  uint32_t wait() const {
+    return GetField<uint32_t>(VT_WAIT, 0);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint64_t>(verifier, VT_QUERY, 8) &&
+           VerifyField<uint32_t>(verifier, VT_WAIT, 4) &&
+           verifier.EndTable();
+  }
+};
+
+struct GetQueryResult64Builder {
+  typedef GetQueryResult64 Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_query(uint64_t query) {
+    fbb_.AddElement<uint64_t>(GetQueryResult64::VT_QUERY, query, 0);
+  }
+  void add_wait(uint32_t wait) {
+    fbb_.AddElement<uint32_t>(GetQueryResult64::VT_WAIT, wait, 0);
+  }
+  explicit GetQueryResult64Builder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<GetQueryResult64> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<GetQueryResult64>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<GetQueryResult64> CreateGetQueryResult64(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint64_t query = 0,
+    uint32_t wait = 0) {
+  GetQueryResult64Builder builder_(_fbb);
+  builder_.add_query(query);
+  builder_.add_wait(wait);
+  return builder_.Finish();
+}
+
+struct BeginOcclusionQuery FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef BeginOcclusionQueryBuilder Builder;
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           verifier.EndTable();
+  }
+};
+
+struct BeginOcclusionQueryBuilder {
+  typedef BeginOcclusionQuery Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  explicit BeginOcclusionQueryBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<BeginOcclusionQuery> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<BeginOcclusionQuery>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<BeginOcclusionQuery> CreateBeginOcclusionQuery(
+    ::flatbuffers::FlatBufferBuilder &_fbb) {
+  BeginOcclusionQueryBuilder builder_(_fbb);
+  return builder_.Finish();
+}
+
+struct EndOcclusionQuery FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef EndOcclusionQueryBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_QUERY = 4
+  };
+  uint64_t query() const {
+    return GetField<uint64_t>(VT_QUERY, 0);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint64_t>(verifier, VT_QUERY, 8) &&
+           verifier.EndTable();
+  }
+};
+
+struct EndOcclusionQueryBuilder {
+  typedef EndOcclusionQuery Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_query(uint64_t query) {
+    fbb_.AddElement<uint64_t>(EndOcclusionQuery::VT_QUERY, query, 0);
+  }
+  explicit EndOcclusionQueryBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<EndOcclusionQuery> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<EndOcclusionQuery>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<EndOcclusionQuery> CreateEndOcclusionQuery(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint64_t query = 0) {
+  EndOcclusionQueryBuilder builder_(_fbb);
+  builder_.add_query(query);
+  return builder_.Finish();
+}
+
+struct BeginXfbPrimitivesQuery FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef BeginXfbPrimitivesQueryBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_GENERATED = 4
+  };
+  uint32_t generated() const {
+    return GetField<uint32_t>(VT_GENERATED, 0);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint32_t>(verifier, VT_GENERATED, 4) &&
+           verifier.EndTable();
+  }
+};
+
+struct BeginXfbPrimitivesQueryBuilder {
+  typedef BeginXfbPrimitivesQuery Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_generated(uint32_t generated) {
+    fbb_.AddElement<uint32_t>(BeginXfbPrimitivesQuery::VT_GENERATED, generated, 0);
+  }
+  explicit BeginXfbPrimitivesQueryBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<BeginXfbPrimitivesQuery> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<BeginXfbPrimitivesQuery>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<BeginXfbPrimitivesQuery> CreateBeginXfbPrimitivesQuery(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint32_t generated = 0) {
+  BeginXfbPrimitivesQueryBuilder builder_(_fbb);
+  builder_.add_generated(generated);
+  return builder_.Finish();
+}
+
+struct EndXfbPrimitivesQuery FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef EndXfbPrimitivesQueryBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_QUERY = 4
+  };
+  uint64_t query() const {
+    return GetField<uint64_t>(VT_QUERY, 0);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint64_t>(verifier, VT_QUERY, 8) &&
+           verifier.EndTable();
+  }
+};
+
+struct EndXfbPrimitivesQueryBuilder {
+  typedef EndXfbPrimitivesQuery Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_query(uint64_t query) {
+    fbb_.AddElement<uint64_t>(EndXfbPrimitivesQuery::VT_QUERY, query, 0);
+  }
+  explicit EndXfbPrimitivesQueryBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<EndXfbPrimitivesQuery> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<EndXfbPrimitivesQuery>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<EndXfbPrimitivesQuery> CreateEndXfbPrimitivesQuery(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint64_t query = 0) {
+  EndXfbPrimitivesQueryBuilder builder_(_fbb);
+  builder_.add_query(query);
+  return builder_.Finish();
+}
+
 struct DataBlob FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef DataBlobBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
@@ -2725,7 +2993,13 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_CLIENT_WAIT_SYNC = 84,
     VT_BEGIN_TIME_ELAPSED_QUERY = 86,
     VT_END_TIME_ELAPSED_QUERY = 88,
-    VT_DELETE_BACKEND_QUERY = 90
+    VT_DELETE_BACKEND_QUERY = 90,
+    VT_IS_QUERY_RESULT_AVAILABLE = 92,
+    VT_GET_QUERY_RESULT64 = 94,
+    VT_BEGIN_OCCLUSION_QUERY = 96,
+    VT_END_OCCLUSION_QUERY = 98,
+    VT_BEGIN_XFB_PRIMITIVES_QUERY = 100,
+    VT_END_XFB_PRIMITIVES_QUERY = 102
   };
   uint32_t opcode() const {
     return GetField<uint32_t>(VT_OPCODE, 0);
@@ -2859,6 +3133,24 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   const MobileGL::Protocol::Wire::DeleteBackendQuery *delete_backend_query() const {
     return GetPointer<const MobileGL::Protocol::Wire::DeleteBackendQuery *>(VT_DELETE_BACKEND_QUERY);
   }
+  const MobileGL::Protocol::Wire::IsQueryResultAvailable *is_query_result_available() const {
+    return GetPointer<const MobileGL::Protocol::Wire::IsQueryResultAvailable *>(VT_IS_QUERY_RESULT_AVAILABLE);
+  }
+  const MobileGL::Protocol::Wire::GetQueryResult64 *get_query_result64() const {
+    return GetPointer<const MobileGL::Protocol::Wire::GetQueryResult64 *>(VT_GET_QUERY_RESULT64);
+  }
+  const MobileGL::Protocol::Wire::BeginOcclusionQuery *begin_occlusion_query() const {
+    return GetPointer<const MobileGL::Protocol::Wire::BeginOcclusionQuery *>(VT_BEGIN_OCCLUSION_QUERY);
+  }
+  const MobileGL::Protocol::Wire::EndOcclusionQuery *end_occlusion_query() const {
+    return GetPointer<const MobileGL::Protocol::Wire::EndOcclusionQuery *>(VT_END_OCCLUSION_QUERY);
+  }
+  const MobileGL::Protocol::Wire::BeginXfbPrimitivesQuery *begin_xfb_primitives_query() const {
+    return GetPointer<const MobileGL::Protocol::Wire::BeginXfbPrimitivesQuery *>(VT_BEGIN_XFB_PRIMITIVES_QUERY);
+  }
+  const MobileGL::Protocol::Wire::EndXfbPrimitivesQuery *end_xfb_primitives_query() const {
+    return GetPointer<const MobileGL::Protocol::Wire::EndXfbPrimitivesQuery *>(VT_END_XFB_PRIMITIVES_QUERY);
+  }
   template <bool B = false>
   bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -2947,6 +3239,18 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            verifier.VerifyTable(end_time_elapsed_query()) &&
            VerifyOffset(verifier, VT_DELETE_BACKEND_QUERY) &&
            verifier.VerifyTable(delete_backend_query()) &&
+           VerifyOffset(verifier, VT_IS_QUERY_RESULT_AVAILABLE) &&
+           verifier.VerifyTable(is_query_result_available()) &&
+           VerifyOffset(verifier, VT_GET_QUERY_RESULT64) &&
+           verifier.VerifyTable(get_query_result64()) &&
+           VerifyOffset(verifier, VT_BEGIN_OCCLUSION_QUERY) &&
+           verifier.VerifyTable(begin_occlusion_query()) &&
+           VerifyOffset(verifier, VT_END_OCCLUSION_QUERY) &&
+           verifier.VerifyTable(end_occlusion_query()) &&
+           VerifyOffset(verifier, VT_BEGIN_XFB_PRIMITIVES_QUERY) &&
+           verifier.VerifyTable(begin_xfb_primitives_query()) &&
+           VerifyOffset(verifier, VT_END_XFB_PRIMITIVES_QUERY) &&
+           verifier.VerifyTable(end_xfb_primitives_query()) &&
            verifier.EndTable();
   }
 };
@@ -3087,6 +3391,24 @@ struct CommandBuilder {
   void add_delete_backend_query(::flatbuffers::Offset<MobileGL::Protocol::Wire::DeleteBackendQuery> delete_backend_query) {
     fbb_.AddOffset(Command::VT_DELETE_BACKEND_QUERY, delete_backend_query);
   }
+  void add_is_query_result_available(::flatbuffers::Offset<MobileGL::Protocol::Wire::IsQueryResultAvailable> is_query_result_available) {
+    fbb_.AddOffset(Command::VT_IS_QUERY_RESULT_AVAILABLE, is_query_result_available);
+  }
+  void add_get_query_result64(::flatbuffers::Offset<MobileGL::Protocol::Wire::GetQueryResult64> get_query_result64) {
+    fbb_.AddOffset(Command::VT_GET_QUERY_RESULT64, get_query_result64);
+  }
+  void add_begin_occlusion_query(::flatbuffers::Offset<MobileGL::Protocol::Wire::BeginOcclusionQuery> begin_occlusion_query) {
+    fbb_.AddOffset(Command::VT_BEGIN_OCCLUSION_QUERY, begin_occlusion_query);
+  }
+  void add_end_occlusion_query(::flatbuffers::Offset<MobileGL::Protocol::Wire::EndOcclusionQuery> end_occlusion_query) {
+    fbb_.AddOffset(Command::VT_END_OCCLUSION_QUERY, end_occlusion_query);
+  }
+  void add_begin_xfb_primitives_query(::flatbuffers::Offset<MobileGL::Protocol::Wire::BeginXfbPrimitivesQuery> begin_xfb_primitives_query) {
+    fbb_.AddOffset(Command::VT_BEGIN_XFB_PRIMITIVES_QUERY, begin_xfb_primitives_query);
+  }
+  void add_end_xfb_primitives_query(::flatbuffers::Offset<MobileGL::Protocol::Wire::EndXfbPrimitivesQuery> end_xfb_primitives_query) {
+    fbb_.AddOffset(Command::VT_END_XFB_PRIMITIVES_QUERY, end_xfb_primitives_query);
+  }
   explicit CommandBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -3143,10 +3465,22 @@ inline ::flatbuffers::Offset<Command> CreateCommand(
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::ClientWaitSync> client_wait_sync = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::BeginTimeElapsedQuery> begin_time_elapsed_query = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::EndTimeElapsedQuery> end_time_elapsed_query = 0,
-    ::flatbuffers::Offset<MobileGL::Protocol::Wire::DeleteBackendQuery> delete_backend_query = 0) {
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::DeleteBackendQuery> delete_backend_query = 0,
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::IsQueryResultAvailable> is_query_result_available = 0,
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::GetQueryResult64> get_query_result64 = 0,
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::BeginOcclusionQuery> begin_occlusion_query = 0,
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::EndOcclusionQuery> end_occlusion_query = 0,
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::BeginXfbPrimitivesQuery> begin_xfb_primitives_query = 0,
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::EndXfbPrimitivesQuery> end_xfb_primitives_query = 0) {
   CommandBuilder builder_(_fbb);
   builder_.add_token(token);
   builder_.add_session_id(session_id);
+  builder_.add_end_xfb_primitives_query(end_xfb_primitives_query);
+  builder_.add_begin_xfb_primitives_query(begin_xfb_primitives_query);
+  builder_.add_end_occlusion_query(end_occlusion_query);
+  builder_.add_begin_occlusion_query(begin_occlusion_query);
+  builder_.add_get_query_result64(get_query_result64);
+  builder_.add_is_query_result_available(is_query_result_available);
   builder_.add_delete_backend_query(delete_backend_query);
   builder_.add_end_time_elapsed_query(end_time_elapsed_query);
   builder_.add_begin_time_elapsed_query(begin_time_elapsed_query);
@@ -3253,7 +3587,8 @@ struct Response FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_DATA_BYTE = 8,
     VT_SYNC = 10,
     VT_STRING_VALUE = 12,
-    VT_RET_SHM_COUNT = 14
+    VT_RET_SHM_COUNT = 14,
+    VT_QUERY_NS = 16
   };
   uint32_t status() const {
     return GetField<uint32_t>(VT_STATUS, 0);
@@ -3273,6 +3608,9 @@ struct Response FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   uint32_t ret_shm_count() const {
     return GetField<uint32_t>(VT_RET_SHM_COUNT, 0);
   }
+  uint64_t query_ns() const {
+    return GetField<uint64_t>(VT_QUERY_NS, 0);
+  }
   template <bool B = false>
   bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -3283,6 +3621,7 @@ struct Response FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            VerifyOffset(verifier, VT_STRING_VALUE) &&
            verifier.VerifyString(string_value()) &&
            VerifyField<uint32_t>(verifier, VT_RET_SHM_COUNT, 4) &&
+           VerifyField<uint64_t>(verifier, VT_QUERY_NS, 8) &&
            verifier.EndTable();
   }
 };
@@ -3309,6 +3648,9 @@ struct ResponseBuilder {
   void add_ret_shm_count(uint32_t ret_shm_count) {
     fbb_.AddElement<uint32_t>(Response::VT_RET_SHM_COUNT, ret_shm_count, 0);
   }
+  void add_query_ns(uint64_t query_ns) {
+    fbb_.AddElement<uint64_t>(Response::VT_QUERY_NS, query_ns, 0);
+  }
   explicit ResponseBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -3327,8 +3669,10 @@ inline ::flatbuffers::Offset<Response> CreateResponse(
     uint32_t data_byte = 0,
     uint64_t sync = 0,
     ::flatbuffers::Offset<::flatbuffers::String> string_value = 0,
-    uint32_t ret_shm_count = 0) {
+    uint32_t ret_shm_count = 0,
+    uint64_t query_ns = 0) {
   ResponseBuilder builder_(_fbb);
+  builder_.add_query_ns(query_ns);
   builder_.add_sync(sync);
   builder_.add_token(token);
   builder_.add_ret_shm_count(ret_shm_count);
@@ -3345,7 +3689,8 @@ inline ::flatbuffers::Offset<Response> CreateResponseDirect(
     uint32_t data_byte = 0,
     uint64_t sync = 0,
     const char *string_value = nullptr,
-    uint32_t ret_shm_count = 0) {
+    uint32_t ret_shm_count = 0,
+    uint64_t query_ns = 0) {
   auto string_value__ = string_value ? _fbb.CreateString(string_value) : 0;
   return MobileGL::Protocol::Wire::CreateResponse(
       _fbb,
@@ -3354,7 +3699,8 @@ inline ::flatbuffers::Offset<Response> CreateResponseDirect(
       data_byte,
       sync,
       string_value__,
-      ret_shm_count);
+      ret_shm_count,
+      query_ns);
 }
 
 inline const MobileGL::Protocol::Wire::Message *GetMessage(const void *buf) {

@@ -251,6 +251,30 @@ table DeleteBackendQuery {
     query: ulong;
 }
 
+table IsQueryResultAvailable {
+    query: ulong;
+}
+
+table GetQueryResult64 {
+    query: ulong;
+    wait: uint;
+}
+
+table BeginOcclusionQuery {
+}
+
+table EndOcclusionQuery {
+    query: ulong;
+}
+
+table BeginXfbPrimitivesQuery {
+    generated: uint;
+}
+
+table EndXfbPrimitivesQuery {
+    query: ulong;
+}
+
 table DataBlob {
     offset: ulong;
     size: ulong;
@@ -301,6 +325,12 @@ table Command {
     begin_time_elapsed_query: BeginTimeElapsedQuery;
     end_time_elapsed_query: EndTimeElapsedQuery;
     delete_backend_query: DeleteBackendQuery;
+    is_query_result_available: IsQueryResultAvailable;
+    get_query_result64: GetQueryResult64;
+    begin_occlusion_query: BeginOcclusionQuery;
+    end_occlusion_query: EndOcclusionQuery;
+    begin_xfb_primitives_query: BeginXfbPrimitivesQuery;
+    end_xfb_primitives_query: EndXfbPrimitivesQuery;
 }
 
 table Message {
@@ -315,6 +345,7 @@ table Response {
     sync: ulong;
     string_value: string;
     ret_shm_count: uint;
+    query_ns: ulong;
 }
 
 root_type Message;

@@ -54,6 +54,7 @@ namespace MobileGL::FullServer {
 
         uint32_t dataByte = 0;
         uint64_t syncHandle = 0;
+        uint64_t queryNs = 0;
         String responseStringValue;
         Vector<MobileGLShmHandle> receivedShm;
         Vector<MobileGLShmHandle> responseShm;
@@ -394,6 +395,77 @@ namespace MobileGL::FullServer {
                 const auto* dq = command->delete_backend_query();
                 m_vtable->DeleteBackendQuery(m_backend, sessionId,
                                              reinterpret_cast<void*>(dq == nullptr ? 0 : dq->query()));
+                status = 0;
+            }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLControlOpcode::QueryResultAvailable) &&
+                   m_vtable->IsQueryResultAvailable != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else {
+                const auto* q = command->is_query_result_available();
+                dataByte = m_vtable->IsQueryResultAvailable(
+                               m_backend, sessionId,
+                               reinterpret_cast<void*>(q == nullptr ? 0 : q->query()))
+                               ? 1
+                               : 0;
+                status = 0;
+            }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLControlOpcode::QueryResult64) &&
+                   m_vtable->GetQueryResult64 != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else {
+                const auto* q = command->get_query_result64();
+                uint64_t ns = 0;
+                dataByte = m_vtable->GetQueryResult64(
+                               m_backend, sessionId,
+                               reinterpret_cast<void*>(q == nullptr ? 0 : q->query()),
+                               q == nullptr ? 0 : q->wait(), &ns)
+                               ? 1
+                               : 0;
+                queryNs = ns;
+                status = 0;
+            }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLControlOpcode::BeginOcclusionQuery) &&
+                   m_vtable->BeginOcclusionQuery != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else {
+                syncHandle = reinterpret_cast<uint64_t>(
+                    m_vtable->BeginOcclusionQuery(m_backend, sessionId));
+                status = 0;
+            }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLControlOpcode::EndOcclusionQuery) &&
+                   m_vtable->EndOcclusionQuery != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else {
+                const auto* q = command->end_occlusion_query();
+                m_vtable->EndOcclusionQuery(
+                    m_backend, sessionId,
+                    reinterpret_cast<void*>(q == nullptr ? 0 : q->query()));
+                status = 0;
+            }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLControlOpcode::BeginXfbPrimitivesQuery) &&
+                   m_vtable->BeginXfbPrimitivesQuery != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else {
+                const auto* q = command->begin_xfb_primitives_query();
+                syncHandle = reinterpret_cast<uint64_t>(
+                    m_vtable->BeginXfbPrimitivesQuery(m_backend, sessionId,
+                                                      q != nullptr && q->generated() != 0));
+                status = 0;
+            }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLControlOpcode::EndXfbPrimitivesQuery) &&
+                   m_vtable->EndXfbPrimitivesQuery != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else {
+                const auto* q = command->end_xfb_primitives_query();
+                m_vtable->EndXfbPrimitivesQuery(
+                    m_backend, sessionId,
+                    reinterpret_cast<void*>(q == nullptr ? 0 : q->query()));
                 status = 0;
             }
         } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glDrawArraysInstanced) &&
@@ -737,7 +809,7 @@ namespace MobileGL::FullServer {
         const auto response = MobileGL::Protocol::Wire::CreateResponse(responseBuilder, status,
                                                                        command->token(), dataByte,
                                                                        syncHandle, responseString,
-                                                                       responseShmCount);
+                                                                       responseShmCount, queryNs);
         responseBuilder.Finish(response);
 
         MobileGLCommandBatch out{};

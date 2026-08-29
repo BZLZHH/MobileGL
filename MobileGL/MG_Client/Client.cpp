@@ -23,6 +23,7 @@ namespace MobileGL::Client {
         const MobileGLTransportOps* s_ops = nullptr;
         Uint32 s_lastResponseByte = 0;
         Uint64 s_lastResponseSync = 0;
+        Uint64 s_lastResponseQueryNs = 0;
         String s_lastResponseString;
         Vector<MobileGLShmHandle> s_lastResponseShm;
         MobileGLShmHandle s_mappedShm{};
@@ -667,6 +668,138 @@ namespace MobileGL::Client {
         cb.add_session_id(sessionId);
         cb.add_token(token);
         cb.add_delete_backend_query(dq);
+        const auto command = cb.Finish();
+        const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 0);
+        builder.Finish(message);
+        return SubmitFlatBuffer(builder.GetBufferPointer(), static_cast<Uint32>(builder.GetSize()),
+                                token);
+    }
+
+    Bool SendIsQueryResultAvailable(Uint64 sessionId, uint64_t query, Uint64 token,
+                                    Bool* outAvailable) {
+        flatbuffers::FlatBufferBuilder builder;
+        const auto q = MobileGL::Protocol::Wire::CreateIsQueryResultAvailable(builder, query);
+        MobileGL::Protocol::Wire::CommandBuilder cb(builder);
+        cb.add_opcode(static_cast<uint32_t>(
+            MobileGL::Protocol::MobileGLControlOpcode::QueryResultAvailable));
+        cb.add_session_id(sessionId);
+        cb.add_token(token);
+        cb.add_is_query_result_available(q);
+        const auto command = cb.Finish();
+        const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 0);
+        builder.Finish(message);
+        if (!SubmitFlatBuffer(builder.GetBufferPointer(), static_cast<Uint32>(builder.GetSize()),
+                              token)) {
+            return false;
+        }
+        if (outAvailable != nullptr) {
+            *outAvailable = GetLastResponseDataByte() != 0 ? 1 : 0;
+        }
+        return true;
+    }
+
+    Bool SendGetQueryResult64(Uint64 sessionId, uint64_t query, Bool wait, Uint64 token,
+                              Bool* outAvailable, uint64_t* outNanoseconds) {
+        if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
+            s_lastError = "Client is not initialized.";
+            return false;
+        }
+        flatbuffers::FlatBufferBuilder builder;
+        const auto q = MobileGL::Protocol::Wire::CreateGetQueryResult64(builder, query, wait ? 1 : 0);
+        MobileGL::Protocol::Wire::CommandBuilder cb(builder);
+        cb.add_opcode(static_cast<uint32_t>(MobileGL::Protocol::MobileGLControlOpcode::QueryResult64));
+        cb.add_session_id(sessionId);
+        cb.add_token(token);
+        cb.add_get_query_result64(q);
+        const auto command = cb.Finish();
+        const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 0);
+        builder.Finish(message);
+        if (!SubmitFlatBuffer(builder.GetBufferPointer(), static_cast<Uint32>(builder.GetSize()),
+                              token)) {
+            return false;
+        }
+        if (outAvailable != nullptr) {
+            *outAvailable = GetLastResponseDataByte() != 0 ? 1 : 0;
+        }
+        if (outNanoseconds != nullptr) {
+            *outNanoseconds = GetLastResponseQueryNs();
+        }
+        return true;
+    }
+
+    Bool SendBeginOcclusionQuery(Uint64 sessionId, Uint64 token, uint64_t* outHandle) {
+        if (!SendOpcodesOnly(
+                static_cast<uint32_t>(MobileGL::Protocol::MobileGLControlOpcode::BeginOcclusionQuery),
+                sessionId, token)) {
+            return false;
+        }
+        if (outHandle != nullptr) {
+            *outHandle = GetLastResponseSync();
+        }
+        return true;
+    }
+
+    Bool SendEndOcclusionQuery(Uint64 sessionId, uint64_t query, Uint64 token) {
+        if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
+            s_lastError = "Client is not initialized.";
+            return false;
+        }
+        flatbuffers::FlatBufferBuilder builder;
+        const auto q = MobileGL::Protocol::Wire::CreateEndOcclusionQuery(builder, query);
+        MobileGL::Protocol::Wire::CommandBuilder cb(builder);
+        cb.add_opcode(static_cast<uint32_t>(
+            MobileGL::Protocol::MobileGLControlOpcode::EndOcclusionQuery));
+        cb.add_session_id(sessionId);
+        cb.add_token(token);
+        cb.add_end_occlusion_query(q);
+        const auto command = cb.Finish();
+        const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 0);
+        builder.Finish(message);
+        return SubmitFlatBuffer(builder.GetBufferPointer(), static_cast<Uint32>(builder.GetSize()),
+                                token);
+    }
+
+    Bool SendBeginXfbPrimitivesQuery(Uint64 sessionId, Bool generated, Uint64 token,
+                                     uint64_t* outHandle) {
+        if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
+            s_lastError = "Client is not initialized.";
+            return false;
+        }
+        flatbuffers::FlatBufferBuilder builder;
+        const auto q =
+            MobileGL::Protocol::Wire::CreateBeginXfbPrimitivesQuery(builder, generated ? 1 : 0);
+        MobileGL::Protocol::Wire::CommandBuilder cb(builder);
+        cb.add_opcode(static_cast<uint32_t>(
+            MobileGL::Protocol::MobileGLControlOpcode::BeginXfbPrimitivesQuery));
+        cb.add_session_id(sessionId);
+        cb.add_token(token);
+        cb.add_begin_xfb_primitives_query(q);
+        const auto command = cb.Finish();
+        const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 0);
+        builder.Finish(message);
+        if (!SubmitFlatBuffer(builder.GetBufferPointer(), static_cast<Uint32>(builder.GetSize()),
+                              token)) {
+            return false;
+        }
+        if (outHandle != nullptr) {
+            *outHandle = GetLastResponseSync();
+        }
+        return true;
+    }
+
+    Bool SendEndXfbPrimitivesQuery(Uint64 sessionId, uint64_t query, Uint64 token) {
+        if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
+            s_lastError = "Client is not initialized.";
+            return false;
+        }
+        flatbuffers::FlatBufferBuilder builder;
+        const auto q = MobileGL::Protocol::Wire::CreateEndXfbPrimitivesQuery(builder, query);
+        MobileGL::Protocol::Wire::CommandBuilder cb(builder);
+        cb.add_opcode(static_cast<uint32_t>(
+            MobileGL::Protocol::MobileGLControlOpcode::EndXfbPrimitivesQuery));
+        cb.add_session_id(sessionId);
+        cb.add_token(token);
+        cb.add_end_xfb_primitives_query(q);
         const auto command = cb.Finish();
         const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 0);
         builder.Finish(message);
@@ -1365,6 +1498,7 @@ namespace MobileGL::Client {
         }
         s_lastResponseByte = parsed->data_byte();
         s_lastResponseSync = parsed->sync();
+        s_lastResponseQueryNs = parsed->query_ns();
         if (parsed->string_value() != nullptr) {
             s_lastResponseString = parsed->string_value()->str();
         } else {
@@ -1382,6 +1516,10 @@ namespace MobileGL::Client {
 
     Uint64 GetLastResponseSync() {
         return s_lastResponseSync;
+    }
+
+    Uint64 GetLastResponseQueryNs() {
+        return s_lastResponseQueryNs;
     }
 
     const String& GetLastResponseString() {
