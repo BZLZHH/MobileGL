@@ -208,6 +208,98 @@ namespace MobileGL::FullServer {
             }
         }
 
+        void ThunkMultiDrawElementsBaseVertex(GLenum mode, const GLsizei* count, GLenum type,
+                                              const GLvoid* const* indices, GLsizei drawcount,
+                                              const GLint* basevertex) {
+            if (VTable() != nullptr && VTable()->MultiDrawElementsBaseVertex != nullptr) {
+                VTable()->MultiDrawElementsBaseVertex(Backend(), Session(), mode, count, type,
+                                                      indices, drawcount, basevertex);
+            }
+        }
+
+        void ThunkMultiDrawArraysIndirectCount(GLenum mode, const void* indirect, GLintptr drawcount,
+                                               GLsizei maxdrawcount, GLsizei stride) {
+            if (VTable() != nullptr && VTable()->MultiDrawArraysIndirectCount != nullptr) {
+                VTable()->MultiDrawArraysIndirectCount(Backend(), Session(), mode, indirect,
+                                                       drawcount, maxdrawcount, stride);
+            }
+        }
+
+        void ThunkMultiDrawElementsIndirectCount(GLenum mode, GLenum type, const void* indirect,
+                                                 GLintptr drawcount, GLsizei maxdrawcount,
+                                                 GLsizei stride) {
+            if (VTable() != nullptr && VTable()->MultiDrawElementsIndirectCount != nullptr) {
+                VTable()->MultiDrawElementsIndirectCount(Backend(), Session(), mode, type, indirect,
+                                                         drawcount, maxdrawcount, stride);
+            }
+        }
+
+        void ThunkDrawRangeElementsBaseVertex(GLenum mode, GLuint start, GLuint end, GLsizei count,
+                                              GLenum type, const void* indices, GLint basevertex) {
+            if (VTable() != nullptr && VTable()->DrawRangeElementsBaseVertex != nullptr) {
+                VTable()->DrawRangeElementsBaseVertex(Backend(), Session(), mode, start, end,
+                                                      count, type, indices, basevertex);
+            }
+        }
+
+        void ThunkDrawElementsInstancedBaseVertex(GLenum mode, GLsizei count, GLenum type,
+                                                  const void* indices, GLsizei instancecount,
+                                                  GLint basevertex) {
+            if (VTable() != nullptr && VTable()->DrawElementsInstancedBaseVertex != nullptr) {
+                VTable()->DrawElementsInstancedBaseVertex(Backend(), Session(), mode, count, type,
+                                                          indices, instancecount, basevertex);
+            }
+        }
+
+        void ThunkDrawElementsInstancedBaseInstance(GLenum mode, GLsizei count, GLenum type,
+                                                    const void* indices, GLsizei instancecount,
+                                                    GLuint baseinstance) {
+            if (VTable() != nullptr && VTable()->DrawElementsInstancedBaseInstance != nullptr) {
+                VTable()->DrawElementsInstancedBaseInstance(Backend(), Session(), mode, count, type,
+                                                            indices, instancecount, baseinstance);
+            }
+        }
+
+        void ThunkDrawElementsInstancedBaseVertexBaseInstance(GLenum mode, GLsizei count, GLenum type,
+                                                              const void* indices,
+                                                              GLsizei instancecount,
+                                                              GLint basevertex,
+                                                              GLuint baseinstance) {
+            if (VTable() != nullptr &&
+                VTable()->DrawElementsInstancedBaseVertexBaseInstance != nullptr) {
+                VTable()->DrawElementsInstancedBaseVertexBaseInstance(
+                    Backend(), Session(), mode, count, type, indices, instancecount, basevertex,
+                    baseinstance);
+            }
+        }
+
+        void ThunkDrawArraysInstancedBaseInstance(GLenum mode, GLint first, GLsizei count,
+                                                  GLsizei instancecount, GLuint baseinstance) {
+            if (VTable() != nullptr && VTable()->DrawArraysInstancedBaseInstance != nullptr) {
+                VTable()->DrawArraysInstancedBaseInstance(Backend(), Session(), mode, first, count,
+                                                          instancecount, baseinstance);
+            }
+        }
+
+        void ThunkGetIntegeri_v(GLenum target, GLuint index, GLint* data) {
+            if (VTable() != nullptr && VTable()->GetIntegeri_v != nullptr) {
+                VTable()->GetIntegeri_v(Backend(), Session(), target, index, data);
+            }
+        }
+
+        void ThunkGetInteger64i_v(GLenum target, GLuint index, GLint64* data) {
+            if (VTable() != nullptr && VTable()->GetInteger64i_v != nullptr) {
+                VTable()->GetInteger64i_v(Backend(), Session(), target, index, data);
+            }
+        }
+
+        void ThunkGetProgramiv(GLuint program, GLenum pname, GLint* params) {
+            if (VTable() != nullptr && VTable()->GetProgramiv != nullptr) {
+                VTable()->GetProgramiv(Backend(), Session(), Handle(MobileGLObjectKindProgram, program),
+                                       pname, params);
+            }
+        }
+
         void ThunkClearBufferfv(GLenum buffer, GLint drawbuffer, const GLfloat* value) {
             if (VTable() != nullptr && VTable()->ClearBufferfv != nullptr) {
                 VTable()->ClearBufferfv(Backend(), Session(), buffer, drawbuffer, value);
@@ -537,6 +629,18 @@ namespace MobileGL::FullServer {
         m_state.Table->GL.MultiDrawElements = &ThunkMultiDrawElements;
         m_state.Table->GL.MultiDrawArraysIndirect = &ThunkMultiDrawArraysIndirect;
         m_state.Table->GL.MultiDrawElementsIndirect = &ThunkMultiDrawElementsIndirect;
+        m_state.Table->GL.MultiDrawElementsBaseVertex = &ThunkMultiDrawElementsBaseVertex;
+        m_state.Table->GL.MultiDrawArraysIndirectCount = &ThunkMultiDrawArraysIndirectCount;
+        m_state.Table->GL.MultiDrawElementsIndirectCount = &ThunkMultiDrawElementsIndirectCount;
+        m_state.Table->GL.DrawRangeElementsBaseVertex = &ThunkDrawRangeElementsBaseVertex;
+        m_state.Table->GL.DrawElementsInstancedBaseVertex = &ThunkDrawElementsInstancedBaseVertex;
+        m_state.Table->GL.DrawElementsInstancedBaseInstance = &ThunkDrawElementsInstancedBaseInstance;
+        m_state.Table->GL.DrawElementsInstancedBaseVertexBaseInstance =
+            &ThunkDrawElementsInstancedBaseVertexBaseInstance;
+        m_state.Table->GL.DrawArraysInstancedBaseInstance = &ThunkDrawArraysInstancedBaseInstance;
+        m_state.Table->GL.GetIntegeri_v = &ThunkGetIntegeri_v;
+        m_state.Table->GL.GetInteger64i_v = &ThunkGetInteger64i_v;
+        m_state.Table->GL.GetProgramiv = &ThunkGetProgramiv;
         m_state.Table->GL.DrawArraysInstanced = &ThunkDrawArraysInstanced;
         m_state.Table->GL.DrawElementsInstanced = &ThunkDrawElementsInstanced;
         m_state.Table->GL.DrawRangeElements = &ThunkDrawRangeElements;

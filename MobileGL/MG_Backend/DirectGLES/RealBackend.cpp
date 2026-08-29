@@ -667,7 +667,7 @@ namespace {
         if (!EnsureDisplay(backend)) {
             return false;
         }
-#if defined(_WIN32) || defined(__ANDROID__) || defined(__APPLE__)
+#if defined(_WIN32) || defined(__ANDROID__) || defined(__APPLE__) || defined(__linux__)
         EGLSurface nativeSurface = EGL_NO_SURFACE;
         if (backend->Egl.eglCreatePlatformWindowSurface != nullptr) {
             nativeSurface = backend->Egl.eglCreatePlatformWindowSurface(
@@ -834,6 +834,195 @@ namespace {
         backend->Gl.glDrawRangeElements(static_cast<GLenum>(mode), start, end, count, static_cast<GLenum>(type),
                                         indices);
     }
+
+    void MultiDrawArraysBackend(MobileGLBackend* backend, MobileGLSessionId session, uint32_t mode,
+                                const int32_t* first, const int32_t* counts, int32_t drawCount) {
+        const std::lock_guard<std::recursive_mutex> lock(backend->Mutex);
+        if (!EnsureCurrent(backend, session) || backend->Gl.glDrawArrays == nullptr ||
+            first == nullptr || counts == nullptr || drawCount <= 0) {
+            return;
+        }
+        for (int32_t i = 0; i < drawCount; ++i) {
+            backend->Gl.glDrawArrays(static_cast<GLenum>(mode), first[i], counts[i]);
+        }
+    }
+
+    void MultiDrawElementsBackend(MobileGLBackend* backend, MobileGLSessionId session, uint32_t mode,
+                                  const int32_t* counts, uint32_t type, const void* const* indices,
+                                  int32_t drawCount) {
+        const std::lock_guard<std::recursive_mutex> lock(backend->Mutex);
+        if (!EnsureCurrent(backend, session) || backend->Gl.glDrawElements == nullptr ||
+            counts == nullptr || indices == nullptr || drawCount <= 0) {
+            return;
+        }
+        const GLenum glType = static_cast<GLenum>(type);
+        for (int32_t i = 0; i < drawCount; ++i) {
+            backend->Gl.glDrawElements(static_cast<GLenum>(mode), counts[i], glType, indices[i]);
+        }
+    }
+
+    void MultiDrawElementsBaseVertexBackend(MobileGLBackend* backend, MobileGLSessionId session,
+                                            uint32_t mode, const int32_t* counts, uint32_t type,
+                                            const void* const* indices, int32_t drawCount,
+                                            const int32_t* baseVertex) {
+        (void)baseVertex;
+        MultiDrawElementsBackend(backend, session, mode, counts, type, indices, drawCount);
+    }
+
+    void MultiDrawArraysIndirectCountBackend(MobileGLBackend* backend, MobileGLSessionId session,
+                                             uint32_t mode, const void* indirect, int64_t drawCount,
+                                             int32_t maxDrawCount, int32_t stride) {
+        (void)backend;
+        (void)session;
+        (void)mode;
+        (void)indirect;
+        (void)drawCount;
+        (void)maxDrawCount;
+        (void)stride;
+    }
+
+    void MultiDrawElementsIndirectCountBackend(MobileGLBackend* backend, MobileGLSessionId session,
+                                               uint32_t mode, uint32_t type, const void* indirect,
+                                               int64_t drawCount, int32_t maxDrawCount,
+                                               int32_t stride) {
+        (void)backend;
+        (void)session;
+        (void)mode;
+        (void)type;
+        (void)indirect;
+        (void)drawCount;
+        (void)maxDrawCount;
+        (void)stride;
+    }
+
+    void DrawRangeElementsBaseVertexBackend(MobileGLBackend* backend, MobileGLSessionId session,
+                                            uint32_t mode, uint32_t start, uint32_t end, int32_t count,
+                                            uint32_t type, const void* indices, int32_t baseVertex) {
+        const std::lock_guard<std::recursive_mutex> lock(backend->Mutex);
+        if (!EnsureCurrent(backend, session)) {
+            return;
+        }
+        if (backend->Gl.glDrawRangeElementsBaseVertex != nullptr) {
+            backend->Gl.glDrawRangeElementsBaseVertex(static_cast<GLenum>(mode), start, end, count,
+                                                      static_cast<GLenum>(type), indices, baseVertex);
+        } else if (backend->Gl.glDrawRangeElements != nullptr) {
+            backend->Gl.glDrawRangeElements(static_cast<GLenum>(mode), start, end, count,
+                                            static_cast<GLenum>(type), indices);
+        }
+    }
+
+    void DrawElementsInstancedBaseVertexBackend(MobileGLBackend* backend, MobileGLSessionId session,
+                                                uint32_t mode, int32_t count, uint32_t type,
+                                                const void* indices, int32_t instanceCount,
+                                                int32_t baseVertex) {
+        const std::lock_guard<std::recursive_mutex> lock(backend->Mutex);
+        if (!EnsureCurrent(backend, session)) {
+            return;
+        }
+        if (backend->Gl.glDrawElementsInstancedBaseVertex != nullptr) {
+            backend->Gl.glDrawElementsInstancedBaseVertex(static_cast<GLenum>(mode), count,
+                                                          static_cast<GLenum>(type), indices,
+                                                          instanceCount, baseVertex);
+        } else if (backend->Gl.glDrawElementsInstanced != nullptr) {
+            backend->Gl.glDrawElementsInstanced(static_cast<GLenum>(mode), count,
+                                                static_cast<GLenum>(type), indices, instanceCount);
+        }
+    }
+
+    void DrawElementsInstancedBaseInstanceBackend(MobileGLBackend* backend, MobileGLSessionId session,
+                                                  uint32_t mode, int32_t count, uint32_t type,
+                                                  const void* indices, int32_t instanceCount,
+                                                  uint32_t baseInstance) {
+        (void)baseInstance;
+        const std::lock_guard<std::recursive_mutex> lock(backend->Mutex);
+        if (!EnsureCurrent(backend, session)) {
+            return;
+        }
+        if (backend->Gl.glDrawElementsInstancedBaseInstanceEXT != nullptr) {
+            backend->Gl.glDrawElementsInstancedBaseInstanceEXT(static_cast<GLenum>(mode), count,
+                                                               static_cast<GLenum>(type), indices,
+                                                               instanceCount, baseInstance);
+        } else if (backend->Gl.glDrawElementsInstanced != nullptr) {
+            backend->Gl.glDrawElementsInstanced(static_cast<GLenum>(mode), count,
+                                                static_cast<GLenum>(type), indices, instanceCount);
+        }
+    }
+
+    void DrawElementsInstancedBaseVertexBaseInstanceBackend(MobileGLBackend* backend,
+                                                            MobileGLSessionId session, uint32_t mode,
+                                                            int32_t count, uint32_t type,
+                                                            const void* indices, int32_t instanceCount,
+                                                            int32_t baseVertex,
+                                                            uint32_t baseInstance) {
+        const std::lock_guard<std::recursive_mutex> lock(backend->Mutex);
+        if (!EnsureCurrent(backend, session)) {
+            return;
+        }
+        if (backend->Gl.glDrawElementsInstancedBaseVertexBaseInstanceEXT != nullptr) {
+            backend->Gl.glDrawElementsInstancedBaseVertexBaseInstanceEXT(
+                static_cast<GLenum>(mode), count, static_cast<GLenum>(type), indices,
+                instanceCount, baseVertex, baseInstance);
+        } else {
+            DrawElementsInstancedBaseVertexBackend(backend, session, mode, count, type, indices,
+                                                   instanceCount, baseVertex);
+        }
+    }
+
+    void DrawArraysInstancedBaseInstanceBackend(MobileGLBackend* backend, MobileGLSessionId session,
+                                                uint32_t mode, int32_t first, int32_t count,
+                                                int32_t instanceCount, uint32_t baseInstance) {
+        const std::lock_guard<std::recursive_mutex> lock(backend->Mutex);
+        if (!EnsureCurrent(backend, session)) {
+            return;
+        }
+        if (backend->Gl.glDrawArraysInstancedBaseInstanceEXT != nullptr) {
+            backend->Gl.glDrawArraysInstancedBaseInstanceEXT(static_cast<GLenum>(mode), first, count,
+                                                             instanceCount, baseInstance);
+        } else if (backend->Gl.glDrawArraysInstanced != nullptr) {
+            backend->Gl.glDrawArraysInstanced(static_cast<GLenum>(mode), first, count, instanceCount);
+        }
+    }
+
+    void GetIntegeri_vBackend(MobileGLBackend* backend, MobileGLSessionId session, uint32_t target,
+                              uint32_t index, int32_t* data) {
+        const std::lock_guard<std::recursive_mutex> lock(backend->Mutex);
+        if (!EnsureCurrent(backend, session)) {
+            return;
+        }
+        if (backend->Gl.glGetIntegeri_v != nullptr && data != nullptr) {
+            backend->Gl.glGetIntegeri_v(static_cast<GLenum>(target), index, data);
+        } else if (data != nullptr) {
+            *data = 0;
+        }
+    }
+
+    void GetInteger64i_vBackend(MobileGLBackend* backend, MobileGLSessionId session, uint32_t target,
+                                uint32_t index, int64_t* data) {
+        const std::lock_guard<std::recursive_mutex> lock(backend->Mutex);
+        if (!EnsureCurrent(backend, session)) {
+            return;
+        }
+        if (backend->Gl.glGetInteger64i_v != nullptr && data != nullptr) {
+            backend->Gl.glGetInteger64i_v(static_cast<GLenum>(target), index, data);
+        } else if (data != nullptr) {
+            *data = 0;
+        }
+    }
+
+    void GetProgramivBackend(MobileGLBackend* backend, MobileGLSessionId session,
+                             MobileGLBackendHandle program, uint32_t pname, int32_t* params) {
+        const std::lock_guard<std::recursive_mutex> lock(backend->Mutex);
+        if (!EnsureCurrent(backend, session)) {
+            return;
+        }
+        if (backend->Gl.glGetProgramiv != nullptr && params != nullptr) {
+            const GLuint name = static_cast<GLuint>(program);
+            backend->Gl.glGetProgramiv(name, static_cast<GLenum>(pname), params);
+        } else if (params != nullptr) {
+            *params = 0;
+        }
+    }
+
 
     void DrawArraysIndirectBackend(MobileGLBackend* backend, MobileGLSessionId session, uint32_t mode,
                                    const void* indirect) {
@@ -1241,6 +1430,17 @@ namespace {
         .GetDynamicParameters = &GetDynamicParametersBackend,
         .GetFormatCapabilities = &GetFormatCapabilitiesBackend,
         .GetFormatSampleCounts = &GetFormatSampleCountsBackend,
+        .MultiDrawElementsBaseVertex = &MultiDrawElementsBaseVertexBackend,
+        .MultiDrawArraysIndirectCount = &MultiDrawArraysIndirectCountBackend,
+        .MultiDrawElementsIndirectCount = &MultiDrawElementsIndirectCountBackend,
+        .DrawRangeElementsBaseVertex = &DrawRangeElementsBaseVertexBackend,
+        .DrawElementsInstancedBaseVertex = &DrawElementsInstancedBaseVertexBackend,
+        .DrawElementsInstancedBaseInstance = &DrawElementsInstancedBaseInstanceBackend,
+        .DrawElementsInstancedBaseVertexBaseInstance = &DrawElementsInstancedBaseVertexBaseInstanceBackend,
+        .DrawArraysInstancedBaseInstance = &DrawArraysInstancedBaseInstanceBackend,
+        .GetIntegeri_v = &GetIntegeri_vBackend,
+        .GetInteger64i_v = &GetInteger64i_vBackend,
+        .GetProgramiv = &GetProgramivBackend,
     };
 } // namespace
 

@@ -21,7 +21,7 @@ extern "C" {
 // ---------------------------------------------------------------------------
 
 #define MOBILEGL_BFA_ABI_MAJOR 1u
-#define MOBILEGL_BFA_ABI_MINOR 0u
+#define MOBILEGL_BFA_ABI_MINOR 1u
 
 // ---------------------------------------------------------------------------
 // IDs / handles. All values are allocated by FullServer and are never reused
@@ -625,6 +625,48 @@ typedef struct MobileGLBackendVTable {
     bool (*GetFormatSampleCounts)(MobileGLBackend* self, MobileGLSessionId session,
                                   uint32_t target, uint32_t format, const uint32_t** counts,
                                   uint32_t* outCount);
+
+    // ABI minor 0.1 additions: the remaining GLFunctionsTable draw/getter
+    // shapes the frontend shim can forward. Plugins that predate these fields
+    // leave them null; FullServer callers must null-check them.
+    void (*MultiDrawElementsBaseVertex)(MobileGLBackend* self, MobileGLSessionId session,
+                                        uint32_t mode, const int32_t* counts, uint32_t type,
+                                        const void* const* indices, int32_t drawCount,
+                                        const int32_t* baseVertex);
+    void (*MultiDrawArraysIndirectCount)(MobileGLBackend* self, MobileGLSessionId session,
+                                         uint32_t mode, const void* indirect,
+                                         int64_t drawCount, int32_t maxDrawCount, int32_t stride);
+    void (*MultiDrawElementsIndirectCount)(MobileGLBackend* self, MobileGLSessionId session,
+                                           uint32_t mode, uint32_t type, const void* indirect,
+                                           int64_t drawCount, int32_t maxDrawCount, int32_t stride);
+    void (*DrawRangeElementsBaseVertex)(MobileGLBackend* self, MobileGLSessionId session,
+                                        uint32_t mode, uint32_t start, uint32_t end,
+                                        int32_t count, uint32_t type, const void* indices,
+                                        int32_t baseVertex);
+    void (*DrawElementsInstancedBaseVertex)(MobileGLBackend* self, MobileGLSessionId session,
+                                            uint32_t mode, int32_t count, uint32_t type,
+                                            const void* indices, int32_t instanceCount,
+                                            int32_t baseVertex);
+    void (*DrawElementsInstancedBaseInstance)(MobileGLBackend* self, MobileGLSessionId session,
+                                              uint32_t mode, int32_t count, uint32_t type,
+                                              const void* indices, int32_t instanceCount,
+                                              uint32_t baseInstance);
+    void (*DrawElementsInstancedBaseVertexBaseInstance)(MobileGLBackend* self,
+                                                        MobileGLSessionId session,
+                                                        uint32_t mode, int32_t count,
+                                                        uint32_t type, const void* indices,
+                                                        int32_t instanceCount,
+                                                        int32_t baseVertex,
+                                                        uint32_t baseInstance);
+    void (*DrawArraysInstancedBaseInstance)(MobileGLBackend* self, MobileGLSessionId session,
+                                            uint32_t mode, int32_t first, int32_t count,
+                                            int32_t instanceCount, uint32_t baseInstance);
+    void (*GetIntegeri_v)(MobileGLBackend* self, MobileGLSessionId session,
+                          uint32_t target, uint32_t index, int32_t* data);
+    void (*GetInteger64i_v)(MobileGLBackend* self, MobileGLSessionId session,
+                            uint32_t target, uint32_t index, int64_t* data);
+    void (*GetProgramiv)(MobileGLBackend* self, MobileGLSessionId session,
+                         MobileGLBackendHandle program, uint32_t pname, int32_t* params);
 } MobileGLBackendVTable;
 
 // ---------------------------------------------------------------------------
