@@ -14,19 +14,23 @@ namespace MobileGL::MG_State::GLState {
         Uint64 s_nextGroupId = 1;
         Uint64 s_nextSessionId = 1;
 
+        // Leak-at-exit storage, matching the convention documented below: the
+        // container itself lives on the heap and is never destroyed by the
+        // runtime, so process exit runs no GL object / backend destructors
+        // while static destruction order across TUs is undefined.
         UnorderedMap<Uint64, SharedPtr<GLSharedGroup>>& SharedGroupMap() {
-            static UnorderedMap<Uint64, SharedPtr<GLSharedGroup>> map;
-            return map;
+            static auto* map = new UnorderedMap<Uint64, SharedPtr<GLSharedGroup>>();
+            return *map;
         }
 
         UnorderedMap<Uint64, SharedPtr<GLContextSession>>& SessionMap() {
-            static UnorderedMap<Uint64, SharedPtr<GLContextSession>> map;
-            return map;
+            static auto* map = new UnorderedMap<Uint64, SharedPtr<GLContextSession>>();
+            return *map;
         }
 
         UnorderedMap<Uint64, GLContextSession*>& CurrentMap() {
-            static UnorderedMap<Uint64, GLContextSession*> map;
-            return map;
+            static auto* map = new UnorderedMap<Uint64, GLContextSession*>();
+            return *map;
         }
     } // namespace
 
