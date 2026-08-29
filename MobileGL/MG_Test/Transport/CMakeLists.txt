@@ -1244,6 +1244,18 @@ endif()
 
 gtest_discover_tests(ClientQueryResultsTest DISCOVERY_TIMEOUT 30 PROPERTIES LABELS unit)
 
+# Every test in this directory compiles ServerCore.cpp / includes Client.h,
+# which transitively consume gen/wire_generated.h; make them wait for the
+# flatbuffers codegen target (MG_FlatBuffersGen) to finish before compiling.
+if (TARGET MG_FlatBuffersGen)
+    get_property(_mobilegl_dir_targets DIRECTORY PROPERTY BUILDSYSTEM_TARGETS)
+    foreach(_t IN LISTS _mobilegl_dir_targets)
+        if (NOT _t MATCHES "^MobileGL_")
+            add_dependencies(${_t} MG_FlatBuffersGen)
+        endif()
+    endforeach()
+endif()
+
 
 
 

@@ -21,4 +21,8 @@ target_include_directories(MobileGL_Client PRIVATE
     ${CMAKE_SOURCE_DIR}/3rdparty/FlatBuffers/include
 )
 
+if (TARGET MG_FlatBuffersGen)
+    add_dependencies(MobileGL_Client MG_FlatBuffersGen)
+endif()
+
 # End of File

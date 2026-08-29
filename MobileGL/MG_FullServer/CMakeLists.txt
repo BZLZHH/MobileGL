@@ -38,4 +38,8 @@ if (UNIX AND NOT APPLE AND NOT ANDROID)
     target_link_libraries(MobileGL_FullServer PRIVATE ${CMAKE_DL_LIBS})
 endif()
 
+if (TARGET MG_FlatBuffersGen)
+    add_dependencies(MobileGL_FullServer MG_FlatBuffersGen)
+endif()
+
 # End of File

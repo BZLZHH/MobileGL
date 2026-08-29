@@ -34,4 +34,28 @@ target_link_libraries(MobileGL_RuntimeApi INTERFACE
     xxHash::xxhash
 )
 
+# -----------------------------------------------------------------------------
+# wire.fbs -> gen/wire_generated.h
+# Generated at build time (cached via the MOBILEGL_FLATC cache variable); the
+# output header is not tracked in git.
+# -----------------------------------------------------------------------------
+find_program(MOBILEGL_FLATC NAMES flatc PATHS /tmp/flatc_bin)
+if(MOBILEGL_FLATC)
+    set(_WIRE_GEN_H ${CMAKE_CURRENT_SOURCE_DIR}/gen/wire_generated.h)
+    add_custom_command(
+        OUTPUT ${_WIRE_GEN_H}
+        COMMAND ${MOBILEGL_FLATC} --cpp --filename-suffix _generated
+                -o ${CMAKE_CURRENT_SOURCE_DIR}/gen ${CMAKE_CURRENT_SOURCE_DIR}/wire.fbs
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/wire.fbs
+        COMMENT "Generating wire_generated.h from wire.fbs"
+        VERBATIM
+    )
+    add_custom_target(MG_FlatBuffersGen ALL DEPENDS ${_WIRE_GEN_H})
+else()
+    message(WARNING
+        "flatc not found on PATH or /tmp/flatc_bin; "
+        "MobileGL/MG_Protocol/gen/wire_generated.h must already exist "
+        "for the C/S targets to compile (set -DMOBILEGL_FLATC=<path> to fix).")
+endif()
+
 # End of File
