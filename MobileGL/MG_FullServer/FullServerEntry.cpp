@@ -116,6 +116,16 @@ extern "C" int mobilegl_fullserver_start(MobileGLFullServerHandle handle) {
         -> MobileGL::Uint {
             return framebuffer != nullptr ? framebuffer->GetExternalIndex() : 0;
         };
+    MobileGL::FullServer::BfaFrontendShim::Get().m_state.TextureNameProvider =
+        [](const MobileGL::SharedPtr<MobileGL::MG_State::GLState::ITextureObject>& texture)
+        -> MobileGL::Uint {
+            return texture != nullptr ? texture->GetExternalIndex() : 0;
+        };
+    MobileGL::FullServer::BfaFrontendShim::Get().m_state.RenderbufferNameProvider =
+        [](const MobileGL::SharedPtr<MobileGL::MG_State::GLState::RenderbufferObject>& renderbuffer)
+        -> MobileGL::Uint {
+            return renderbuffer != nullptr ? renderbuffer->GetExternalIndex() : 0;
+        };
     return 0;
 }
 

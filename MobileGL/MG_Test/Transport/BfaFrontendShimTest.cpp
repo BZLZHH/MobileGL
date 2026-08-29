@@ -287,6 +287,9 @@ namespace MobileGL::Transport {
 
         ASSERT_NE(table.GL.ClearNamedFramebufferfv, nullptr);
         ASSERT_NE(table.GL.BlitNamedFramebuffer, nullptr);
+        ASSERT_NE(table.GL.GetTexImage, nullptr);
+        ASSERT_NE(table.GL.GetTextureImage, nullptr);
+        ASSERT_NE(table.GL.CopyImageSubData, nullptr);
 
         shim.Clear();
     }

@@ -40,6 +40,17 @@ namespace MobileGL::FullServer {
                                                             : 0;
         }
 
+        Uint TextureName(const SharedPtr<MG_State::GLState::ITextureObject>& texture) {
+            auto& state = BfaFrontendShim::Get().m_state;
+            return state.TextureNameProvider != nullptr ? state.TextureNameProvider(texture) : 0;
+        }
+
+        Uint RenderbufferName(const SharedPtr<MG_State::GLState::RenderbufferObject>& renderbuffer) {
+            auto& state = BfaFrontendShim::Get().m_state;
+            return state.RenderbufferNameProvider != nullptr ? state.RenderbufferNameProvider(renderbuffer)
+                                                             : 0;
+        }
+
         void ThunkClear(GLbitfield mask) {
             if (VTable() != nullptr && VTable()->Clear != nullptr) {
                 VTable()->Clear(Backend(), Session(), mask);
@@ -460,6 +471,46 @@ namespace MobileGL::FullServer {
                     srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
             }
         }
+
+        void ThunkGetTexImage(GLenum target, GLint level, GLenum format, GLenum type,
+                              GLvoid* pixels) {
+            if (VTable() != nullptr && VTable()->GetTexImage != nullptr) {
+                VTable()->GetTexImage(Backend(), Session(), target, level, format, type, pixels);
+            }
+        }
+
+        void ThunkGetTextureImage(const SharedPtr<MG_State::GLState::ITextureObject>& texture,
+                                  TextureUploadTarget uploadTarget, GLint level,
+                                  GLenum format, GLenum type, GLsizei bufSize, GLvoid* pixels) {
+            if (VTable() != nullptr && VTable()->GetTextureImage != nullptr && texture != nullptr) {
+                VTable()->GetTextureImage(
+                    Backend(), Session(),
+                    Handle(MobileGLObjectKindTexture, TextureName(texture)),
+                    static_cast<uint32_t>(uploadTarget), level, format, type, bufSize, pixels);
+            }
+        }
+
+        void ThunkCopyImageSubData(const MG_Backend::CopyImageEndpoint& src, GLenum srcTarget,
+                                   GLint srcLevel, GLint srcX, GLint srcY, GLint srcZ,
+                                   const MG_Backend::CopyImageEndpoint& dst, GLenum dstTarget,
+                                   GLint dstLevel, GLint dstX, GLint dstY, GLint dstZ,
+                                   GLsizei srcWidth, GLsizei srcHeight, GLsizei srcDepth) {
+            if (VTable() == nullptr || VTable()->CopyImageSubData == nullptr) {
+                return;
+            }
+            const auto srcKind = src.IsRenderbuffer() ? MobileGLObjectKindRenderbuffer
+                                                      : MobileGLObjectKindTexture;
+            const auto dstKind = dst.IsRenderbuffer() ? MobileGLObjectKindRenderbuffer
+                                                      : MobileGLObjectKindTexture;
+            const uint64_t srcName = src.IsRenderbuffer() ? RenderbufferName(src.Renderbuffer)
+                                                          : TextureName(src.Texture);
+            const uint64_t dstName = dst.IsRenderbuffer() ? RenderbufferName(dst.Renderbuffer)
+                                                          : TextureName(dst.Texture);
+            VTable()->CopyImageSubData(
+                Backend(), Session(), srcKind, Handle(srcKind, srcName), dstKind,
+                Handle(dstKind, dstName), srcLevel, srcX, srcY, srcZ, dstLevel, dstX, dstY, dstZ,
+                srcWidth, srcHeight, srcDepth);
+        }
     } // namespace
 
     BfaFrontendShim& BfaFrontendShim::Get() {
@@ -501,6 +552,9 @@ namespace MobileGL::FullServer {
         m_state.Table->GL.BlitFramebuffer = &ThunkBlitFramebuffer;
         m_state.Table->GL.CopyTexImage2D = &ThunkCopyTexImage2D;
         m_state.Table->GL.CopyTexSubImage2D = &ThunkCopyTexSubImage2D;
+        m_state.Table->GL.CopyImageSubData = &ThunkCopyImageSubData;
+        m_state.Table->GL.GetTexImage = &ThunkGetTexImage;
+        m_state.Table->GL.GetTextureImage = &ThunkGetTextureImage;
         m_state.Table->GL.GenerateMipmap = &ThunkGenerateMipmap;
         m_state.Table->GL.DispatchCompute = &ThunkDispatchCompute;
         m_state.Table->GL.DispatchComputeIndirect = &ThunkDispatchComputeIndirect;

@@ -11,6 +11,11 @@
 #include "MG_Protocol/bfa.h"
 #include "MG_State/GLState/FramebufferState/FramebufferObject.h"
 
+namespace MobileGL::MG_State::GLState {
+    class ITextureObject;
+    class RenderbufferObject;
+} // namespace MobileGL::MG_State::GLState
+
 namespace MobileGL::MG_Backend {
     struct GlobalBackendFunctionsTable;
 } // namespace MobileGL::MG_Backend
@@ -52,6 +57,11 @@ namespace MobileGL::FullServer {
             // by FullServerEntry so the shim itself has no core dependency.
             Uint (*FramebufferNameProvider)(
                 const SharedPtr<MG_State::GLState::FramebufferObject>& framebuffer) = nullptr;
+            // Same for texture / renderbuffer objects (used by GetTextureImage,
+            // CopyImageSubData). Supplied by FullServerEntry.
+            Uint (*TextureNameProvider)(const SharedPtr<MG_State::GLState::ITextureObject>& texture) = nullptr;
+            Uint (*RenderbufferNameProvider)(
+                const SharedPtr<MG_State::GLState::RenderbufferObject>& renderbuffer) = nullptr;
         };
 
         State m_state{};
