@@ -1,7 +1,8 @@
 # C/S Refactor Implementation Status
 
-> 更新：Phase 0 完成，Phase 1-4 进行中（见下方清单）
+> 更新：Phase 0-2 完成；Phase 3 后端迁移未完成（插件仍为 null 存根）；Phase 4 大部分完成（24 类 C/S 命令，含 shm 零拷贝 / 句柄闭环）；Phase 5 插件链路已通；Phase 6 部分完成（全量 ctest 1428/1428，基准已跑）。
 > 分支：`Feat/cs-refactor`（从 `dev@81b17c0` 创建）
+> 最新 HEAD：`2ae39c3d [Docs] (All): Record 1428/1428 ctest unit pass.`（工作区干净）
 > 首次提交：`9be8bcff [Feat] (All): Add C/S refactor Phase 0-5 scaffolding and state/handle registry.`
 > 源码目录约定：新 C/S 模块统一使用项目原有的 `MG_*` 前缀（`MG_Protocol` / `MG_Client` / `MG_FullServer` / `MG_Transport` / `MG_UtilRuntime`），保持 `MobileGL/` 下模块分层一致。
 
@@ -110,10 +111,8 @@
 - [x] `MobileGL/MG_FullServer/Main.cpp` — 启动流程接线（UtilRuntime→BackendPlugin→Create→Initialize→Shutdown）
 - [x] **插件生命周期链路（组件级验证）**：`UtilRuntimeLoader` / `BackendPluginLoader` / `ServerCore` 在 `libMobileGL_FullServer.so` 内编译通过；`BigServerE2ETest` 覆盖 Create→Initialize→command dispatch→Shutdown
 - [x] **DrawElements + shm indices（零拷贝 draw 数据路径）**：wire 增加 `DrawElements{mode,count,type,indices_offset}`；`Client::SendDrawElements` 携带 shm fd；`ServerCore` 接收并映射后把 indices 指针传给 BFA `DrawElements`；`ClientDrawElementsShmTest` 1/1 通过（offset=1 读到 0x2B）
-- [x] **DrawElements + shm indices（零拷贝 draw 数据路径）**：wire 增加 `DrawElements{mode,count,type,indices_offset}`；`Client::SendDrawElements` 携带 shm fd；`ServerCore` 接收并映射后把 indices 指针传给 BFA `DrawElements`；`ClientDrawElementsShmTest` 1/1 通过（offset=1 读到 0x2B）
 - [x] **BufferSubData + shm data（buffer 数据通路）**：wire 增加 `BufferSubData{buffer_handle,offset,size}`；`Client::SendBufferSubData` 携带 shm fd；`ServerCore` 把 shm 指针传给 BFA `BufferSubData`；`ClientBufferSubDataShmTest` 1/1 通过（handle/offset/size/首字节 0x44 精确回查）
-- [x] **PatchParameteri scalar 命令**：wire 增加 `PatchParameteri{pname,value}`；`Client::SendPatchParameteri` + `ServerCore` 解包调 BFA `PatchParameteri`；`ClientPatchParameteriTest` 1/1 通过（0x1234/-7 精确回查）
-- [x] **DrawRangeElements（shm indices + range）**：wire 增加 `DrawRangeElements{mode,start,end,count,type,indices_offset}`；`Client::SendDrawRangeElements` 携带 shm fd；`ServerCore` 映射后把 indices 指针 + start/end 传给 BFA；`ClientDrawRangeElementsTest` 1/1 通过（mode=4/start=2/end=5/count=3/type=5/0x2B 精确回查）
+- [x] **后续 16 类命令已接入（Client*Test 均 1/1）**：`MemoryBarrier` / `MemoryBarrierByRegion` / `PatchParameteri` / `GenerateMipmap` / `DispatchCompute` / `DispatchComputeIndirect` / `Begin/End/Pause/Resume/BindTransformFeedback` / `BlitFramebuffer` / `SwapBuffers` / `DrawArraysInstanced` / `DrawElementsInstanced` / `DrawRangeElements` / `FenceSync`(handle 回传) / `DeleteSync`(handle) / `WaitSync` —— 全部具备 wire 表 + Client API + ServerCore 分发 + null adapter 存根
 - [x] DirectGLES / DirectVulkan null adapter 提供 `Initialize/Shutdown/Display/SharedGroup/Session/Clear/ClearColor/DrawArrays/DrawArraysInstanced/DrawElements/DrawElementsInstanced/DrawRangeElements/BufferSubData/MemoryBarrier/MemoryBarrierByRegion/PatchParameteri/GenerateMipmap/DispatchCompute/DispatchComputeIndirect/Begin/End/Pause/Resume/BindTransformFeedback/BlitFramebuffer/SwapBuffers/FenceSync/DeleteSync/WaitSync` 存根
 - [x] **BigServer 全链路 E2E（in-process）**：Client 命令 → InProcessTransport → `FullServer::ServerCore` → Backend VTable → Response → Client；`BigServerE2ETest` 1/1 通过
 - [x] **BigServer 全链路 E2E（LocalSocketShm）**：client socket → server accept → `ServerCore` 分发 → 响应返回 client；`BigServerE2ETest` 2/2 通过
@@ -125,12 +124,12 @@
 - [x] 多 Session / 多 Display / share group 回归：`ContextRegistryTest` 6/6 通过（含跨 session 对象可见性、不同 Display 分组隔离）
 - [x] **命令往返基准**：`scripts/bench_cs_e2e.py`（Python FlatBuffers → socket → FullServer.so → backend），含 SessionCreate/Destroy 生命周期，100 次往返 avg 30.5µs / min 25.2µs / max 107.5µs（null backend）
 - [x] **shm payload 零拷贝基准**：`ShmPayloadBenchmark`（C++：SessionCreate → 100× SubmitDataCommand+fd 回读 → destroy），avg 34.1µs / min 25.8µs / max 83.4µs（含 SCM_RIGHTS fd + mmap 回读）
-- [ ] 命令批处理、零拷贝 benchmark（shm payload 传输）
+- [ ] 命令批处理基准（batch 提交 vs 逐条）；大 payload（DrawElements / DrawRangeElements / BufferSubData）零拷贝基准
 - [ ] 平台 Surface：X11 → Win32 → Android Binder
 
 ## 下一步
 
-1. 完成 Phase 2 共享对象表迁移（先从 Buffer/Texture 入手）。
-2. Phase 3 把 DirectGLES/DirectVulkan 的 device/sharedgroup/session 状态与 BFA 对齐。
-3. Phase 4 生成完整 `protocol.fbs` + codegen + `LocalSocketShmTransport`。
-4. Phase 5/6 插件化、E2E、回归与 benchmark。
+1. **Phase 3（最高优先）**：DirectGLES 真实渲染层迁入 BFA vtable —— OnSessionCreated/Destroyed 用 `ContextRegistry`+`GLState` 建/销真实上下文并 MakeCurrent；Clear/ClearColor/DrawArrays/DrawElements/BufferSubData 调真实 GLES entry points。注意静态库双份 static 状态与 `gBackendFunctionsTable`（MG_Backend 已被核心库排除）的 link 设计，先做符号调研再决定；无 surfaceless EGL 时做最大真实 state-backed 路径并如实记录。DirectVulkan 随后。
+2. Phase 4 剩余：完整 source-list 运行时分发（dispatch/trampoline 全覆盖）、Query/Sync session-private 状态、Token↔session 失效模型。
+3. Phase 6：真实后端基准 + X11/Win32/Android Surface（本机有 lavapipe/lvp 软件光栅，可尝试真实 Vulkan/GLES 初始化）。
+4. 每完成一块：更新本文件 + 提交（`[Feat] (Scope): Subject`）；单线串行推进，不使用 subagent 并行。
