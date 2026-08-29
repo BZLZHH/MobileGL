@@ -40,6 +40,10 @@ struct MobileGLBackend {
     MobileGLSharedGroupId CurrentSharedGroupId = 0;
     MobileGLSessionId CurrentSessionId = 0;
 
+    // Handle-keyed surfaces created through the BFA (pbuffer or window). The
+    // legacy single-field Surface stays for the headless session context.
+    MobileGL::UnorderedMap<MobileGLBackendHandle, EGLSurface> SurfaceByName;
+
     std::recursive_mutex Mutex;
 
     struct NativeSession {

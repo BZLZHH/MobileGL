@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdio>
+#include <cstring>
 #include <numeric>
 #include <thread>
 #include "MG_Client/Client.h"
@@ -47,6 +48,11 @@ namespace {
 
 int main(int argc, char** argv) {
     const uint32_t iterations = argc > 1 ? static_cast<uint32_t>(atoi(argv[1])) : 100;
+    const char* mode = argc > 2 ? argv[2] : "single";
+    const uint32_t batchSize = 64;
+    const uint64_t payloadSize =
+        (std::string(mode) == "large" || std::string(mode) == "large-batch") ? (4ull * 1024ull * 1024ull) : 1ull;
+    const bool useBatch = std::string(mode) == "batch" || std::string(mode) == "large-batch";
     const uint64_t sessionId = 5;
 
     const char* endpoint = "/tmp/mobilegl_shm_bench.sock";
@@ -68,7 +74,7 @@ int main(int argc, char** argv) {
     config.structSize = sizeof(MobileGLTransportConfig);
     config.kind = MobileGLTransportKindLocalSocketShm;
     config.endpoint = endpoint;
-    config.maxShmArenaSize = 1024 * 1024;
+    config.maxShmArenaSize = 64 * 1024 * 1024;
     config.timeoutMs = 0;
     if (!ops.Start(client, &config)) {
         return 1;
@@ -80,12 +86,15 @@ int main(int argc, char** argv) {
     if (!MobileGL::Client::InitializeWithTransport(client, &ops)) return 1;
 
     MobileGLShmHandle shm{};
-    if (!ops.OpenSharedMemory(client, &shm)) return 1;
-    static_cast<uint8_t*>(shm.mappedAddress)[0] = 0x11;
+    if (!ops.OpenSharedMemory(client, &shm) || shm.mappedAddress == nullptr) return 1;
+    if (shm.size < payloadSize) return 1;
+    std::memset(shm.mappedAddress, 0x11, static_cast<size_t>(payloadSize));
 
+    const uint32_t commandsPerIteration = useBatch ? batchSize : 1;
+    const uint32_t totalCommands = iterations * commandsPerIteration;
     bool serverOk = false;
     std::thread serverThread([&] {
-        for (uint32_t i = 0; i < iterations + 1; ++i) {
+        for (uint32_t i = 0; i < totalCommands + 1; ++i) {
             if (!core.ServiceOnce()) return;
         }
         serverOk = true;
@@ -98,15 +107,26 @@ int main(int argc, char** argv) {
 
     std::vector<uint64_t> latencies;
     latencies.reserve(iterations);
+    uint64_t nextToken = 1;
     for (uint32_t i = 0; i < iterations; ++i) {
         const auto started = std::chrono::steady_clock::now();
-        if (!MobileGL::Client::SubmitDataCommand(
-                static_cast<uint32_t>(sessionId),
-                static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glClear),
-                i + 1, 0, 1, &shm) ||
-            !MobileGL::Client::WaitResponseForToken(i + 1, 5000)) {
-            printf("iteration %u failed\n", i);
-            return 1;
+        for (uint32_t j = 0; j < commandsPerIteration; ++j) {
+            if (!MobileGL::Client::SubmitDataCommand(
+                    static_cast<uint32_t>(sessionId),
+                    static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glClear),
+                    nextToken, 0, payloadSize, &shm)) {
+                printf("iteration %u submit failed\n", i);
+                return 1;
+            }
+            ++nextToken;
+        }
+        for (uint32_t j = 0; j < commandsPerIteration; ++j) {
+            const uint64_t token = nextToken - commandsPerIteration + j;
+            if (!MobileGL::Client::WaitResponseForToken(token, 5000)) {
+                printf("iteration %u wait failed (token %llu)\n", i,
+                       static_cast<unsigned long long>(token));
+                return 1;
+            }
         }
         latencies.push_back(std::chrono::duration_cast<std::chrono::nanoseconds>(
                                 std::chrono::steady_clock::now() - started)
@@ -118,9 +138,13 @@ int main(int argc, char** argv) {
                            latencies.size();
     const uint64_t minNs = *std::min_element(latencies.begin(), latencies.end());
     const uint64_t maxNs = *std::max_element(latencies.begin(), latencies.end());
+    const uint64_t perCommandAvgNs = avgNs / commandsPerIteration;
 
-    printf("iterations=%u avg_us=%.1f min_us=%.1f max_us=%.1f serverOk=%d\n",
-           iterations, avgNs / 1000.0, minNs / 1000.0, maxNs / 1000.0, serverOk ? 1 : 0);
+    printf("mode=%s payload_bytes=%llu iterations=%u batch=%u "
+           "per_command_avg_us=%.1f per_batch_avg_us=%.1f min_us=%.1f max_us=%.1f serverOk=%d\n",
+           mode, static_cast<unsigned long long>(payloadSize), iterations,
+           useBatch ? batchSize : 1, perCommandAvgNs / 1000.0, avgNs / 1000.0,
+           minNs / 1000.0, maxNs / 1000.0, serverOk ? 1 : 0);
 
     ops.ReleaseSharedMemory(client, &shm);
     core.Shutdown();

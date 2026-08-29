@@ -476,6 +476,7 @@ namespace {
             }
         }
         backend->Sessions.clear();
+        backend->SurfaceByName.clear();
         backend->BufferNames.clear();
         backend->TextureNames.clear();
         backend->SyncNames.clear();
@@ -511,6 +512,7 @@ namespace {
             }
         }
         backend->Sessions.clear();
+        backend->SurfaceByName.clear();
     }
 
     bool OnSharedGroupCreatedBackend(MobileGLBackend* backend, MobileGLSharedGroupId group, const void* shareInfo) {
@@ -648,17 +650,45 @@ namespace {
         }
         const EGLint attribs[] = {EGL_WIDTH, width, EGL_HEIGHT, height, EGL_NONE};
         backend->Surface = backend->Egl.eglCreatePbufferSurface(backend->Display, backend->Config, attribs);
+        if (backend->Surface != EGL_NO_SURFACE) {
+            backend->SurfaceByName[surface] = backend->Surface;
+        }
         return backend->Surface != EGL_NO_SURFACE;
     }
 
     bool CreateWindowSurfaceBackend(MobileGLBackend* backend, MobileGLDisplayId display, MobileGLBackendHandle surface,
                                     const MobileGLSurfaceCreateInfo* info) {
-        (void)surface;
-        (void)info;
         const std::lock_guard<std::recursive_mutex> lock(backend->Mutex);
         backend->CurrentDisplayId = display;
-        BackendLog(backend, 2, "DirectGLES BFA: window surfaces are not supported in the headless path");
+        if (info == nullptr || info->nativeWindow == nullptr) {
+            BackendLog(backend, 2, "DirectGLES BFA: window surface requires a native window");
+            return false;
+        }
+        if (!EnsureDisplay(backend)) {
+            return false;
+        }
+#if defined(_WIN32) || defined(__ANDROID__) || defined(__APPLE__)
+        EGLSurface nativeSurface = EGL_NO_SURFACE;
+        if (backend->Egl.eglCreatePlatformWindowSurface != nullptr) {
+            nativeSurface = backend->Egl.eglCreatePlatformWindowSurface(
+                backend->Display, backend->Config, info->nativeWindow, nullptr);
+        } else if (backend->Egl.eglCreateWindowSurface != nullptr) {
+            nativeSurface = backend->Egl.eglCreateWindowSurface(
+                backend->Display, backend->Config,
+                reinterpret_cast<EGLNativeWindowType>(info->nativeWindow), nullptr);
+        }
+        if (nativeSurface != EGL_NO_SURFACE) {
+            backend->SurfaceByName[surface] = nativeSurface;
+            return true;
+        }
+        BackendLog(backend, 2, "DirectGLES BFA: eglCreateWindowSurface failed (error 0x%x)",
+                   backend->Egl.eglGetError == nullptr ? 0u : backend->Egl.eglGetError());
         return false;
+#else
+        (void)surface;
+        BackendLog(backend, 2, "DirectGLES BFA: window surfaces are not supported on this platform yet");
+        return false;
+#endif
     }
 
     bool ResizeSurfaceBackend(MobileGLBackend* backend, MobileGLDisplayId display, MobileGLBackendHandle surface,
@@ -681,16 +711,25 @@ namespace {
     }
 
     bool SwapBuffersBackend(MobileGLBackend* backend, MobileGLSessionId session, MobileGLBackendHandle draw) {
-        (void)draw;
         const std::lock_guard<std::recursive_mutex> lock(backend->Mutex);
         if (!EnsureCurrent(backend, session) || backend->Egl.eglSwapBuffers == nullptr) {
             return false;
         }
         const auto it = backend->Sessions.find(session);
-        if (it == backend->Sessions.end() || it->second.Surface == EGL_NO_SURFACE) {
+        if (it == backend->Sessions.end()) {
+            return false;
+        }
+        EGLSurface surfaceToSwap = it->second.Surface;
+        if (draw != 0) {
+            const auto surfaceIt = backend->SurfaceByName.find(draw);
+            if (surfaceIt != backend->SurfaceByName.end()) {
+                surfaceToSwap = surfaceIt->second;
+            }
+        }
+        if (surfaceToSwap == EGL_NO_SURFACE) {
             return true;
         }
-        return backend->Egl.eglSwapBuffers(backend->Display, it->second.Surface) != EGL_FALSE;
+        return backend->Egl.eglSwapBuffers(backend->Display, surfaceToSwap) != EGL_FALSE;
     }
 
     void SetSwapIntervalBackend(MobileGLBackend* backend, MobileGLSessionId session, int32_t interval) {
@@ -703,12 +742,17 @@ namespace {
 
     void ReleaseEGLSurfaceBackend(MobileGLBackend* backend, MobileGLDisplayId display, MobileGLBackendHandle surface) {
         (void)display;
-        (void)surface;
         const std::lock_guard<std::recursive_mutex> lock(backend->Mutex);
-        if (backend->Surface != EGL_NO_SURFACE && backend->Egl.eglDestroySurface != nullptr) {
-            backend->Egl.eglDestroySurface(backend->Display, backend->Surface);
+        const auto it = backend->SurfaceByName.find(surface);
+        if (it != backend->SurfaceByName.end()) {
+            if (it->second != EGL_NO_SURFACE && backend->Egl.eglDestroySurface != nullptr) {
+                backend->Egl.eglDestroySurface(backend->Display, it->second);
+            }
+            if (backend->Surface == it->second) {
+                backend->Surface = EGL_NO_SURFACE;
+            }
+            backend->SurfaceByName.erase(it);
         }
-        backend->Surface = EGL_NO_SURFACE;
     }
 
     void ReleaseEGLResourcesBackend(MobileGLBackend* backend, MobileGLDisplayId display, MobileGLSessionId session) {
@@ -719,6 +763,12 @@ namespace {
             backend->Egl.eglDestroySurface(backend->Display, backend->Surface);
         }
         backend->Surface = EGL_NO_SURFACE;
+        for (auto& entry : backend->SurfaceByName) {
+            if (entry.second != EGL_NO_SURFACE && backend->Egl.eglDestroySurface != nullptr) {
+                backend->Egl.eglDestroySurface(backend->Display, entry.second);
+            }
+        }
+        backend->SurfaceByName.clear();
     }
 
     void ClearBackend(MobileGLBackend* backend, MobileGLSessionId session, uint32_t mask) {

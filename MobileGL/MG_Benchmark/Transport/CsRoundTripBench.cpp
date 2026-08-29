@@ -167,6 +167,40 @@ namespace {
         auto* parsed = MobileGL::Protocol::Wire::GetResponse(response.data());
         return parsed != nullptr && parsed->status() == 0;
     }
+
+    bool BatchClear(uint32_t count, uint64_t tokenBase) {
+        std::vector<std::vector<uint8_t>> frames;
+        frames.reserve(count);
+        for (uint32_t i = 0; i < count; ++i) {
+            flatbuffers::FlatBufferBuilder builder;
+            auto clear = MobileGL::Protocol::Wire::CreateGlClear(builder, 0);
+            auto command = MobileGL::Protocol::Wire::CreateCommand(
+                builder,
+                static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glClear),
+                kSessionId, tokenBase + i, clear);
+            auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 0);
+            builder.Finish(message);
+            frames.emplace_back(builder.GetBufferPointer(),
+                                builder.GetBufferPointer() + builder.GetSize());
+        }
+        for (const auto& frame : frames) {
+            if (!SendRaw(Bench().Socket, frame.data(), static_cast<uint32_t>(frame.size()))) {
+                return false;
+            }
+        }
+        std::vector<uint8_t> response;
+        for (uint32_t i = 0; i < count; ++i) {
+            response.clear();
+            if (!RecvRaw(Bench().Socket, response)) {
+                return false;
+            }
+            auto* parsed = MobileGL::Protocol::Wire::GetResponse(response.data());
+            if (parsed == nullptr || parsed->status() != 0 || parsed->token() != tokenBase + i) {
+                return false;
+            }
+        }
+        return true;
+    }
 } // namespace
 
 static void CsRoundTrip(benchmark::State& state) {
@@ -187,5 +221,25 @@ static void CsRoundTrip(benchmark::State& state) {
     Control(1'000'001, kSessionId, 9001); // SessionDestroy (best effort)
 }
 BENCHMARK(CsRoundTrip)->MeasureProcessCPUTime()->UseRealTime();
+
+static void CsBatchRoundTrip(benchmark::State& state) {
+    if (!InitBench()) {
+        state.SkipWithError("FullServer C/S init failed (set MGL_REPO_ROOT)");
+        return;
+    }
+    if (!Control(kSessionCreate, kSessionId, 9100)) {
+        state.SkipWithError("SessionCreate failed");
+        return;
+    }
+    const uint32_t batchSize = static_cast<uint32_t>(state.range(0));
+    for (auto _ : state) {
+        if (!BatchClear(batchSize, state.iterations() * batchSize + 1)) {
+            state.SkipWithError("BatchClear failed");
+            return;
+        }
+    }
+    Control(1'000'001, kSessionId, 9101); // SessionDestroy (best effort)
+}
+BENCHMARK(CsBatchRoundTrip)->Args({16, 64, 256})->MeasureProcessCPUTime()->UseRealTime();
 
 BENCHMARK_MAIN();
