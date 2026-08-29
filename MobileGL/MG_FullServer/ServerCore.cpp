@@ -553,6 +553,30 @@ namespace MobileGL::FullServer {
                 responseShmCount = 1;
                 status = 0;
             }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glGetBufferSubData) &&
+                   m_vtable->BufferReadbackFromGpu != nullptr) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else if (m_ops->OpenSharedMemory == nullptr ||
+                       !m_ops->OpenSharedMemory(m_transport, &responseShm.emplace_back())) {
+                responseShm.clear();
+                status = 1;
+            } else {
+                const auto* rb = command->buffer_readback_from_gpu();
+                const Bool readbackOk = m_vtable->BufferReadbackFromGpu(
+                    m_backend, sessionId,
+                    rb == nullptr ? 0 : rb->buffer_handle(),
+                    rb == nullptr ? 0 : rb->offset(),
+                    rb == nullptr ? 0 : rb->size(),
+                    responseShm.back().mappedAddress);
+                if (readbackOk) {
+                    responseShmCount = 1;
+                    status = 0;
+                } else {
+                    responseShm.clear();
+                    status = 1;
+                }
+            }
         }
 
         for (auto& handle : receivedShm) {

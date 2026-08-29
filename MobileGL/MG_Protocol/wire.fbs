@@ -186,6 +186,12 @@ table ReadPixels {
     type: uint;
 }
 
+table BufferReadbackFromGpu {
+    buffer_handle: ulong;
+    offset: ulong;
+    size: ulong;
+}
+
 table DataBlob {
     offset: ulong;
     size: ulong;
@@ -224,6 +230,7 @@ table Command {
     texture_respecify: TextureRespecify;
     texture_sub_image: TextureSubImage;
     read_pixels: ReadPixels;
+    buffer_readback_from_gpu: BufferReadbackFromGpu;
 }
 
 table Message {

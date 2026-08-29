@@ -146,6 +146,11 @@ namespace MobileGL::Client {
                         int32_t height, uint32_t format, uint32_t type,
                         void* outPixels, Uint64 outSize, Uint64 token);
 
+    // Sends a typed glGetBufferSubData-style readback; server returns bytes via
+    // shared memory.
+    Bool SendBufferReadbackFromGpu(Uint64 sessionId, uint64_t bufferHandle, uint64_t offset,
+                                   uint64_t size, void* outBytes, Uint64 outSize, Uint64 token);
+
     // Submits a command without waiting for its response.
     Bool SubmitCommand(Uint32 sessionId, Uint32 opcode, Uint64 token);
 

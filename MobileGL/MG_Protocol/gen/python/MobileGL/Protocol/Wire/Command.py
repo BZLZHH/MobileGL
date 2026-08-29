@@ -364,8 +364,19 @@ class Command(object):
             return obj
         return None
 
+    # Command
+    def BufferReadbackFromGpu(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(68))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from MobileGL.Protocol.Wire.BufferReadbackFromGpu import BufferReadbackFromGpu
+            obj = BufferReadbackFromGpu()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
 def CommandStart(builder):
-    builder.StartObject(32)
+    builder.StartObject(33)
 
 def Start(builder):
     CommandStart(builder)
@@ -561,6 +572,12 @@ def CommandAddReadPixels(builder, readPixels):
 
 def AddReadPixels(builder, readPixels):
     CommandAddReadPixels(builder, readPixels)
+
+def CommandAddBufferReadbackFromGpu(builder, bufferReadbackFromGpu):
+    builder.PrependUOffsetTRelativeSlot(32, flatbuffers.number_types.UOffsetTFlags.py_type(bufferReadbackFromGpu), 0)
+
+def AddBufferReadbackFromGpu(builder, bufferReadbackFromGpu):
+    CommandAddBufferReadbackFromGpu(builder, bufferReadbackFromGpu)
 
 def CommandEnd(builder):
     return builder.EndObject()

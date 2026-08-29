@@ -897,6 +897,47 @@ namespace MobileGL::Client {
         return true;
     }
 
+    Bool SendBufferReadbackFromGpu(Uint64 sessionId, uint64_t bufferHandle, uint64_t offset,
+                                   uint64_t size, void* outBytes, Uint64 outSize, Uint64 token) {
+        if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
+            s_lastError = "Client is not initialized.";
+            return false;
+        }
+        flatbuffers::FlatBufferBuilder builder;
+        const auto rb = MobileGL::Protocol::Wire::CreateBufferReadbackFromGpu(builder, bufferHandle, offset, size);
+        MobileGL::Protocol::Wire::CommandBuilder commandBuilder(builder);
+        commandBuilder.add_opcode(static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glGetBufferSubData));
+        commandBuilder.add_session_id(sessionId);
+        commandBuilder.add_token(token);
+        commandBuilder.add_buffer_readback_from_gpu(rb);
+        const auto command = commandBuilder.Finish();
+        const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 0);
+        builder.Finish(message);
+
+        MobileGLCommandBatch batch{};
+        batch.structSize = sizeof(MobileGLCommandBatch);
+        batch.flatBufferData = builder.GetBufferPointer();
+        batch.flatBufferSize = static_cast<Uint32>(builder.GetSize());
+        if (!s_ops->SubmitCommands(s_transport, &batch)) {
+            s_lastError = s_ops->GetLastError(s_transport);
+            return false;
+        }
+        if (!WaitResponseForToken(token, 0)) {
+            return false;
+        }
+        if (s_lastResponseShm.empty() || s_lastResponseShm[0].mappedAddress == nullptr) {
+            s_lastError = "Response did not carry buffer data.";
+            return false;
+        }
+        const Uint64 available = s_lastResponseShm[0].size;
+        if (outBytes == nullptr || outSize > available) {
+            s_lastError = "Buffer output buffer too small for server response.";
+            return false;
+        }
+        Memcpy(outBytes, s_lastResponseShm[0].mappedAddress, static_cast<SizeT>(outSize));
+        return true;
+    }
+
     Bool SubmitCommand(Uint32 sessionId, Uint32 opcode, Uint64 token) {
         return SubmitDataCommand(sessionId, opcode, token, 0, 0, nullptr);
     }

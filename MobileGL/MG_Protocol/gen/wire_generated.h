@@ -101,6 +101,9 @@ struct TextureSubImageBuilder;
 struct ReadPixels;
 struct ReadPixelsBuilder;
 
+struct BufferReadbackFromGpu;
+struct BufferReadbackFromGpuBuilder;
+
 struct DataBlob;
 struct DataBlobBuilder;
 
@@ -1919,6 +1922,68 @@ inline ::flatbuffers::Offset<ReadPixels> CreateReadPixels(
   return builder_.Finish();
 }
 
+struct BufferReadbackFromGpu FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef BufferReadbackFromGpuBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_BUFFER_HANDLE = 4,
+    VT_OFFSET = 6,
+    VT_SIZE = 8
+  };
+  uint64_t buffer_handle() const {
+    return GetField<uint64_t>(VT_BUFFER_HANDLE, 0);
+  }
+  uint64_t offset() const {
+    return GetField<uint64_t>(VT_OFFSET, 0);
+  }
+  uint64_t size() const {
+    return GetField<uint64_t>(VT_SIZE, 0);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint64_t>(verifier, VT_BUFFER_HANDLE, 8) &&
+           VerifyField<uint64_t>(verifier, VT_OFFSET, 8) &&
+           VerifyField<uint64_t>(verifier, VT_SIZE, 8) &&
+           verifier.EndTable();
+  }
+};
+
+struct BufferReadbackFromGpuBuilder {
+  typedef BufferReadbackFromGpu Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_buffer_handle(uint64_t buffer_handle) {
+    fbb_.AddElement<uint64_t>(BufferReadbackFromGpu::VT_BUFFER_HANDLE, buffer_handle, 0);
+  }
+  void add_offset(uint64_t offset) {
+    fbb_.AddElement<uint64_t>(BufferReadbackFromGpu::VT_OFFSET, offset, 0);
+  }
+  void add_size(uint64_t size) {
+    fbb_.AddElement<uint64_t>(BufferReadbackFromGpu::VT_SIZE, size, 0);
+  }
+  explicit BufferReadbackFromGpuBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<BufferReadbackFromGpu> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<BufferReadbackFromGpu>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<BufferReadbackFromGpu> CreateBufferReadbackFromGpu(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint64_t buffer_handle = 0,
+    uint64_t offset = 0,
+    uint64_t size = 0) {
+  BufferReadbackFromGpuBuilder builder_(_fbb);
+  builder_.add_size(size);
+  builder_.add_offset(offset);
+  builder_.add_buffer_handle(buffer_handle);
+  return builder_.Finish();
+}
+
 struct DataBlob FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef DataBlobBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
@@ -2005,7 +2070,8 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_GET_STRING = 60,
     VT_TEXTURE_RESPECIFY = 62,
     VT_TEXTURE_SUB_IMAGE = 64,
-    VT_READ_PIXELS = 66
+    VT_READ_PIXELS = 66,
+    VT_BUFFER_READBACK_FROM_GPU = 68
   };
   uint32_t opcode() const {
     return GetField<uint32_t>(VT_OPCODE, 0);
@@ -2103,6 +2169,9 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   const MobileGL::Protocol::Wire::ReadPixels *read_pixels() const {
     return GetPointer<const MobileGL::Protocol::Wire::ReadPixels *>(VT_READ_PIXELS);
   }
+  const MobileGL::Protocol::Wire::BufferReadbackFromGpu *buffer_readback_from_gpu() const {
+    return GetPointer<const MobileGL::Protocol::Wire::BufferReadbackFromGpu *>(VT_BUFFER_READBACK_FROM_GPU);
+  }
   template <bool B = false>
   bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -2167,6 +2236,8 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            verifier.VerifyTable(texture_sub_image()) &&
            VerifyOffset(verifier, VT_READ_PIXELS) &&
            verifier.VerifyTable(read_pixels()) &&
+           VerifyOffset(verifier, VT_BUFFER_READBACK_FROM_GPU) &&
+           verifier.VerifyTable(buffer_readback_from_gpu()) &&
            verifier.EndTable();
   }
 };
@@ -2271,6 +2342,9 @@ struct CommandBuilder {
   void add_read_pixels(::flatbuffers::Offset<MobileGL::Protocol::Wire::ReadPixels> read_pixels) {
     fbb_.AddOffset(Command::VT_READ_PIXELS, read_pixels);
   }
+  void add_buffer_readback_from_gpu(::flatbuffers::Offset<MobileGL::Protocol::Wire::BufferReadbackFromGpu> buffer_readback_from_gpu) {
+    fbb_.AddOffset(Command::VT_BUFFER_READBACK_FROM_GPU, buffer_readback_from_gpu);
+  }
   explicit CommandBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -2315,10 +2389,12 @@ inline ::flatbuffers::Offset<Command> CreateCommand(
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::GetString> get_string = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::TextureRespecify> texture_respecify = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::TextureSubImage> texture_sub_image = 0,
-    ::flatbuffers::Offset<MobileGL::Protocol::Wire::ReadPixels> read_pixels = 0) {
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::ReadPixels> read_pixels = 0,
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::BufferReadbackFromGpu> buffer_readback_from_gpu = 0) {
   CommandBuilder builder_(_fbb);
   builder_.add_token(token);
   builder_.add_session_id(session_id);
+  builder_.add_buffer_readback_from_gpu(buffer_readback_from_gpu);
   builder_.add_read_pixels(read_pixels);
   builder_.add_texture_sub_image(texture_sub_image);
   builder_.add_texture_respecify(texture_respecify);

@@ -158,6 +158,8 @@ namespace {
         MOBILEGL_LOAD_GLES(glBindBuffer);
         MOBILEGL_LOAD_GLES(glBufferData);
         MOBILEGL_LOAD_GLES(glBufferSubData);
+        MOBILEGL_LOAD_GLES(glMapBufferRange);
+        MOBILEGL_LOAD_GLES(glUnmapBuffer);
         MOBILEGL_LOAD_GLES(glMemoryBarrier);
         MOBILEGL_LOAD_GLES(glMemoryBarrierByRegion);
         MOBILEGL_LOAD_GLES(glPatchParameteri);
@@ -910,6 +912,31 @@ namespace {
         backend->Gl.glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 
+    bool BufferReadbackFromGpuBackend(MobileGLBackend* backend, MobileGLSessionId session,
+                                      MobileGLBackendHandle buffer, uint64_t offset, uint64_t size,
+                                      void* dst) {
+        const std::lock_guard<std::recursive_mutex> lock(backend->Mutex);
+        if (!EnsureCurrent(backend, session) || dst == nullptr || backend->Gl.glBindBuffer == nullptr ||
+            backend->Gl.glMapBufferRange == nullptr || backend->Gl.glUnmapBuffer == nullptr) {
+            return false;
+        }
+        const auto it = backend->BufferNames.find(buffer);
+        if (it == backend->BufferNames.end() || it->second == 0) {
+            return false;
+        }
+        backend->Gl.glBindBuffer(GL_ARRAY_BUFFER, it->second);
+        const void* mapped = backend->Gl.glMapBufferRange(GL_ARRAY_BUFFER, static_cast<GLintptr>(offset),
+                                                          static_cast<GLsizeiptr>(size), GL_MAP_READ_BIT);
+        if (mapped == nullptr) {
+            backend->Gl.glBindBuffer(GL_ARRAY_BUFFER, 0);
+            return false;
+        }
+        memcpy(dst, mapped, static_cast<MobileGL::SizeT>(size));
+        backend->Gl.glUnmapBuffer(GL_ARRAY_BUFFER);
+        backend->Gl.glBindBuffer(GL_ARRAY_BUFFER, 0);
+        return true;
+    }
+
     void MemoryBarrierBackend(MobileGLBackend* backend, MobileGLSessionId session, uint32_t barriers) {
         const std::lock_guard<std::recursive_mutex> lock(backend->Mutex);
         if (!EnsureCurrent(backend, session) || backend->Gl.glMemoryBarrier == nullptr) {
@@ -1152,6 +1179,7 @@ namespace {
         .BindTransformFeedback = &BindTransformFeedbackBackend,
         .BufferRespecify = &BufferRespecifyBackend,
         .BufferSubData = &BufferSubDataBackend,
+        .BufferReadbackFromGpu = &BufferReadbackFromGpuBackend,
         .TextureRespecify = &TextureRespecifyBackend,
         .TextureSubImage = &TextureSubImageBackend,
         .FenceSync = &FenceSyncBackend,
