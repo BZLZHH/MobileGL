@@ -11,6 +11,7 @@
 
 add_library(BackendObject_DirectGLES MODULE
     DirectGLES/PluginManifest.cpp
+    DirectGLES/RealBackend.cpp
 )
 
 target_link_libraries(BackendObject_DirectGLES PRIVATE

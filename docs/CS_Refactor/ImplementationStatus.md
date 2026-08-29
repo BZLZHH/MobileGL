@@ -67,7 +67,9 @@
 - [x] `MobileGL/MG_FullServer/BackendPluginLoader.h/.cpp` — dlopen + manifest ABI 校验 + Create
 - [x] `StateBackendObjectRegistry` 增加 handle-key 并行查找：`RegisterHandle` / `FindByHandle` / `UnregisterHandle`（主 map 仍按 state 指针走热路径；原生 Monolith 编译通过）
 - [x] **Display / SharedGroup 生命周期控制**：`control.h` 增加 `DisplayCreate/Destroy` + `SharedGroupCreate/Destroy`；`Client::SubmitDisplayControl/SubmitSharedGroupControl`；`ServerCore` 调 `OnDisplayCreated/Destroyed/OnSharedGroupCreated/Destroyed`；`ClientHierarchyLifecycleTest` 1/1 通过
-- [ ] DirectGLES / DirectVulkan 后端迁移到 BFA vtable（device/sharedgroup/session 三层）
+- [x] **DirectGLES 真实 BFA 插件初版**：`RealBackend.h/.cpp` 自包含 dlopen `libEGL`/`libGLESv2` + `eglGetProcAddress` 解析；`OnDisplayCreated` 初始化 surfaceless/默认 EGLDisplay 并选 config；`OnSessionCreated` 创建真实 EGLContext（ES3→ES2 fallback）+ pbuffer（失败退 surfaceless no-surface）并 `eglMakeCurrent`；`OnSessionDestroyed` 释放；Clear/ClearColor/DrawArrays/DrawElements/BufferSubData/DrawRangeElements/DrawArraysInstanced/DrawElementsInstanced/MemoryBarrier/MemoryBarrierByRegion/PatchParameteri/GenerateMipmap/DispatchCompute/DispatchComputeIndirect/TransformFeedback 全链/BlitFramebuffer/SwapBuffers/FenceSync/DeleteSync/WaitSync 走真实 GLES/EGL entry points（缺失入口安全 no-op）；Buffer handle→GLuint、Sync handle→GLsync 映射；`GetRendererInfo/GetDynamicParameters` 由真实 `glGetString/glGetIntegerv` 回填
+- [ ] 符号/link 调研（nm 核心库与插件 .so）与最终 link 方案结论；FullServer 侧 BFA→旧 `BackendObject`/`gBackendFunctionsTable` shim（把 MG_Impl/MG_State 前端接入 BFA）待做
+- [ ] DirectVulkan 后端迁移到 BFA vtable（device/sharedgroup/session 三层）
 
 ## Phase 4 — 外部协议落地（进行中）
 
