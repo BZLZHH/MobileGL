@@ -1,8 +1,8 @@
 # C/S Refactor Implementation Status
 
-> 更新：Phase 0-2 完成；Phase 3 DirectGLES 真实 BFA 插件已接入（EGL/GLES 自包含，24+ 类命令真实 entry point）；Phase 4 覆盖 24 类原始命令 + BufferRespecify/Indirect/GetString/TextureRespecify/TextureSubImage/ReadPixels/BufferReadback/Map-Unmap（含服务端→客户端 shm 回读与客户端映射）；Phase 5 插件链路已通；Phase 6 真实 EGL/GLES 平台初验（NVIDIA 驱动）。
+> 更新：Phase 0-2 完成；Phase 3 DirectGLES 真实 BFA 插件已接入（EGL/GLES 自包含，24+ 类命令真实 entry point）；Phase 4 覆盖 24 类原始命令 + BufferRespecify/Indirect/GetString/TextureRespecify/TextureSubImage/ReadPixels/BufferReadback/Map-Unmap（含服务端→客户端 shm 回读与客户端映射）；Phase 5 插件链路已通；Phase 6 真实 EGL/GLES 平台初验（NVIDIA 驱动）+ EGL pbuffer surface 生命周期命令。
 > 分支：`Feat/cs-refactor`（从 `dev@81b17c0` 创建）
-> 最新 HEAD：`f421bb33 [Feat] (MG_Protocol, MG_Client, MG_FullServer): Add client MapBufferRange/UnmapBuffer mappings.`（Map/Unmap 提交后）
+> 最新 HEAD：`d47811fc [Feat] (MG_Protocol, MG_Client, MG_FullServer): Add EGL pbuffer surface lifecycle commands.`（EGL Surface 提交后）
 > 首次提交：`9be8bcff [Feat] (All): Add C/S refactor Phase 0-5 scaffolding and state/handle registry.`
 > 源码目录约定：新 C/S 模块统一使用项目原有的 `MG_*` 前缀（`MG_Protocol` / `MG_Client` / `MG_FullServer` / `MG_Transport` / `MG_UtilRuntime`），保持 `MobileGL/` 下模块分层一致。
 
@@ -13,7 +13,7 @@
 - C/S 目标编译通过：`libMobileGL_FullServer.so`（链接 `libMobileGL_MG_FullServerCore.a`）、`libMobileGL_Client.so`、`libMobileGL_UtilRuntime.so`、`BackendObject_DirectGLES.so`、`BackendObject_DirectVulkan.so`、`libMobileGL_Transport.a` ✅
 - 单元测试：`ContextRegistryTest` 5/5、`HandleRegistryTest` 5/5 通过 ✅
 - **目录重构后全量验证**：C/S 目标与全部相关测试重编译通过；`SanityTest` 82/82、`InProcessTransportTest` 1/1、`BigServerE2ETest` 1/1 通过；`libMobileGL_FullServer.so` 构建成功
-- **全量 ctest（unit）**：1437/1437 通过（3 skipped）✅（含 BufferRespecify / Indirect / GetString / TextureRespecify / TextureSubImage / ReadPixels / BufferReadback / Map-Unmap 新测试）
+- **全量 ctest（unit）**：1438/1438 通过（3 skipped）✅（含 BufferRespecify / Indirect / GetString / TextureRespecify / TextureSubImage / ReadPixels / BufferReadback / Map-Unmap / EGL pbuffer surface 新测试）
 - 第二次构建（共享 Buffer 表迁移后）：`BufferState` 委托 group 级 `SharedBufferObjectTable`，跨 session 可见性测试通过 ✅
 
 ## Phase 0 — 契约定稿 ✅
@@ -136,6 +136,7 @@
 - [x] 多 Session / 多 Display / share group 回归：`ContextRegistryTest` 6/6 通过（含跨 session 对象可见性、不同 Display 分组隔离）
 - [x] **真实 EGL/GLES 平台初验**：`BackendObject_DirectGLES.so`（自包含 EGL/GLES 加载）经 `libMobileGL_FullServer.so` 的 socket 路径创建真实 session；Python 端 `GetString(GL_VENDOR)` 返回 `NVIDIA Corporation`（真实驱动初始化成功；surfaceless/默认 EGL display 路径工作）
 - [x] **平台环境探测**：`DISPLAY=:0`、`WAYLAND_DISPLAY=wayland-0`；`vulkaninfo --summary`：Vulkan 1.4.341、NVIDIA 独显（vendorID 0x10de / deviceID 0x21c4 / driver 610.57.4.0），`VK_KHR_xcb_surface`、`VK_KHR_wayland_surface`、`VK_KHR_surface` 可用；`/usr/share/vulkan/icd.d/` 含 nvidia/lvp/llvmpipe 等 ICD（真实 X11/Wayland C/S Surface 有硬件基础，DirectVulkan 插件仍是 null 存根待迁移）
+- [x] **EGL pbuffer surface 生命周期**：wire 增加 `EglCreatePbufferSurface{display,surface,width,height}` + `EglDestroySurface{display,surface}`；`Client::SendEglCreatePbufferSurface/SendEglDestroySurface`；`ServerCore` 分发到 BFA `CreatePbufferSurface/ReleaseEGLSurface`（按 live display 校验）；真实插件已实现 pbuffer surface 创建/释放；`ClientEglSurfaceTest` 1/1 通过（display/surface/64x48/释放回查）
 - [x] **命令往返基准**：`scripts/bench_cs_e2e.py`（Python FlatBuffers → socket → FullServer.so → backend），含 SessionCreate/Destroy 生命周期，100 次往返 avg 30.5µs / min 25.2µs / max 107.5µs（null backend）
 - [x] **shm payload 零拷贝基准**：`ShmPayloadBenchmark`（C++：SessionCreate → 100× SubmitDataCommand+fd 回读 → destroy），avg 34.1µs / min 25.8µs / max 83.4µs（含 SCM_RIGHTS fd + mmap 回读）
 - [ ] 命令批处理基准（batch 提交 vs 逐条）；大 payload（DrawElements / DrawRangeElements / BufferSubData）零拷贝基准
