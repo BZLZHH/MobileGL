@@ -90,6 +90,8 @@ If you want to try the project right now, you’ll need to build it yourself:
    
    Alternatively, you can use platform-specific build commands as needed.
 
+For the new Client / FullServer / BackendObject split, see [C/S Architecture Usage](#cs-architecture-usage-preview) below.
+
 ### Build For macOS
 
 On macOS, MobileGL can be built as a dylib that exposes the normal OpenGL/CGL/NSOpenGL entry points and routes them to the `DirectVulkan` backend. This is useful for running applications such as Minecraft through their stock GLFW/LWJGL OpenGL path while MobileGL is injected before context creation.
@@ -138,6 +140,7 @@ Also make sure the JVM arguments include:
 |------------------------------| ----------------------------------------------------- | ------- |
 | `MOBILEGL_BUILD_TEST`        | Build MobileGL tests (requires Clang)                 | ON      |
 | `MOBILEGL_BUILD_BENCHMARK`   | Build MobileGL benchmarks (requires Clang)            | ON      |
+| `MOBILEGL_BUILD_CS_REFACTOR` | Build C/S refactor targets (Client/FullServer/UtilRuntime/BackendObject plugins) | OFF |
 | `MOBILEGL_FORCE_RELEASE_OPT` | Enable O3 and LTO in Debug build                      | ON      |
 | `MOBILEGL_ENABLE_TRACY`      | Enable Tracy profiler for performance analysis        | OFF     |
 
@@ -146,6 +149,247 @@ Also make sure the JVM arguments include:
 * The project requires C++23.
 * `MG_Test` and `MG_Benchmark` can only be built with Clang, not GCC. To enforce Clang, add `-DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++` to your command.
 * On Android, tests and benchmarks are always disabled.
+
+## C/S Architecture Usage (Preview)
+
+> [!NOTE]
+> This is an **experimental, development preview**. The Client / FullServer /
+> BackendObject split is built behind `MOBILEGL_BUILD_CS_REFACTOR=ON`; the legacy
+> monolith (`MobileGL` / `MobileGL_s`) remains the default build and is kept as a
+> reference until the migration completes. `BackendObject_DirectGLES.so` is the
+> real EGL/GLES BFA plugin. `BackendObject_DirectVulkan.so` is currently a null
+> ABI adapter awaiting the DirectVulkan BFA migration.
+
+### Architecture at a glance
+
+| Target / artifact | Role |
+|---|---|
+| `MobileGL_Client` (`libMobileGL_Client.so`) | Thin client in the application process; owns one control connection, no GL state |
+| `MobileGL_FullServer` (`libMobileGL_FullServer.so`) | Complete frontend (`MG_Impl` + `MG_State` + `MG_Util`) plus BFA host, plugin loader and transport; loaded by a host process |
+| `MobileGL_UtilRuntime` (`libMobileGL_UtilRuntime.so`) | C ABI utility services injected into plugins |
+| `BackendObject_DirectGLES.so` | Real DirectGLES backend plugin, `dlopen`ed by the FullServer at runtime |
+| `BackendObject_DirectVulkan.so` | DirectVulkan plugin scaffold (null adapter, Phase 5) |
+| `MobileGL_Transport` | Transport library: local socket + shared memory, plus an in-process transport for tests |
+
+The data path is:
+
+```text
+app process                              BigServer process
+-----------------------------------------------------------
+MobileGL_Client.so  --FlatBuffers+shm--> MobileGL_FullServer.so
+   (no GL state)                            |    + MobileGL_UtilRuntime.so
+                                            v
+                                    BackendObject_*.so
+                                            |
+                                            v
+                                         EGL / GLES / GPU
+```
+
+Full details of the design and current status live in
+[`C_S_REFACTOR_PLAN.md`](C_S_REFACTOR_PLAN.md), the
+[`MobileGL/MG_Protocol/README.md`](MobileGL/MG_Protocol/README.md) contract notes
+and [`docs/CS_Refactor/ImplementationStatus.md`](docs/CS_Refactor/ImplementationStatus.md).
+
+### 1. Build the C/S targets
+
+Configure a separate build directory with the C/S option enabled:
+
+```sh
+cmake -S . -B build-cs -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_C_COMPILER=clang \
+  -DCMAKE_CXX_COMPILER=clang++ \
+  -DMOBILEGL_BUILD_CS_REFACTOR=ON
+```
+
+Build the main C/S artifacts:
+
+```sh
+cmake --build build-cs --target \
+  MobileGL_Client \
+  MobileGL_FullServer \
+  MobileGL_UtilRuntime \
+  BackendObject_DirectGLES \
+  BackendObject_DirectVulkan \
+  -j
+```
+
+Typical output locations (adjust for your build directory):
+
+```text
+build-cs/MobileGL/MG_Client/libMobileGL_Client.so
+build-cs/MobileGL/MG_FullServer/libMobileGL_FullServer.so
+build-cs/MobileGL/MG_UtilRuntime/libMobileGL_UtilRuntime.so
+build-cs/MobileGL/MG_Backend/BackendObject_DirectGLES.so
+build-cs/MobileGL/MG_Backend/BackendObject_DirectVulkan.so
+build-cs/MobileGL/MG_Transport/libMobileGL_Transport.a
+```
+
+Notes:
+
+* The wire code is generated at build time. `flatc` and `python3` must be
+  discoverable: CMake looks for `flatc` on `PATH` or in `/tmp/flatc_bin`
+  (override with `-DMOBILEGL_FLATC=/path/to/flatc`). If codegen is disabled,
+  the generated headers must already exist.
+* `BackendObject_DirectGLES.so` needs a real EGL/GLES driver at runtime
+  (`libEGL` / `libGLESv2`, e.g. Mesa on Linux). Without one, session creation
+  fails because no EGL display/context can be created.
+* The current v1 transport is POSIX + Linux shared memory
+  (`AF_UNIX` + `memfd_create`). Windows/macOS shared-memory paths are not
+  implemented yet; the in-process transport works in tests.
+
+### 2. Start the BigServer from a host process
+
+`libMobileGL_FullServer.so` is **not** a standalone executable. Call it from a
+host process (an app or launcher, or a test/benchmark harness) through the C ABI
+declared in `MobileGL/MG_FullServer/FullServerEntry.h`:
+
+| Entry point | Purpose |
+|---|---|
+| `mobilegl_fullserver_create(utilRuntimePath, backendPath)` | Load `MobileGL_UtilRuntime.so` + one backend plugin, negotiate the ABI, create the backend |
+| `mobilegl_fullserver_start(handle)` | Initialize the backend |
+| `mobilegl_fullserver_run_socket(handle, endpoint, maxCommands)` | Convenience loop: listen on a local socket, accept one client, service up to `maxCommands`, then release |
+| `mobilegl_fullserver_attach_transport(handle, ops, transport)` | Attach an already-accepted transport for a custom event loop |
+| `mobilegl_fullserver_service_once(handle)` | Service one batch from the attached transport |
+| `mobilegl_fullserver_destroy(handle)` | Shut down and free the handle |
+
+Minimal POSIX host example:
+
+```cpp
+#include <dlfcn.h>
+
+using FullServerCreate = void* (*)(const char*, const char*);
+using FullServerStart  = int (*)(void*);
+using FullServerRun    = int (*)(void*, const char*, uint32_t);
+using FullServerDestroy = void (*)(void*);
+
+void* lib = dlopen("build-cs/MobileGL/MG_FullServer/libMobileGL_FullServer.so",
+                   RTLD_NOW | RTLD_GLOBAL);
+auto create  = (FullServerCreate)dlsym(lib, "mobilegl_fullserver_create");
+auto start   = (FullServerStart)dlsym(lib, "mobilegl_fullserver_start");
+auto run     = (FullServerRun)dlsym(lib, "mobilegl_fullserver_run_socket");
+auto destroy = (FullServerDestroy)dlsym(lib, "mobilegl_fullserver_destroy");
+
+void* server = create("build-cs/MobileGL/MG_UtilRuntime/libMobileGL_UtilRuntime.so",
+                      "build-cs/MobileGL/MG_Backend/BackendObject_DirectGLES.so");
+if (server == nullptr || start(server) != 0) { /* handle error */ }
+
+// Blocks until maxCommands have been serviced; call it from a server thread
+// when the client runs concurrently, or use attach_transport/service_once
+// for a custom loop.
+run(server, "/tmp/mobilegl.sock", 1000000);
+
+destroy(server);
+dlclose(lib);
+```
+
+On Windows use `LoadLibrary`/`GetProcAddress` instead of `dlopen`/`dlsym`.
+The entry points are `extern "C"`: `create` returns `nullptr` on failure and
+`start` / `run` / `service_once` return non-zero on failure, so check the return
+values before proceeding (`destroy` returns `void`).
+
+### 3. Connect a client
+
+Link your application against `MobileGL_Client` and `MobileGL_Transport`
+(inside this CMake project: `target_link_libraries(app PRIVATE MobileGL_Client
+MobileGL_Transport MobileGL_Protocol)`) and include `MG_Client/Client.h`. The
+generated full-API wrappers are in `MG_Client/generated_wire_client.h`.
+
+```cpp
+#include <GL/gl.h>
+
+#include "MG_Client/Client.h"
+#include "MG_Client/generated_wire_client.h"
+
+namespace Client = MobileGL::Client;
+
+int main() {
+    Client::ClientConfig cfg;
+    cfg.Endpoint = "/tmp/mobilegl.sock";   // must match the FullServer endpoint
+    if (!Client::Initialize(cfg)) {
+        return 1;                          // check Client::GetLastError()
+    }
+
+    const uint64_t kDisplay = 1;
+    const uint64_t kGroup   = 1;
+    const uint64_t kSession = 1;
+    uint64_t token = 1;
+
+    auto ok = Client::SubmitDisplayControl(kDisplay, true, token) &&
+              Client::WaitResponseForToken(token++, 5000);
+    ok = ok && Client::SubmitSharedGroupControl(kGroup, true, token) &&
+               Client::WaitResponseForToken(token++, 5000);
+    ok = ok && Client::SubmitSessionControl(kSession, true, token) &&
+               Client::WaitResponseForToken(token++, 5000);
+    if (!ok) return 1;
+
+    // Generated wrappers for the supported API surface (1170 are generated)
+    // serialize the argument payload, submit it and block until the matching
+    // response.
+    Client::Wire::SendGlClearColor(kSession, 0.2f, 0.4f, 0.6f, 1.0f, token++);
+    Client::Wire::SendGlClear(kSession, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT,
+                              token++);
+    Client::Wire::SendGlDrawArrays(kSession, GL_TRIANGLES, 0, 3, token++);
+
+    // Typed convenience helpers exist for common hot paths and behave the same.
+    Client::SendSwapBuffers(kSession, 0, token++);
+
+    ok = Client::SubmitSessionControl(kSession, false, token) &&
+         Client::WaitResponseForToken(token++, 5000);
+    Client::Shutdown();
+    return ok ? 0 : 1;
+}
+```
+
+`Client::Send*` calls block until the server answers; `Client::Submit*` calls
+return immediately and are drained with `Client::WaitResponseForToken(token,
+timeout)`. Use unique, monotonically increasing tokens; they are invalidated on
+session destruction, so they are required for correlation.
+
+### 4. Shared memory, batching and readback
+
+For large payloads, allocate a shared-memory region, write into
+`MobileGLShmHandle::mappedAddress`, and pass the handle to the command:
+
+* `Client::SubmitDataCommand(...)` / `SubmitDataCommandBatch(...)` — one
+  command or one message frame containing many commands plus a shared shm region.
+* `Client::SendDrawElements`, `SendBufferSubData`, `SendTextureRespecify`,
+  `SendTextureSubImage`, `SendBufferRespecify` — shm-backed upload paths.
+* `Client::SendReadPixels`, `SendBufferReadbackFromGpu` — server writes results
+  into a returned shm region and the client copies them out.
+* `Client::MapBufferRange` / `UnmapBuffer` — client-side mapped-range protocol.
+
+Reference implementations: `MobileGL/MG_Benchmark/Transport/CsRoundTripBench.cpp`
+and `MobileGL/MG_Test/Transport/ShmPayloadBenchmark.cpp`.
+
+### 5. Smoke test
+
+The transport tests and the C/S benchmarks are registered when
+`MOBILEGL_BUILD_TEST` / `MOBILEGL_BUILD_BENCHMARK` are enabled:
+
+```sh
+ctest --test-dir build-cs -L unit -j
+```
+
+The C/S round-trip benchmark (`CsRoundTripBench`) currently looks for the C/S
+artifacts under `<repo>/build_agent/...`, so use that build directory (or update
+the paths in the benchmark source):
+
+```sh
+cmake -S . -B build_agent -G Ninja \
+  -DMOBILEGL_BUILD_CS_REFACTOR=ON \
+  -DMOBILEGL_BUILD_TEST=ON \
+  -DMOBILEGL_BUILD_BENCHMARK=ON
+cmake --build build_agent --target CsRoundTripBench -j
+MGL_REPO_ROOT=$PWD ./build_agent/MobileGL/MG_Benchmark/Transport/CsRoundTripBench \
+  --benchmark_filter=CsRoundTrip
+```
+
+> [!WARNING]
+> This preview is not yet a drop-in OpenGL replacement: the client currently
+> exposes the C++ command API above (plus generated wire wrappers), not the full
+> `eglGetProcAddress`/exported-symbol trampoline. That layer is part of the
+> remaining Phase 4/5 work.
 
 ## Environment Variables
 
