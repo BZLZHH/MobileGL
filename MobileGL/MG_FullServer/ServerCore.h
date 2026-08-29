@@ -30,6 +30,8 @@ namespace MobileGL::FullServer {
 
     class ServerCore {
     public:
+        using SessionListener = void (*)(MobileGLSessionId sessionId, void* user);
+
         ServerCore(const MobileGLTransportOps* ops, MobileGLTransport* transport,
                    MobileGLBackend* backend, const MobileGLBackendVTable* vtable);
 
@@ -37,12 +39,20 @@ namespace MobileGL::FullServer {
         Bool ServiceOnce();
         void Shutdown();
 
+        // Optional hook fired with the created session id (or 0 on destroy) so
+        // the FullServer can keep the frontend shim's current session in sync.
+        void SetSessionListener(SessionListener listener, void* user);
+
     private:
+        void NotifySessionChanged(MobileGLSessionId sessionId);
+
         const MobileGLTransportOps* m_ops = nullptr;
         MobileGLTransport* m_transport = nullptr;
         MobileGLBackend* m_backend = nullptr;
         const MobileGLBackendVTable* m_vtable = nullptr;
         Bool m_running = false;
+        SessionListener m_sessionListener = nullptr;
+        void* m_sessionUser = nullptr;
         // Sessions created through SessionCreate control commands; commands for
         // unknown/destroyed sessions are rejected until re-created.
         UnorderedMap<MobileGLSessionId, Bool> m_liveSessions;

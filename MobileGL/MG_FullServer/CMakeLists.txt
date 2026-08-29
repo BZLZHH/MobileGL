@@ -15,6 +15,7 @@ add_library(MobileGL_FullServer SHARED
     UtilRuntimeLoader.cpp
     ServerCore.cpp
     FullServerEntry.cpp
+    BfaFrontendShim.cpp
 )
 
 target_link_libraries(MobileGL_FullServer PRIVATE
@@ -29,6 +30,7 @@ target_include_directories(MobileGL_FullServer PRIVATE
     ${CMAKE_SOURCE_DIR}/MobileGL
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/3rdparty/SPIRV-Reflect
+    ${CMAKE_SOURCE_DIR}/3rdparty/Vulkan-Headers/include
     ${CMAKE_SOURCE_DIR}/3rdparty/FlatBuffers/include
 )
 

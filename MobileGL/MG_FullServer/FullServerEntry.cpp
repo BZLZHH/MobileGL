@@ -9,6 +9,7 @@
 #include "FullServerEntry.h"
 #include "BackendHost.h"
 #include "BackendPluginLoader.h"
+#include "BfaFrontendShim.h"
 #include "ServerCore.h"
 #include "UtilRuntimeLoader.h"
 #include "MG_Transport/LocalSocketShmTransport.h"
@@ -21,6 +22,11 @@ namespace MobileGL::FullServer {
         const MobileGLBackendVTable* vtable = nullptr;
         ServerCore* core = nullptr;
     };
+
+    void OnSessionChanged(MobileGLSessionId sessionId, void* user) {
+        (void)user;
+        BfaFrontendShim::Get().SetCurrentSession(sessionId);
+    }
 } // namespace MobileGL::FullServer
 
 extern "C" MobileGLFullServerHandle mobilegl_fullserver_create(const char* utilRuntimePath,
@@ -68,6 +74,8 @@ extern "C" int mobilegl_fullserver_start(MobileGLFullServerHandle handle) {
         !instance->vtable->Initialize(instance->backendObject, nullptr)) {
         return -1;
     }
+    MobileGL::FullServer::BfaFrontendShim::Get().Install(instance->backendObject, instance->vtable,
+                                                         nullptr);
     return 0;
 }
 
@@ -83,6 +91,7 @@ extern "C" int mobilegl_fullserver_attach_transport(MobileGLFullServerHandle han
     }
     instance->core = new MobileGL::FullServer::ServerCore(ops, transport, instance->backendObject,
                                                           instance->vtable);
+    instance->core->SetSessionListener(&MobileGL::FullServer::OnSessionChanged, nullptr);
     return instance->core->Start() ? 0 : -1;
 }
 
@@ -115,6 +124,7 @@ extern "C" int mobilegl_fullserver_run_socket(MobileGLFullServerHandle handle,
     const MobileGLTransportOps& ops = MobileGL::Transport::GetLocalSocketShmTransportOps();
     instance->core = new MobileGL::FullServer::ServerCore(&ops, accepted, instance->backendObject,
                                                           instance->vtable);
+    instance->core->SetSessionListener(&MobileGL::FullServer::OnSessionChanged, nullptr);
     if (!instance->core->Start()) {
         delete instance->core;
         instance->core = nullptr;
@@ -152,6 +162,7 @@ extern "C" void mobilegl_fullserver_destroy(MobileGLFullServerHandle handle) {
         instance->backendObject != nullptr) {
         instance->vtable->Shutdown(instance->backendObject);
     }
+    MobileGL::FullServer::BfaFrontendShim::Get().Clear();
     delete instance;
 }
 

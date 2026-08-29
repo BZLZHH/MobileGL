@@ -83,11 +83,13 @@ namespace MobileGL::FullServer {
             status = m_vtable->OnSessionCreated(m_backend, sessionId, nullptr) ? 0 : 1;
             if (status == 0) {
                 m_liveSessions[sessionId] = true;
+                NotifySessionChanged(sessionId);
             }
         } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLControlOpcode::SessionDestroy) &&
                    m_vtable->OnSessionDestroyed != nullptr) {
             m_vtable->OnSessionDestroyed(m_backend, sessionId);
             m_liveSessions.erase(sessionId);
+            NotifySessionChanged(0);
             status = 0;
         } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLControlOpcode::DisplayCreate) &&
                    m_vtable->OnDisplayCreated != nullptr) {
@@ -707,6 +709,17 @@ namespace MobileGL::FullServer {
             m_ops->ReleaseSharedMemory(m_transport, &handle);
         }
         return submitted;
+    }
+
+    void ServerCore::SetSessionListener(SessionListener listener, void* user) {
+        m_sessionListener = listener;
+        m_sessionUser = user;
+    }
+
+    void ServerCore::NotifySessionChanged(MobileGLSessionId sessionId) {
+        if (m_sessionListener != nullptr) {
+            m_sessionListener(sessionId, m_sessionUser);
+        }
     }
 
     void ServerCore::Shutdown() {
