@@ -205,6 +205,18 @@ table UnmapBuffer {
     size: ulong;
 }
 
+table EglCreatePbufferSurface {
+    display: ulong;
+    surface: ulong;
+    width: int;
+    height: int;
+}
+
+table EglDestroySurface {
+    display: ulong;
+    surface: ulong;
+}
+
 table DataBlob {
     offset: ulong;
     size: ulong;
@@ -246,6 +258,8 @@ table Command {
     buffer_readback_from_gpu: BufferReadbackFromGpu;
     map_buffer_range: MapBufferRange;
     unmap_buffer: UnmapBuffer;
+    egl_create_pbuffer_surface: EglCreatePbufferSurface;
+    egl_destroy_surface: EglDestroySurface;
 }
 
 table Message {

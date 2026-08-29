@@ -159,6 +159,11 @@ namespace MobileGL::Client {
     // UnmapBuffer: flushes the previously mapped bytes back to the server buffer.
     Bool UnmapBuffer(Uint64 sessionId, Uint64 token);
 
+    // EGL surface lifecycle commands.
+    Bool SendEglCreatePbufferSurface(Uint64 displayId, uint64_t surface, int32_t width,
+                                     int32_t height, Uint64 token);
+    Bool SendEglDestroySurface(Uint64 displayId, uint64_t surface, Uint64 token);
+
     // Submits a command without waiting for its response.
     Bool SubmitCommand(Uint32 sessionId, Uint32 opcode, Uint64 token);
 

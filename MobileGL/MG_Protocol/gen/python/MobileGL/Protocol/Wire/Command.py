@@ -397,8 +397,30 @@ class Command(object):
             return obj
         return None
 
+    # Command
+    def EglCreatePbufferSurface(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(74))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from MobileGL.Protocol.Wire.EglCreatePbufferSurface import EglCreatePbufferSurface
+            obj = EglCreatePbufferSurface()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # Command
+    def EglDestroySurface(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(76))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from MobileGL.Protocol.Wire.EglDestroySurface import EglDestroySurface
+            obj = EglDestroySurface()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
 def CommandStart(builder):
-    builder.StartObject(35)
+    builder.StartObject(37)
 
 def Start(builder):
     CommandStart(builder)
@@ -612,6 +634,18 @@ def CommandAddUnmapBuffer(builder, unmapBuffer):
 
 def AddUnmapBuffer(builder, unmapBuffer):
     CommandAddUnmapBuffer(builder, unmapBuffer)
+
+def CommandAddEglCreatePbufferSurface(builder, eglCreatePbufferSurface):
+    builder.PrependUOffsetTRelativeSlot(35, flatbuffers.number_types.UOffsetTFlags.py_type(eglCreatePbufferSurface), 0)
+
+def AddEglCreatePbufferSurface(builder, eglCreatePbufferSurface):
+    CommandAddEglCreatePbufferSurface(builder, eglCreatePbufferSurface)
+
+def CommandAddEglDestroySurface(builder, eglDestroySurface):
+    builder.PrependUOffsetTRelativeSlot(36, flatbuffers.number_types.UOffsetTFlags.py_type(eglDestroySurface), 0)
+
+def AddEglDestroySurface(builder, eglDestroySurface):
+    CommandAddEglDestroySurface(builder, eglDestroySurface)
 
 def CommandEnd(builder):
     return builder.EndObject()

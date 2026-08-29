@@ -617,6 +617,33 @@ namespace MobileGL::FullServer {
                                         data);
                 status = 0;
             }
+        } else if (opcode ==
+                   static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::eglCreatePbufferSurface) &&
+                   m_vtable->CreatePbufferSurface != nullptr) {
+            const auto* ps = command->egl_create_pbuffer_surface();
+            const auto displayId = static_cast<MobileGLDisplayId>(ps == nullptr ? 0 : ps->display());
+            if (m_liveDisplays.find(displayId) == m_liveDisplays.end()) {
+                status = 1;
+            } else {
+                status = m_vtable->CreatePbufferSurface(m_backend, displayId,
+                                                        ps == nullptr ? 0 : ps->surface(),
+                                                        ps == nullptr ? 0 : ps->width(),
+                                                        ps == nullptr ? 0 : ps->height())
+                            ? 0
+                            : 1;
+            }
+        } else if (opcode ==
+                   static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::eglDestroySurface) &&
+                   m_vtable->ReleaseEGLSurface != nullptr) {
+            const auto* ds = command->egl_destroy_surface();
+            const auto displayId = static_cast<MobileGLDisplayId>(ds == nullptr ? 0 : ds->display());
+            if (m_liveDisplays.find(displayId) == m_liveDisplays.end()) {
+                status = 1;
+            } else {
+                m_vtable->ReleaseEGLSurface(m_backend, displayId,
+                                            ds == nullptr ? 0 : ds->surface());
+                status = 0;
+            }
         }
 
         for (auto& handle : receivedShm) {

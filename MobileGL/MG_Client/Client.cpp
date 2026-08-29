@@ -1048,6 +1048,61 @@ namespace MobileGL::Client {
         return true;
     }
 
+    Bool SendEglCreatePbufferSurface(Uint64 displayId, uint64_t surface, int32_t width,
+                                     int32_t height, Uint64 token) {
+        if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
+            s_lastError = "Client is not initialized.";
+            return false;
+        }
+        flatbuffers::FlatBufferBuilder builder;
+        const auto ps = MobileGL::Protocol::Wire::CreateEglCreatePbufferSurface(builder, displayId, surface, width, height);
+        MobileGL::Protocol::Wire::CommandBuilder commandBuilder(builder);
+        commandBuilder.add_opcode(static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::eglCreatePbufferSurface));
+        commandBuilder.add_session_id(displayId);
+        commandBuilder.add_token(token);
+        commandBuilder.add_egl_create_pbuffer_surface(ps);
+        const auto command = commandBuilder.Finish();
+        const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 0);
+        builder.Finish(message);
+
+        MobileGLCommandBatch batch{};
+        batch.structSize = sizeof(MobileGLCommandBatch);
+        batch.flatBufferData = builder.GetBufferPointer();
+        batch.flatBufferSize = static_cast<Uint32>(builder.GetSize());
+        if (!s_ops->SubmitCommands(s_transport, &batch)) {
+            s_lastError = s_ops->GetLastError(s_transport);
+            return false;
+        }
+        return WaitResponseForToken(token, 0);
+    }
+
+    Bool SendEglDestroySurface(Uint64 displayId, uint64_t surface, Uint64 token) {
+        if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
+            s_lastError = "Client is not initialized.";
+            return false;
+        }
+        flatbuffers::FlatBufferBuilder builder;
+        const auto ds = MobileGL::Protocol::Wire::CreateEglDestroySurface(builder, displayId, surface);
+        MobileGL::Protocol::Wire::CommandBuilder commandBuilder(builder);
+        commandBuilder.add_opcode(static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::eglDestroySurface));
+        commandBuilder.add_session_id(displayId);
+        commandBuilder.add_token(token);
+        commandBuilder.add_egl_destroy_surface(ds);
+        const auto command = commandBuilder.Finish();
+        const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 0);
+        builder.Finish(message);
+
+        MobileGLCommandBatch batch{};
+        batch.structSize = sizeof(MobileGLCommandBatch);
+        batch.flatBufferData = builder.GetBufferPointer();
+        batch.flatBufferSize = static_cast<Uint32>(builder.GetSize());
+        if (!s_ops->SubmitCommands(s_transport, &batch)) {
+            s_lastError = s_ops->GetLastError(s_transport);
+            return false;
+        }
+        return WaitResponseForToken(token, 0);
+    }
+
     Bool SubmitCommand(Uint32 sessionId, Uint32 opcode, Uint64 token) {
         return SubmitDataCommand(sessionId, opcode, token, 0, 0, nullptr);
     }

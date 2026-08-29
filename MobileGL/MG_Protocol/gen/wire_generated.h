@@ -110,6 +110,12 @@ struct MapBufferRangeBuilder;
 struct UnmapBuffer;
 struct UnmapBufferBuilder;
 
+struct EglCreatePbufferSurface;
+struct EglCreatePbufferSurfaceBuilder;
+
+struct EglDestroySurface;
+struct EglDestroySurfaceBuilder;
+
 struct DataBlob;
 struct DataBlobBuilder;
 
@@ -2124,6 +2130,130 @@ inline ::flatbuffers::Offset<UnmapBuffer> CreateUnmapBuffer(
   return builder_.Finish();
 }
 
+struct EglCreatePbufferSurface FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef EglCreatePbufferSurfaceBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_DISPLAY = 4,
+    VT_SURFACE = 6,
+    VT_WIDTH = 8,
+    VT_HEIGHT = 10
+  };
+  uint64_t display() const {
+    return GetField<uint64_t>(VT_DISPLAY, 0);
+  }
+  uint64_t surface() const {
+    return GetField<uint64_t>(VT_SURFACE, 0);
+  }
+  int32_t width() const {
+    return GetField<int32_t>(VT_WIDTH, 0);
+  }
+  int32_t height() const {
+    return GetField<int32_t>(VT_HEIGHT, 0);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint64_t>(verifier, VT_DISPLAY, 8) &&
+           VerifyField<uint64_t>(verifier, VT_SURFACE, 8) &&
+           VerifyField<int32_t>(verifier, VT_WIDTH, 4) &&
+           VerifyField<int32_t>(verifier, VT_HEIGHT, 4) &&
+           verifier.EndTable();
+  }
+};
+
+struct EglCreatePbufferSurfaceBuilder {
+  typedef EglCreatePbufferSurface Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_display(uint64_t display) {
+    fbb_.AddElement<uint64_t>(EglCreatePbufferSurface::VT_DISPLAY, display, 0);
+  }
+  void add_surface(uint64_t surface) {
+    fbb_.AddElement<uint64_t>(EglCreatePbufferSurface::VT_SURFACE, surface, 0);
+  }
+  void add_width(int32_t width) {
+    fbb_.AddElement<int32_t>(EglCreatePbufferSurface::VT_WIDTH, width, 0);
+  }
+  void add_height(int32_t height) {
+    fbb_.AddElement<int32_t>(EglCreatePbufferSurface::VT_HEIGHT, height, 0);
+  }
+  explicit EglCreatePbufferSurfaceBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<EglCreatePbufferSurface> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<EglCreatePbufferSurface>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<EglCreatePbufferSurface> CreateEglCreatePbufferSurface(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint64_t display = 0,
+    uint64_t surface = 0,
+    int32_t width = 0,
+    int32_t height = 0) {
+  EglCreatePbufferSurfaceBuilder builder_(_fbb);
+  builder_.add_surface(surface);
+  builder_.add_display(display);
+  builder_.add_height(height);
+  builder_.add_width(width);
+  return builder_.Finish();
+}
+
+struct EglDestroySurface FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef EglDestroySurfaceBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_DISPLAY = 4,
+    VT_SURFACE = 6
+  };
+  uint64_t display() const {
+    return GetField<uint64_t>(VT_DISPLAY, 0);
+  }
+  uint64_t surface() const {
+    return GetField<uint64_t>(VT_SURFACE, 0);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint64_t>(verifier, VT_DISPLAY, 8) &&
+           VerifyField<uint64_t>(verifier, VT_SURFACE, 8) &&
+           verifier.EndTable();
+  }
+};
+
+struct EglDestroySurfaceBuilder {
+  typedef EglDestroySurface Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_display(uint64_t display) {
+    fbb_.AddElement<uint64_t>(EglDestroySurface::VT_DISPLAY, display, 0);
+  }
+  void add_surface(uint64_t surface) {
+    fbb_.AddElement<uint64_t>(EglDestroySurface::VT_SURFACE, surface, 0);
+  }
+  explicit EglDestroySurfaceBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<EglDestroySurface> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<EglDestroySurface>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<EglDestroySurface> CreateEglDestroySurface(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint64_t display = 0,
+    uint64_t surface = 0) {
+  EglDestroySurfaceBuilder builder_(_fbb);
+  builder_.add_surface(surface);
+  builder_.add_display(display);
+  return builder_.Finish();
+}
+
 struct DataBlob FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef DataBlobBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
@@ -2213,7 +2343,9 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_READ_PIXELS = 66,
     VT_BUFFER_READBACK_FROM_GPU = 68,
     VT_MAP_BUFFER_RANGE = 70,
-    VT_UNMAP_BUFFER = 72
+    VT_UNMAP_BUFFER = 72,
+    VT_EGL_CREATE_PBUFFER_SURFACE = 74,
+    VT_EGL_DESTROY_SURFACE = 76
   };
   uint32_t opcode() const {
     return GetField<uint32_t>(VT_OPCODE, 0);
@@ -2320,6 +2452,12 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   const MobileGL::Protocol::Wire::UnmapBuffer *unmap_buffer() const {
     return GetPointer<const MobileGL::Protocol::Wire::UnmapBuffer *>(VT_UNMAP_BUFFER);
   }
+  const MobileGL::Protocol::Wire::EglCreatePbufferSurface *egl_create_pbuffer_surface() const {
+    return GetPointer<const MobileGL::Protocol::Wire::EglCreatePbufferSurface *>(VT_EGL_CREATE_PBUFFER_SURFACE);
+  }
+  const MobileGL::Protocol::Wire::EglDestroySurface *egl_destroy_surface() const {
+    return GetPointer<const MobileGL::Protocol::Wire::EglDestroySurface *>(VT_EGL_DESTROY_SURFACE);
+  }
   template <bool B = false>
   bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -2390,6 +2528,10 @@ struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            verifier.VerifyTable(map_buffer_range()) &&
            VerifyOffset(verifier, VT_UNMAP_BUFFER) &&
            verifier.VerifyTable(unmap_buffer()) &&
+           VerifyOffset(verifier, VT_EGL_CREATE_PBUFFER_SURFACE) &&
+           verifier.VerifyTable(egl_create_pbuffer_surface()) &&
+           VerifyOffset(verifier, VT_EGL_DESTROY_SURFACE) &&
+           verifier.VerifyTable(egl_destroy_surface()) &&
            verifier.EndTable();
   }
 };
@@ -2503,6 +2645,12 @@ struct CommandBuilder {
   void add_unmap_buffer(::flatbuffers::Offset<MobileGL::Protocol::Wire::UnmapBuffer> unmap_buffer) {
     fbb_.AddOffset(Command::VT_UNMAP_BUFFER, unmap_buffer);
   }
+  void add_egl_create_pbuffer_surface(::flatbuffers::Offset<MobileGL::Protocol::Wire::EglCreatePbufferSurface> egl_create_pbuffer_surface) {
+    fbb_.AddOffset(Command::VT_EGL_CREATE_PBUFFER_SURFACE, egl_create_pbuffer_surface);
+  }
+  void add_egl_destroy_surface(::flatbuffers::Offset<MobileGL::Protocol::Wire::EglDestroySurface> egl_destroy_surface) {
+    fbb_.AddOffset(Command::VT_EGL_DESTROY_SURFACE, egl_destroy_surface);
+  }
   explicit CommandBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -2550,10 +2698,14 @@ inline ::flatbuffers::Offset<Command> CreateCommand(
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::ReadPixels> read_pixels = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::BufferReadbackFromGpu> buffer_readback_from_gpu = 0,
     ::flatbuffers::Offset<MobileGL::Protocol::Wire::MapBufferRange> map_buffer_range = 0,
-    ::flatbuffers::Offset<MobileGL::Protocol::Wire::UnmapBuffer> unmap_buffer = 0) {
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::UnmapBuffer> unmap_buffer = 0,
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::EglCreatePbufferSurface> egl_create_pbuffer_surface = 0,
+    ::flatbuffers::Offset<MobileGL::Protocol::Wire::EglDestroySurface> egl_destroy_surface = 0) {
   CommandBuilder builder_(_fbb);
   builder_.add_token(token);
   builder_.add_session_id(session_id);
+  builder_.add_egl_destroy_surface(egl_destroy_surface);
+  builder_.add_egl_create_pbuffer_surface(egl_create_pbuffer_surface);
   builder_.add_unmap_buffer(unmap_buffer);
   builder_.add_map_buffer_range(map_buffer_range);
   builder_.add_buffer_readback_from_gpu(buffer_readback_from_gpu);
