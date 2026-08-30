@@ -59,6 +59,7 @@ if(MOBILEGL_FLATC AND MOBILEGL_PYTHON)
         COMMAND ${MOBILEGL_PYTHON} ${CMAKE_SOURCE_DIR}/scripts/generate_protocol_fbs.py
         DEPENDS ${CMAKE_SOURCE_DIR}/scripts/generate_protocol_fbs.py
                 ${CMAKE_SOURCE_DIR}/MobileGL/MG_Impl/GLImpl/Exporting/Definitions.cpp
+                ${CMAKE_SOURCE_DIR}/MobileGL/MG_Impl/EGLImpl/Exporting/Definitions.cpp
         COMMENT "Regenerating protocol_generated.fbs from Definitions.cpp"
         VERBATIM
     )
@@ -91,6 +92,7 @@ if(MOBILEGL_FLATC AND MOBILEGL_PYTHON)
         COMMAND ${MOBILEGL_PYTHON} ${CMAKE_SOURCE_DIR}/scripts/generate_wire_dispatch.py
         DEPENDS ${CMAKE_SOURCE_DIR}/scripts/generate_wire_dispatch.py
                 ${CMAKE_SOURCE_DIR}/MobileGL/MG_Impl/GLImpl/Exporting/Definitions.cpp
+                ${CMAKE_SOURCE_DIR}/MobileGL/MG_Impl/EGLImpl/Exporting/Definitions.cpp
                 ${_WIRE_FULL_FBS}
                 ${CMAKE_CURRENT_SOURCE_DIR}/generated_opcodes.h
                 ${CMAKE_CURRENT_SOURCE_DIR}/generated_dispatch.h
@@ -105,6 +107,7 @@ if(MOBILEGL_FLATC AND MOBILEGL_PYTHON)
         COMMAND ${MOBILEGL_PYTHON} ${CMAKE_SOURCE_DIR}/scripts/generate_wire_client.py
         DEPENDS ${CMAKE_SOURCE_DIR}/scripts/generate_wire_client.py
                 ${CMAKE_SOURCE_DIR}/MobileGL/MG_Impl/GLImpl/Exporting/Definitions.cpp
+                ${CMAKE_SOURCE_DIR}/MobileGL/MG_Impl/EGLImpl/Exporting/Definitions.cpp
                 ${_WIRE_FULL_FBS}
                 ${CMAKE_CURRENT_SOURCE_DIR}/generated_opcodes.h
                 ${CMAKE_CURRENT_SOURCE_DIR}/generated_dispatch.h
@@ -112,6 +115,22 @@ if(MOBILEGL_FLATC AND MOBILEGL_PYTHON)
         VERBATIM
     )
     add_custom_target(MG_WireClientGen ALL DEPENDS ${_WIRE_CLIENT_H})
+
+    set(_TRAMPOLINE_H ${CMAKE_SOURCE_DIR}/MobileGL/MG_Client/generated_wire_trampoline.h)
+    set(_TRAMPOLINE_CPP ${CMAKE_SOURCE_DIR}/MobileGL/MG_Client/generated_wire_trampoline.cpp)
+    set(_TRAMPOLINE_COVERAGE ${CMAKE_SOURCE_DIR}/MobileGL/MG_Client/generated_trampoline_coverage.txt)
+    add_custom_command(
+        OUTPUT ${_TRAMPOLINE_H} ${_TRAMPOLINE_CPP} ${_TRAMPOLINE_COVERAGE}
+        COMMAND ${MOBILEGL_PYTHON} ${CMAKE_SOURCE_DIR}/scripts/generate_client_trampoline.py
+        DEPENDS ${CMAKE_SOURCE_DIR}/scripts/generate_client_trampoline.py
+                ${CMAKE_SOURCE_DIR}/MobileGL/MG_Impl/GLImpl/Exporting/Definitions.cpp
+                ${_WIRE_FULL_FBS}
+                ${CMAKE_CURRENT_SOURCE_DIR}/generated_opcodes.h
+                ${CMAKE_CURRENT_SOURCE_DIR}/generated_dispatch.h
+        COMMENT "Generating generated_wire_trampoline.h/.cpp"
+        VERBATIM
+    )
+    add_custom_target(MG_TrampolineGen ALL DEPENDS ${_TRAMPOLINE_H} ${_TRAMPOLINE_CPP} ${_TRAMPOLINE_COVERAGE})
 else()
     message(WARNING
         "flatc not found on PATH or /tmp/flatc_bin; "

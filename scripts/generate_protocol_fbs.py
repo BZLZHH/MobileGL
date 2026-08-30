@@ -25,12 +25,21 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFINITIONS = REPO_ROOT / "MobileGL/MG_Impl/GLImpl/Exporting/Definitions.cpp"
+EGL_DEFINITIONS = REPO_ROOT / "MobileGL/MG_Impl/EGLImpl/Exporting/Definitions.cpp"
 OUTPUT = REPO_ROOT / "MobileGL/MG_Protocol/protocol_generated.fbs"
 
 # DECLARE_GL_FUNCTION_HEAD(type, name, args...)
 HEADER_RE = re.compile(
     r"DECLARE_GL_FUNCTION_(?:STUB_)?HEAD\s*\(\s*([^,]+)\s*,\s*([A-Za-z0-9_]+)\s*,\s*(.*?)\)\s*"
     r"DECLARE_GL_FUNCTION_(?:STUB_)?END(?:_NO_RETURN)?\s*\(",
+    re.DOTALL,
+)
+
+# EGL definitions are plain `MOBILEGL_EGL_API <ret> egl*<Name>(args) {` bodies
+# (no macro indirection), so a direct signature regex is sufficient. The lazy
+# return-type group handles multi-token returns such as `char const*`.
+EGL_FUNC_RE = re.compile(
+    r"MOBILEGL_EGL_API\s+(.+?)\s+(egl[A-Za-z0-9_]+)\s*\(([^)]*)\)\s*\{",
     re.DOTALL,
 )
 
@@ -95,6 +104,50 @@ def fbs_type(arg: str) -> str | None:
     arg = re.sub(r"\b(?:const|volatile)\s+", "", arg).strip()
     arg = arg.replace("GLvoid", "void")
     for pattern, fbs in FBS_TYPE_BY_C:
+        if re.fullmatch(pattern + r"\s*", arg):
+            return fbs
+    return None
+
+
+EGL_FBS_TYPE_BY_C = [
+    # Order matters: const pointer forms must be matched before the bare
+    # pointer forms (regex fullmatch against the stripped C type).
+    (r"const\s+EGLint\s*\*", "ShmRegion"),
+    (r"const\s+EGLAttrib\s*\*", "ShmRegion"),
+    (r"const\s+char\s*\*", "string"),
+    (r"EGLint\s*\*", "[int]"),
+    (r"EGLAttrib\s*\*", "[ulong]"),
+    (r"EGLConfig\s*\*", "[uint]"),
+    (r"EGLContext\s*\*", "[ulong]"),
+    (r"EGLint64", "long"),
+    (r"EGLTime", "long"),
+    (r"EGLuint64KHR", "ulong"),
+    (r"EGLuint64", "ulong"),
+    (r"EGLBoolean", "uint"),
+    (r"EGLenum", "uint"),
+    (r"EGLint", "int"),
+    (r"EGLAttrib", "ulong"),
+    (r"EGLAttr", "ulong"),
+    (r"EGLDisplay", "ulong"),
+    (r"EGLContext", "ulong"),
+    (r"EGLSurface", "ulong"),
+    (r"EGLConfig", "ulong"),
+    (r"EGLImage", "ulong"),
+    (r"EGLSync", "ulong"),
+    (r"EGLClientBuffer", "ulong"),
+    (r"EGLNativePixmapType", "ulong"),
+    (r"EGLNativeDisplayType", "ulong"),
+    (r"NativeWindowType", "ulong"),
+    (r"NativeDisplayType", "ulong"),
+    (r"void\s*\*", "ulong"),
+]
+
+
+def egl_fbs_type(arg: str) -> str | None:
+    arg = arg.strip()
+    arg = re.sub(r"=\s*[^,]+$", "", arg).strip()
+    arg = re.sub(r"\b(?:const|volatile)\s+", "", arg).strip()
+    for pattern, fbs in EGL_FBS_TYPE_BY_C:
         if re.fullmatch(pattern + r"\s*", arg):
             return fbs
     return None
@@ -176,6 +229,36 @@ def main() -> int:
         union_entries.append(f"    {table_name},")
         if not ok:
             tables.append(f"// TODO(GEN): incomplete signature for {name}")
+
+    # EGL payload tables from EGLImpl/Exporting/Definitions.cpp. EGL uses
+    # plain foreign-call-style functions (no DECLARE_* macros), so the parser
+    # above does not apply; scan the definitions directly.
+    if EGL_DEFINITIONS.exists():
+        egl_text = EGL_DEFINITIONS.read_text(encoding="utf-8")
+        egl_text = "\n".join(
+            line for line in egl_text.splitlines()
+            if not line.lstrip().startswith("//")
+        )
+        for match in EGL_FUNC_RE.finditer(egl_text):
+            _ret_type, name, arglist = match.group(1).strip(), match.group(2).strip(), match.group(3)
+            table_name = "Egl" + name[3:]
+            if table_name in seen_names:
+                continue
+            seen_names.add(table_name)
+            fields = parse_args(arglist)
+            fbs_fields: list[str] = []
+            ok = True
+            for c_arg_type, arg_name in fields:
+                fbs = egl_fbs_type(c_arg_type)
+                if fbs is None:
+                    ok = False
+                    fbs_fields.append(f"    // TODO: unsupported {c_arg_type} {arg_name}")
+                else:
+                    fbs_fields.append(f"    {arg_name}: {fbs};")
+            tables.append(f"table {table_name} {{\n" + "\n".join(fbs_fields) + "\n}")
+            union_entries.append(f"    {table_name},")
+            if not ok:
+                tables.append(f"// TODO(GEN): incomplete EGL signature for {name}")
 
     header = (
         "// MobileGL - MobileGL/MG_Protocol/protocol_generated.fbs\n"

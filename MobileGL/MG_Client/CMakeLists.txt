@@ -8,12 +8,27 @@
 
 add_library(MobileGL_Client SHARED
     Client.cpp
+    ClientEnv.cpp
+    ClientTrampoline.cpp
+    generated_wire_trampoline.cpp
 )
 
 target_link_libraries(MobileGL_Client PRIVATE
     MobileGL_Protocol
     MobileGL_Transport
 )
+
+# Self-location + dlopen of the sibling FullServer/UtilRuntime/BackendObject
+# libraries (MOBILEGL_CS_MODE=inprocess). Android/bionic has dlopen in libc;
+# desktop Unix needs -ldl explicitly.
+if (UNIX AND NOT ANDROID)
+    target_link_libraries(MobileGL_Client PRIVATE ${CMAKE_DL_LIBS})
+endif()
+
+if (ANDROID)
+    # Client-side diagnostics go through __android_log_print (tag MobileGL_CS).
+    target_link_libraries(MobileGL_Client PRIVATE log)
+endif()
 
 target_include_directories(MobileGL_Client PRIVATE
     ${CMAKE_SOURCE_DIR}/MobileGL
@@ -26,6 +41,9 @@ if (TARGET MG_FlatBuffersGen)
 endif()
 if (TARGET MG_WireClientGen)
     add_dependencies(MobileGL_Client MG_WireClientGen)
+endif()
+if (TARGET MG_TrampolineGen)
+    add_dependencies(MobileGL_Client MG_TrampolineGen)
 endif()
 
 # End of File

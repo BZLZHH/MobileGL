@@ -19,6 +19,11 @@
 #include <unistd.h>
 #endif
 
+#if defined(__ANDROID__)
+#include <linux/memfd.h>
+#include <sys/syscall.h>
+#endif
+
 namespace MobileGL::Transport {
     namespace {
         // Framing: 4-byte little-endian payload length followed by the payload.
@@ -278,7 +283,16 @@ namespace MobileGL::Transport {
                 }
 #if defined(__linux__)
                 const Uint32 arenaSize = m_maxShmArenaSize != 0 ? m_maxShmArenaSize : (64u * 1024u * 1024u);
+#if defined(__ANDROID__)
+                // memfd_create is only declared by bionic from API 30; the
+                // plugin targets minSdk 26, so go through the syscall (the
+                // kernel supports memfd since 3.17, which every Android
+                // device ships).
+                const int fd = static_cast<int>(
+                    syscall(SYS_memfd_create, "mobilegl_shm", static_cast<unsigned int>(MFD_CLOEXEC)));
+#else
                 const int fd = memfd_create("mobilegl_shm", MFD_CLOEXEC);
+#endif
                 if (fd < 0 || ftruncate(fd, arenaSize) != 0) {
                     if (fd >= 0) close(fd);
                     m_lastError = "memfd_create/ftruncate failed.";

@@ -17,6 +17,7 @@ android {
         externalNativeBuild {
             cmake {
                 arguments "-DMOBILEGL_LOG_ACTIVE_LEVEL=${mobileGlLogActiveLevel()}"
+                arguments "-DMOBILEGL_BUILD_CS_REFACTOR=ON"
             }
         }
     }
@@ -38,6 +39,7 @@ android {
             externalNativeBuild {
                 cmake {
                     arguments "-DCMAKE_BUILD_TYPE=RelWithDebInfo"
+                    arguments "-DMOBILEGL_BUILD_CS_REFACTOR=ON"
                 }
             }
         }
@@ -53,6 +55,7 @@ android {
                 externalNativeBuild {
                     cmake {
                         arguments '-DMOBILEGL_TRACE_ANGLE_VARIANTS=ON'
+                        arguments '-DMOBILEGL_BUILD_CS_REFACTOR=ON'
                     }
                 }
             }

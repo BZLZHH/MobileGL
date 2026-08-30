@@ -79,14 +79,20 @@ def main() -> int:
 
     seen: set[str] = set()
     for name, block in tables.items():
-        if not name.startswith("Gl"):
+        if not (name.startswith("Gl") or name.startswith("Egl")):
             continue
-        new_name = "Gen" + name[2:]
+        if name.startswith("Egl"):
+            # EGL payload tables use GenEgl* so glClientWaitSync and
+            # eglClientWaitSync never collide after renaming.
+            new_name = "GenEgl" + name[3:]
+            renamed = re.sub(r"^\s*table\s+Egl", "table GenEgl", block, count=1)
+        else:
+            new_name = "Gen" + name[2:]
+            renamed = re.sub(r"^\s*table\s+Gl", "table Gen", block, count=1)
         if new_name in seen:
             continue
         seen.add(new_name)
         # Replace the leading table name inside the block only.
-        renamed = re.sub(r"^\s*table\s+Gl", "table Gen", block, count=1)
         lines.append(renamed)
         lines.append("\n")
 
@@ -96,6 +102,7 @@ def main() -> int:
         "    session_id: ulong;\n"
         "    token: ulong;\n"
         "    payload_bytes: [ubyte];\n"
+        "    out_capacity: uint;\n"
         "}\n\n"
         "table Message {\n"
         "    command: Command;\n"
@@ -110,6 +117,8 @@ def main() -> int:
         "    string_value: string;\n"
         "    ret_shm_count: uint;\n"
         "    query_ns: ulong;\n"
+        "    ret_i64: long;\n"
+        "    ret_bytes: [ubyte];\n"
         "}\n\n"
         "root_type Message;\n"
     )

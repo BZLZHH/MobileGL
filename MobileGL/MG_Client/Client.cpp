@@ -7,12 +7,28 @@
 // End of Source File Header
 
 #include "Client.h"
+#include "ClientEnv.h"
 #include "MG_Protocol/control.h"
 #include "MG_Protocol/gen/wire_generated.h"
 #include "MG_Protocol/generated_opcodes.h"
+#include "MG_Transport/InProcessTransport.h"
 #include "MG_Transport/LocalSocketShmTransport.h"
 
 #include <flatbuffers/flatbuffers.h>
+
+#if defined(_WIN32)
+#include <windows.h>
+#else
+#include <dlfcn.h>
+#endif
+
+#if defined(__ANDROID__)
+#include <android/log.h>
+#define MOBILEGL_CS_LOG(level, ...) __android_log_print(level, "MobileGL_CS", __VA_ARGS__)
+#define MOBILEGL_CS_LOGD(...) MOBILEGL_CS_LOG(ANDROID_LOG_DEBUG, __VA_ARGS__)
+#else
+#define MOBILEGL_CS_LOGD(...) ((void)0)
+#endif
 
 namespace MobileGL::Client {
     namespace {
@@ -24,11 +40,14 @@ namespace MobileGL::Client {
         String s_lastError;
         Bool s_initialized = false;
         Bool s_ownsTransport = false;
+        thread_local Uint64 s_currentSessionId = 0;
         MobileGLTransport* s_transport = nullptr;
         const MobileGLTransportOps* s_ops = nullptr;
         Uint32 s_lastResponseByte = 0;
         Uint64 s_lastResponseSync = 0;
         Uint64 s_lastResponseQueryNs = 0;
+        int64_t s_lastResponseRetI64 = 0;
+        Vector<Uint8> s_lastResponseBytes;
         String s_lastResponseString;
         Vector<MobileGLShmHandle> s_lastResponseShm;
         MobileGLShmHandle s_mappedShm{};
@@ -43,6 +62,47 @@ namespace MobileGL::Client {
         // (set by SubmitSessionControl(destroy)); invalidation runs after the
         // response is consumed so the destroy call itself can still be waited on.
         UnorderedMap<Uint64, Uint64> s_invalidateAfterResponse;
+
+        // Auto-hosted FullServer state (MOBILEGL_CS_MODE=inprocess). The
+        // handle lives as long as the client connection; Shutdown tears the
+        // FullServer down before releasing the in-process transport.
+        using CreateInProcessFn = void* (*)(const char*, const char*,
+                                            MobileGLTransport**, const MobileGLTransportOps**);
+        using DestroyHostFn = void (*)(void*);
+        void* s_autoServerHandle = nullptr;
+        DestroyHostFn s_autoServerDestroy = nullptr;
+        Bool s_autoHostedTransport = false;
+
+        // Marker inside this DSO, used by dladdr / GetModuleHandleEx to locate
+        // the sibling MobileGL_* libraries without any launcher-provided path.
+        void ClientSelfMarker() {}
+
+        String SelfLibraryDirectory() {
+#if defined(_WIN32)
+            HMODULE module = nullptr;
+            char path[MAX_PATH] = {};
+            const LPCSTR selfAddress =
+                reinterpret_cast<LPCSTR>(reinterpret_cast<std::uintptr_t>(&ClientSelfMarker));
+            if (GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                                       GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                                   selfAddress, &module) != 0 &&
+                GetModuleFileNameA(module, path, MAX_PATH) > 0) {
+                String full(path);
+                const SizeT sep = full.find_last_of("\\/");
+                if (sep != String::npos) return full.substr(0, sep);
+            }
+            return {};
+#else
+            Dl_info info{};
+            if (dladdr(reinterpret_cast<void*>(&ClientSelfMarker), &info) != 0 &&
+                info.dli_fname != nullptr) {
+                String full(info.dli_fname);
+                const SizeT sep = full.find_last_of('/');
+                if (sep != String::npos) return full.substr(0, sep);
+            }
+            return {};
+#endif
+        }
 
         void RegisterToken(Uint64 token, Uint64 sessionId) {
             s_pendingTokens[token] = PendingToken{token, sessionId};
@@ -130,6 +190,88 @@ namespace MobileGL::Client {
         s_ownsTransport = false;
         s_initialized = true;
         s_lastError.clear();
+        return true;
+    }
+
+    Bool InitializeFromEnvironment() {
+        if (s_initialized) {
+            s_lastError = "Client already initialized.";
+            return false;
+        }
+
+        RuntimeConfig cfg = LoadRuntimeConfig();
+        MOBILEGL_CS_LOGD("InitializeFromEnvironment mode=%s backend=%s debug=%d",
+                         cfg.Mode == RuntimeMode::Connect ? "connect" : "inprocess",
+                         cfg.Backend.c_str(), cfg.Debug ? 1 : 0);
+        if (cfg.Mode == RuntimeMode::Connect) {
+            ClientConfig config;
+            config.Endpoint = cfg.Endpoint.empty() ? String("/tmp/mobilegl.sock") : cfg.Endpoint;
+            return Initialize(config);
+        }
+
+        const String directory = SelfLibraryDirectory();
+        if (directory.empty()) {
+            s_lastError = "Unable to locate the MobileGL client library directory.";
+            return false;
+        }
+
+        const String fullServerPath = directory + "/libMobileGL_FullServer.so";
+        const String utilPath =
+            cfg.ServerUtilPath.empty() ? (directory + "/libMobileGL_UtilRuntime.so")
+                                       : cfg.ServerUtilPath;
+        const String backendPath = cfg.ServerBackendPath.empty()
+            ? (directory + "/BackendObject_" + cfg.Backend + ".so")
+            : cfg.ServerBackendPath;
+
+#if defined(_WIN32)
+        HMODULE module = LoadLibraryA(fullServerPath.c_str());
+        if (module == nullptr) {
+            s_lastError = "Failed to load " + fullServerPath;
+            return false;
+        }
+        auto createInProcess = reinterpret_cast<CreateInProcessFn>(
+            GetProcAddress(module, "mobilegl_fullserver_create_inprocess"));
+        auto destroyHost = reinterpret_cast<DestroyHostFn>(
+            GetProcAddress(module, "mobilegl_fullserver_destroy"));
+        if (createInProcess == nullptr || destroyHost == nullptr) {
+            s_lastError = "libMobileGL_FullServer.so does not export the in-process host API.";
+            FreeLibrary(module);
+            return false;
+        }
+#else
+        void* module = dlopen(fullServerPath.c_str(), RTLD_NOW | RTLD_GLOBAL);
+        if (module == nullptr) {
+            s_lastError = "Failed to load " + fullServerPath;
+            return false;
+        }
+        auto createInProcess = reinterpret_cast<CreateInProcessFn>(
+            dlsym(module, "mobilegl_fullserver_create_inprocess"));
+        auto destroyHost =
+            reinterpret_cast<DestroyHostFn>(dlsym(module, "mobilegl_fullserver_destroy"));
+        if (createInProcess == nullptr || destroyHost == nullptr) {
+            s_lastError = "libMobileGL_FullServer.so does not export the in-process host API.";
+            dlclose(module);
+            return false;
+        }
+#endif
+
+        MobileGLTransport* clientTransport = nullptr;
+        const MobileGLTransportOps* clientOps = nullptr;
+        void* handle =
+            createInProcess(utilPath.c_str(), backendPath.c_str(), &clientTransport, &clientOps);
+        if (handle == nullptr || clientTransport == nullptr || clientOps == nullptr) {
+            s_lastError = "FullServer in-process hosting failed.";
+            return false;
+        }
+        if (!InitializeWithTransport(clientTransport, clientOps)) {
+            MOBILEGL_CS_LOGD("FullServer in-process hosting failed: %s", s_lastError.c_str());
+            destroyHost(handle);
+            return false;
+        }
+
+        s_autoServerHandle = handle;
+        s_autoServerDestroy = destroyHost;
+        s_autoHostedTransport = true;
         return true;
     }
 
@@ -1037,6 +1179,40 @@ namespace MobileGL::Client {
         return true;
     }
 
+    Bool SendGetStringi(Uint64 sessionId, uint32_t pname, uint32_t index, Uint64 token,
+                        String* outString) {
+        if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
+            s_lastError = "Client is not initialized.";
+            return false;
+        }
+        flatbuffers::FlatBufferBuilder builder;
+        const auto gs = MobileGL::Protocol::Wire::CreateGetStringi(builder, pname, index);
+        MobileGL::Protocol::Wire::CommandBuilder commandBuilder(builder);
+        commandBuilder.add_opcode(static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glGetStringi));
+        commandBuilder.add_session_id(sessionId);
+        commandBuilder.add_token(token);
+        commandBuilder.add_get_stringi(gs);
+        const auto command = commandBuilder.Finish();
+        const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 0);
+        builder.Finish(message);
+
+        MobileGLCommandBatch batch{};
+        batch.structSize = sizeof(MobileGLCommandBatch);
+        batch.flatBufferData = builder.GetBufferPointer();
+        batch.flatBufferSize = static_cast<Uint32>(builder.GetSize());
+        if (!s_ops->SubmitCommands(s_transport, &batch)) {
+            s_lastError = s_ops->GetLastError(s_transport);
+            return false;
+        }
+        if (!WaitResponseForToken(token, 0)) {
+            return false;
+        }
+        if (outString != nullptr) {
+            *outString = s_lastResponseString;
+        }
+        return true;
+    }
+
     Bool SendTextureRespecify(Uint64 sessionId, uint64_t texture, uint32_t level, uint32_t format,
                               uint32_t type, uint32_t width, uint32_t height, uint32_t depth,
                               uint64_t dataSize, MobileGLShmHandle* shm, Uint64 token) {
@@ -1290,6 +1466,92 @@ namespace MobileGL::Client {
         return true;
     }
 
+    Bool SendGetActiveAttrib(Uint64 sessionId, uint32_t program, uint32_t index,
+                             uint32_t bufSize, Uint64 token) {
+        if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
+            s_lastError = "Client is not initialized.";
+            return false;
+        }
+        flatbuffers::FlatBufferBuilder builder;
+        const auto av = MobileGL::Protocol::Wire::CreateActiveVariable(builder, program, index, bufSize);
+        MobileGL::Protocol::Wire::CommandBuilder commandBuilder(builder);
+        commandBuilder.add_opcode(static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glGetActiveAttrib));
+        commandBuilder.add_session_id(sessionId);
+        commandBuilder.add_token(token);
+        commandBuilder.add_active_attrib(av);
+        const auto command = commandBuilder.Finish();
+        const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 0);
+        builder.Finish(message);
+
+        MobileGLCommandBatch batch{};
+        batch.structSize = sizeof(MobileGLCommandBatch);
+        batch.flatBufferData = builder.GetBufferPointer();
+        batch.flatBufferSize = static_cast<Uint32>(builder.GetSize());
+        if (!s_ops->SubmitCommands(s_transport, &batch)) {
+            s_lastError = s_ops->GetLastError(s_transport);
+            return false;
+        }
+        return WaitResponseForToken(token, 0);
+    }
+
+    Bool SendGetActiveUniform(Uint64 sessionId, uint32_t program, uint32_t index,
+                              uint32_t bufSize, Uint64 token) {
+        if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
+            s_lastError = "Client is not initialized.";
+            return false;
+        }
+        flatbuffers::FlatBufferBuilder builder;
+        const auto av = MobileGL::Protocol::Wire::CreateActiveVariable(builder, program, index, bufSize);
+        MobileGL::Protocol::Wire::CommandBuilder commandBuilder(builder);
+        commandBuilder.add_opcode(static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glGetActiveUniform));
+        commandBuilder.add_session_id(sessionId);
+        commandBuilder.add_token(token);
+        commandBuilder.add_active_uniform(av);
+        const auto command = commandBuilder.Finish();
+        const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 0);
+        builder.Finish(message);
+
+        MobileGLCommandBatch batch{};
+        batch.structSize = sizeof(MobileGLCommandBatch);
+        batch.flatBufferData = builder.GetBufferPointer();
+        batch.flatBufferSize = static_cast<Uint32>(builder.GetSize());
+        if (!s_ops->SubmitCommands(s_transport, &batch)) {
+            s_lastError = s_ops->GetLastError(s_transport);
+            return false;
+        }
+        return WaitResponseForToken(token, 0);
+    }
+
+    Bool SendEglCreateWindowSurface(Uint64 displayId, uint64_t surface, uint64_t nativeWindow,
+                                    Uint64 token) {
+        if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
+            s_lastError = "Client is not initialized.";
+            return false;
+        }
+        flatbuffers::FlatBufferBuilder builder;
+        const auto ws = MobileGL::Protocol::Wire::CreateEglCreateWindowSurface(
+            builder, displayId, surface, nativeWindow);
+        MobileGL::Protocol::Wire::CommandBuilder commandBuilder(builder);
+        commandBuilder.add_opcode(
+            static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::eglCreateWindowSurface));
+        commandBuilder.add_session_id(displayId);
+        commandBuilder.add_token(token);
+        commandBuilder.add_egl_create_window_surface(ws);
+        const auto command = commandBuilder.Finish();
+        const auto message = MobileGL::Protocol::Wire::CreateMessage(builder, command, 0);
+        builder.Finish(message);
+
+        MobileGLCommandBatch batch{};
+        batch.structSize = sizeof(MobileGLCommandBatch);
+        batch.flatBufferData = builder.GetBufferPointer();
+        batch.flatBufferSize = static_cast<Uint32>(builder.GetSize());
+        if (!s_ops->SubmitCommands(s_transport, &batch)) {
+            s_lastError = s_ops->GetLastError(s_transport);
+            return false;
+        }
+        return WaitResponseForToken(token, 0);
+    }
+
     Bool SendEglCreatePbufferSurface(Uint64 displayId, uint64_t surface, int32_t width,
                                      int32_t height, Uint64 token) {
         if (!s_initialized || s_transport == nullptr || s_ops == nullptr) {
@@ -1478,7 +1740,7 @@ namespace MobileGL::Client {
 
     Bool SendWirePayload(Uint64 sessionId, Uint32 opcode, Uint64 token,
                          const uint8_t* payloadBytes, Uint32 payloadSize,
-                         MobileGLShmHandle* shm) {
+                         MobileGLShmHandle* shm, Uint32 outCapacity) {
         if (!s_initialized || s_transport == nullptr || s_ops == nullptr ||
             payloadBytes == nullptr || payloadSize == 0) {
             s_lastError = "Client is not initialized or payload is missing.";
@@ -1493,6 +1755,7 @@ namespace MobileGL::Client {
         commandBuilder.add_session_id(sessionId);
         commandBuilder.add_token(token);
         commandBuilder.add_payload_bytes(payload);
+        commandBuilder.add_out_capacity(outCapacity);
         const auto command = commandBuilder.Finish();
         const auto message =
             MobileGL::Protocol::Wire::CreateMessage(builder, command, shm == nullptr ? 0 : 1);
@@ -1645,6 +1908,13 @@ namespace MobileGL::Client {
             s_lastResponseByte = parsed->data_byte();
             s_lastResponseSync = parsed->sync();
             s_lastResponseQueryNs = parsed->query_ns();
+            s_lastResponseRetI64 = parsed->ret_i64();
+            if (parsed->ret_bytes() != nullptr) {
+                const auto* retBytes = parsed->ret_bytes();
+                s_lastResponseBytes.assign(retBytes->data(), retBytes->data() + retBytes->size());
+            } else {
+                s_lastResponseBytes.clear();
+            }
             if (parsed->string_value() != nullptr) {
                 s_lastResponseString = parsed->string_value()->str();
             } else {
@@ -1684,8 +1954,55 @@ namespace MobileGL::Client {
         return s_lastResponseQueryNs;
     }
 
+    int64_t GetLastResponseRetI64() {
+        return s_lastResponseRetI64;
+    }
+
+    const Vector<Uint8>& GetLastResponseBytes() {
+        return s_lastResponseBytes;
+    }
+
     const String& GetLastResponseString() {
         return s_lastResponseString;
+    }
+
+    void SetCurrentSession(Uint64 sessionId) {
+        s_currentSessionId = sessionId;
+    }
+
+    Uint64 GetCurrentSessionId() {
+        return s_currentSessionId;
+    }
+
+    Bool AllocateShm(Uint64 size, MobileGLShmHandle* out) {
+        if (!s_initialized || s_ops == nullptr || s_transport == nullptr || out == nullptr) {
+            s_lastError = "Client is not initialized.";
+            return false;
+        }
+        if (s_ops->OpenSharedMemory == nullptr) {
+            s_lastError = "Transport does not support shared memory.";
+            return false;
+        }
+        if (!s_ops->OpenSharedMemory(s_transport, out)) {
+            s_lastError = s_ops->GetLastError(s_transport);
+            return false;
+        }
+        if (out->size < size) {
+            s_ops->ReleaseSharedMemory(s_transport, out);
+            s_lastError = "Shared memory region is smaller than requested.";
+            return false;
+        }
+        s_lastError.clear();
+        return true;
+    }
+
+    void ReleaseShm(MobileGLShmHandle* handle) {
+        if (handle == nullptr || s_ops == nullptr || s_transport == nullptr) {
+            return;
+        }
+        if (s_ops->ReleaseSharedMemory != nullptr) {
+            s_ops->ReleaseSharedMemory(s_transport, handle);
+        }
     }
 
     Uint32 GetLastResponseDataByte() {
@@ -1715,9 +2032,20 @@ namespace MobileGL::Client {
         s_mappedOffset = 0;
         s_mappedSize = 0;
         s_mappedShm = {};
+        // Tear down an auto-hosted FullServer before releasing the transport:
+        // mobilegl_fullserver_destroy joins the server loop, then the client
+        // half of the InProcessTransport pair is freed here.
+        if (s_autoServerHandle != nullptr && s_autoServerDestroy != nullptr) {
+            s_autoServerDestroy(s_autoServerHandle);
+            s_autoServerHandle = nullptr;
+            s_autoServerDestroy = nullptr;
+        }
         if (s_transport != nullptr && s_ownsTransport) {
             Transport::DestroyLocalSocketShmTransport(s_transport);
+        } else if (s_transport != nullptr && s_autoHostedTransport) {
+            Transport::DestroyInProcessTransport(s_transport);
         }
+        s_autoHostedTransport = false;
         s_transport = nullptr;
         s_ops = nullptr;
         s_ownsTransport = false;

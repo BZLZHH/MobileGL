@@ -238,6 +238,55 @@ Notes:
   (`AF_UNIX` + `memfd_create`). Windows/macOS shared-memory paths are not
   implemented yet; the in-process transport works in tests.
 
+### Runtime environment variables (`MOBILEGL_CS_*`)
+
+The client reads its runtime layout from these variables (FCL zero-change
+integration: FCL only forwards environment variables and dlopens the renderer
+plugin, so no launcher API is needed):
+
+| Variable | Default | Behavior |
+|---|---|---|
+| `MOBILEGL_CS_MODE` | `inprocess` | `inprocess` = auto-host a FullServer next to `libMobileGL_Client.so`; `connect` = attach to an existing server |
+| `MOBILEGL_CS_ENDPOINT` | `/tmp/mobilegl.sock` | Endpoint used by `connect` mode |
+| `MOBILEGL_CS_BACKEND` | `DirectGLES` | Backend plugin name (e.g. `DirectVulkan`) |
+| `MOBILEGL_CS_SERVER_UTIL` | auto (sibling of the client `.so`) | Override `libMobileGL_UtilRuntime.so` path |
+| `MOBILEGL_CS_SERVER_BACKEND` | auto | Override `BackendObject_<BACKEND>.so` path |
+| `MOBILEGL_CS_DEBUG` | `0` | `1` = enable verbose client/server diagnostics |
+
+### 1.5 FCL renderer plugin (C/S, zero launcher changes)
+
+The `android-plugin/` Gradle project packages the C/S artifacts as a
+FoldCraftLauncher renderer plugin APK. FCL only dlopens the listed libraries and
+forwards the environment below — no launcher API or launcher modification is
+needed.
+
+```sh
+cd android-plugin
+./gradlew :app:assemblePluginRelease \
+  -PMOBILEGL_ABIS=arm64-v8a \
+  -PMOBILEGL_LOG_ACTIVE_LEVEL=MOBILEGL_LOG_LEVEL_INFO
+# output: android-plugin/app/build/outputs/apk/plugin/release/MobileGL-plugin-release-<hash>.apk
+```
+
+The plugin manifest (generated from `app/build.gradle.kts`) declares:
+
+* `renderer` = `MobileGL C/S:libMobileGL_Client.so:/libMobileGL_Client.so`
+* `DLOPEN` = `libMobileGL_FullServer.so,libMobileGL_UtilRuntime.so,BackendObject_DirectGLES.so`
+* `MOBILEGL_CS_MODE=inprocess`, `MOBILEGL_CS_BACKEND=DirectGLES`
+
+Install the APK, pick **MobileGL C/S** in FCL's renderer list and launch. First
+run expectations (smoke):
+
+| Observation point | Expected |
+|---|---|
+| FCL log / renderer list | `MobileGL C/S` selectable |
+| `latest_game.log` | no `verifyRendererLibraries` failure; `LibraryLoader` dlopens the 4 `.so` files |
+| in-process server | first `eglGetDisplay` auto-hosts FullServer; session created; server thread runs |
+| rendering | gameplay renderer path (M2 = main menu reachable; M3 = playable) |
+
+Runtime tuning is the same table as above; with `MOBILEGL_CS_MODE=inprocess` the
+client derives sibling `.so` paths via `dladdr`, so no path env is required.
+
 ### 2. Start the BigServer from a host process
 
 `libMobileGL_FullServer.so` is **not** a standalone executable. Call it from a

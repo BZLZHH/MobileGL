@@ -40,10 +40,12 @@ namespace {
     // root and verifies the mask arrived intact.
     uint32_t FakeWireDispatch(uint32_t opcode, uint32_t sessionId,
                               const void* payloadBytes, uint64_t payloadSize,
-                              const void* const* receivedShm, uint32_t receivedShmCount) {
+                              const void* const* receivedShm, uint32_t receivedShmCount,
+                              uint32_t outCapacity) {
         (void)sessionId;
         (void)receivedShm;
         (void)receivedShmCount;
+        (void)outCapacity;
         if (opcode != static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glClear) ||
             payloadBytes == nullptr || payloadSize < 4) {
             return 1u;

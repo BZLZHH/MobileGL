@@ -22,6 +22,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFINITIONS = REPO_ROOT / "MobileGL/MG_Impl/GLImpl/Exporting/Definitions.cpp"
+EGL_DEFINITIONS = REPO_ROOT / "MobileGL/MG_Impl/EGLImpl/Exporting/Definitions.cpp"
 WIRE_FULL = REPO_ROOT / "MobileGL/MG_Protocol/wire_full.fbs"
 OPCODE_H = REPO_ROOT / "MobileGL/MG_Protocol/generated_opcodes.h"
 DISPATCH_H = REPO_ROOT / "MobileGL/MG_Protocol/generated_dispatch.h"
@@ -30,6 +31,12 @@ OUT_H = REPO_ROOT / "MobileGL/MG_Client/generated_wire_client.h"
 HEADER_RE = re.compile(
     r"DECLARE_GL_FUNCTION_(STUB_)?HEAD\s*\(\s*([^,]+)\s*,\s*([A-Za-z0-9_]+)\s*,\s*(.*?)\)\s*"
     r"DECLARE_GL_FUNCTION_(?:STUB_)?END(?:_NO_RETURN)?\s*\(",
+    re.DOTALL,
+)
+
+# EGL functions are plain `MOBILEGL_EGL_API <ret> egl*<Name>(args) {` bodies.
+EGL_FUNC_RE = re.compile(
+    r"MOBILEGL_EGL_API\s+(.+?)\s+(egl[A-Za-z0-9_]+)\s*\(([^)]*)\)\s*\{",
     re.DOTALL,
 )
 
@@ -164,17 +171,37 @@ def main() -> int:
         c_type, name, arglist = match.group(2).strip(), match.group(3).strip(), match.group(4)
         api_args[name] = (c_type, parse_args(arglist), stub)
 
+    egl_api_args: dict[str, tuple[str, list[tuple[str, str]], bool]] = {}
+    if EGL_DEFINITIONS.exists():
+        egl_text = EGL_DEFINITIONS.read_text(encoding="utf-8")
+        egl_text = "\n".join(
+            line for line in egl_text.splitlines()
+            if not line.lstrip().startswith("//")
+        )
+        for match in EGL_FUNC_RE.finditer(egl_text):
+            ret_type, name, arglist = match.group(1).strip(), match.group(2).strip(), match.group(3)
+            egl_api_args[name[3:]] = (ret_type, parse_args(arglist), False)
+
     functions: list[str] = []
     wrapped: set[int] = set()
     for opcode, api, _table in dispatch_entries:
-        if not api.startswith("gl") or opcode in wrapped:
+        if not api.startswith(("gl", "egl")) or opcode in wrapped:
             continue
-        name = api[2:]
-        entry = api_args.get(name)
+        if api.startswith("egl"):
+            name = api[3:]
+            entry = egl_api_args.get(name)
+            fn_name = "SendEgl" + name
+        else:
+            name = api[2:]
+            entry = api_args.get(name)
+            fn_name = "SendGl" + name
         if entry is None:
             continue
         _, args, _stub = entry
-        gen_table = "Gen" + name
+        if api.startswith("egl"):
+            gen_table = "GenEgl" + name
+        else:
+            gen_table = "Gen" + name
         fields = wire_tables.get(gen_table)
         if fields is None:
             continue
@@ -183,6 +210,7 @@ def main() -> int:
         params: list[str] = []
         create_exprs: list[str] = []
         shm_count = 0
+        has_out_vector = False
         ok = True
         for c_type, arg_name in args:
             if c_type.count("*") > 1:
@@ -202,6 +230,14 @@ def main() -> int:
                     "builder, 0, shm == nullptr ? 0 : shm->size)"
                 )
                 continue
+            if fbs_type.startswith("[") and "const" not in c_type:
+                # Out-vector: values are not sent; the results come back in
+                # Response.ret_bytes and the trampoline copies them out.
+                # Keep Create* argument positions aligned with the table's
+                # field order: the out field stays null (0 offset).
+                has_out_vector = True
+                create_exprs.append("0")
+                continue
             param_decl, expr, _, param_ok = build_param_and_expr(fbs_type, arg_name, len(params))
             if not param_ok:
                 ok = False
@@ -215,9 +251,12 @@ def main() -> int:
             params.append("MobileGLShmHandle* shm")
         else:
             params.append("MobileGLShmHandle* shm = nullptr")
+        if has_out_vector:
+            params.append("Uint32 outCapacity = 0")
         opcode_expr = f"static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::{api})"
+        extra_call = ", outCapacity" if has_out_vector else ""
         body = (
-            f"    inline Bool SendGl{api[2:]}(Uint64 sessionId, {', '.join(params)}) {{\n"
+            f"    inline Bool {fn_name}(Uint64 sessionId, {', '.join(params)}) {{\n"
             f"        flatbuffers::FlatBufferBuilder builder;\n"
             f"        auto payload = MobileGL::Protocol::WireFull::Create{gen_table}(builder"
             + (", " + ", ".join(create_exprs) if create_exprs else "") +
@@ -225,7 +264,7 @@ def main() -> int:
             f"        builder.Finish(payload);\n"
             f"        return MobileGL::Client::SendWirePayload(sessionId, {opcode_expr}, token,\n"
             f"                                 builder.GetBufferPointer(),\n"
-            f"                                 static_cast<Uint32>(builder.GetSize()), shm);\n"
+            f"                                 static_cast<Uint32>(builder.GetSize()), shm{extra_call});\n"
             f"    }}\n"
         )
         functions.append(body)

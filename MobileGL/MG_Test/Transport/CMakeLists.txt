@@ -1362,3 +1362,55 @@ endif()
 
 
 
+
+# ServerCore now references the frontend (GLImpl::GetString / pActiveBackendObject);
+# link the FullServer core when it exists (CS refactor builds).
+if (TARGET MobileGL_MG_FullServerCore)
+    foreach(MGL_SERVERCORE_TEST
+            BigServerE2ETest
+            ClientAsyncBatchTest
+            ClientBeginTransformFeedbackTest
+            ClientBindTransformFeedbackTest
+            ClientBlitFramebufferTest
+            ClientBufferReadbackTest
+            ClientBufferRespecifyTest
+            ClientBufferSubDataShmTest
+            ClientClearColorTest
+            ClientClientWaitSyncTest
+            ClientDeleteSyncTest
+            ClientDispatchComputeIndirectTest
+            ClientDispatchComputeTest
+            ClientDrawArraysInstancedTest
+            ClientDrawArraysTest
+            ClientDrawElementsInstancedTest
+            ClientDrawElementsShmTest
+            ClientDrawRangeElementsTest
+            ClientEglCommandsTest
+            ClientEglSurfaceTest
+            ClientEndTransformFeedbackTest
+            ClientFenceSyncTest
+            ClientGenerateMipmapTest
+            ClientGetStringTest
+            ClientHierarchyLifecycleTest
+            ClientIndirectDrawsTest
+            ClientMapUnmapTest
+            ClientMemoryBarrierByRegionTest
+            ClientMemoryBarrierTest
+            ClientPatchParameteriTest
+            ClientPauseResumeTransformFeedbackTest
+            ClientQueryResultsTest
+            ClientReadPixelsTest
+            ClientServerEndToEndTest
+            ClientSessionLifecycleTest
+            ClientShmPayloadTest
+            ClientSwapBuffersTest
+            ClientTextureRespecifyTest
+            ClientTextureSubImageTest
+            ClientTokenSessionTest
+            ClientWaitSyncTest
+            ClientWirePayloadTest
+            ShmPayloadBenchmark
+)
+        target_link_libraries(${MGL_SERVERCORE_TEST} PRIVATE MobileGL_MG_FullServerCore)
+    endforeach()
+endif()

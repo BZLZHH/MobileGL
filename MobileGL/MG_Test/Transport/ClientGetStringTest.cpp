@@ -20,13 +20,19 @@ struct MobileGLBackend {
 };
 
 namespace {
+    const char* kExtensions[] = {
+        "GL_EXT_mobilegl_test",
+        "GL_KHR_debug",
+        nullptr,
+    };
+
     MobileGLRendererInfo s_rendererInfo = {.structSize = sizeof(MobileGLRendererInfo),
                                            .name = "Espryt Renderer",
                                            .vendor = "Espryt Vendor",
                                            .version = "OpenGL ES 3.2",
                                            .shaderLanguageVersion = "OpenGL ES GLSL ES 3.20",
-                                           .extensions = nullptr,
-                                           .extensionCount = 0,
+                                           .extensions = kExtensions,
+                                           .extensionCount = 2,
                                            .reserved = 0};
 
     bool OnSessionCreated(MobileGLBackend* backend, MobileGLSessionId session, const MobileGLBackendInitInfo* info) {
@@ -101,6 +107,15 @@ namespace MobileGL::Transport {
         EXPECT_EQ(value, "OpenGL ES 3.2");
         ASSERT_TRUE(Client::SendGetString(10, static_cast<uint32_t>(GL_SHADING_LANGUAGE_VERSION), 5, &value));
         EXPECT_EQ(value, "OpenGL ES GLSL ES 3.20");
+
+        value.clear();
+        ASSERT_TRUE(Client::SendGetStringi(10, static_cast<uint32_t>(GL_EXTENSIONS), 0, 6, &value));
+        EXPECT_EQ(value, "GL_EXT_mobilegl_test");
+        value.clear();
+        ASSERT_TRUE(Client::SendGetStringi(10, static_cast<uint32_t>(GL_EXTENSIONS), 1, 7, &value));
+        EXPECT_EQ(value, "GL_KHR_debug");
+        value.clear();
+        EXPECT_FALSE(Client::SendGetStringi(10, static_cast<uint32_t>(GL_EXTENSIONS), 2, 8, &value));
 
         serverThread.join();
         EXPECT_TRUE(serverOk);

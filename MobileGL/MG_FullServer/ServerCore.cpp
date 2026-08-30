@@ -10,6 +10,8 @@
 #include "MG_Protocol/control.h"
 #include "MG_Protocol/gen/wire_generated.h"
 #include "MG_Protocol/generated_opcodes.h"
+#include "MG_Impl/GLImpl/Getter/GL_Getter.h"
+#include "MG_Backend/BackendObjects.h"
 
 #include <flatbuffers/flatbuffers.h>
 
@@ -60,6 +62,8 @@ namespace MobileGL::FullServer {
         uint32_t dataByte = 0;
         uint64_t syncHandle = 0;
         uint64_t queryNs = 0;
+        int64_t retI64 = 0;
+        Vector<Uint8> responseRetBytes;
         String responseStringValue;
         Vector<MobileGLShmHandle> receivedShm;
         Vector<MobileGLShmHandle> responseShm;
@@ -85,6 +89,8 @@ namespace MobileGL::FullServer {
         uint32_t status = 1;
         syncHandle = 0;
         queryNs = 0;
+        retI64 = 0;
+        responseRetBytes.clear();
         responseStringValue.clear();
         responseShm.clear();
         responseShmCount = 0;
@@ -103,11 +109,26 @@ namespace MobileGL::FullServer {
             for (const auto& shm : receivedShm) {
                 shmPointers.push_back(shm.mappedAddress);
             }
+            const uint32_t outCapacity = command->out_capacity();
             status = m_wireDispatch(opcode, static_cast<uint32_t>(sessionId),
                                     command->payload_bytes()->data(),
                                     command->payload_bytes()->size(),
                                     shmPointers.empty() ? nullptr : shmPointers.data(),
-                                    static_cast<uint32_t>(shmPointers.size()));
+                                    static_cast<uint32_t>(shmPointers.size()),
+                                    outCapacity);
+            if (m_wireRet != nullptr) {
+                Bool retValid = false;
+                int64_t retValue = 0;
+                const Uint8* retBytes = nullptr;
+                Uint32 retBytesSize = 0;
+                m_wireRet(&retValid, &retValue, &retBytes, &retBytesSize);
+                if (retValid) {
+                    retI64 = retValue;
+                }
+                if (retBytes != nullptr && retBytesSize > 0) {
+                    responseRetBytes.assign(retBytes, retBytes + retBytesSize);
+                }
+            }
             wireDispatched = true;
         }
 
@@ -602,33 +623,66 @@ namespace MobileGL::FullServer {
                                                indirect);
                 status = 0;
             }
-        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glGetString) &&
-                   m_vtable->GetRendererInfo != nullptr) {
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glGetString)) {
             if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
                 status = 1;
             } else {
                 const auto* gs = command->get_string();
-                const auto* info = m_vtable->GetRendererInfo(m_backend, sessionId);
+                // All GL entry points go through the frontend (monolith-side)
+                // implementation: GLImpl::GetString synthesizes the desktop
+                // GL_VERSION/GL_RENDERER/GLSL strings from the active backend
+                // object (never leaks raw driver EGL/GLES strings to desktop
+                // consumers). Isolated ServerCore tests run without a backend
+                // object; fall back to the BFA renderer info there.
                 const char* value = nullptr;
-                if (info != nullptr && gs != nullptr) {
-                    switch (gs->pname()) {
-                    case GL_VENDOR:
-                        value = info->vendor;
-                        break;
-                    case GL_RENDERER:
-                        value = info->name;
-                        break;
-                    case GL_VERSION:
-                        value = info->version;
-                        break;
-                    case GL_SHADING_LANGUAGE_VERSION:
-                        value = info->shaderLanguageVersion;
-                        break;
-                    default:
-                        break;
+                if (gs != nullptr) {
+                    if (MobileGL::MG_Backend::pActiveBackendObject != nullptr) {
+                        value = reinterpret_cast<const char*>(
+                            MobileGL::MG_Impl::GLImpl::GetString(static_cast<GLenum>(gs->pname())));
+                    } else if (m_vtable->GetRendererInfo != nullptr) {
+                        const auto* info = m_vtable->GetRendererInfo(m_backend, sessionId);
+                        if (info != nullptr) {
+                            switch (gs->pname()) {
+                            case GL_VENDOR: value = info->vendor; break;
+                            case GL_RENDERER: value = info->name; break;
+                            case GL_VERSION: value = info->version; break;
+                            case GL_SHADING_LANGUAGE_VERSION: value = info->shaderLanguageVersion; break;
+                            default: break;
+                            }
+                        }
                     }
                 }
-                if (value == nullptr) {
+                if (value == nullptr || value[0] == '\0') {
+                    status = 1;
+                } else {
+                    responseStringValue = value;
+                    status = 0;
+                }
+            }
+        } else if (opcode == static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::glGetStringi)) {
+            if (m_liveSessions.find(sessionId) == m_liveSessions.end()) {
+                status = 1;
+            } else {
+                const auto* gs = command->get_stringi();
+                const char* value = nullptr;
+                if (gs != nullptr) {
+                    if (MobileGL::MG_Backend::pActiveBackendObject != nullptr) {
+                        value = reinterpret_cast<const char*>(
+                            MobileGL::MG_Impl::GLImpl::GetStringi(
+                                static_cast<GLenum>(gs->pname()), static_cast<GLuint>(gs->index())));
+                    } else if (m_vtable->GetRendererInfo != nullptr) {
+                        const auto* info = m_vtable->GetRendererInfo(m_backend, sessionId);
+                        if (info != nullptr && info->extensions != nullptr) {
+                            const uint32_t index = gs->index();
+                            for (uint32_t i = 0; i <= index; ++i) {
+                                if (info->extensions[i] == nullptr) break;
+                                value = info->extensions[i];
+                                if (i == index) break;
+                            }
+                        }
+                    }
+                }
+                if (value == nullptr || value[0] == '\0') {
                     status = 1;
                 } else {
                     responseStringValue = value;
@@ -767,6 +821,30 @@ namespace MobileGL::FullServer {
                 status = 0;
             }
         } else if (opcode ==
+                   static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::eglCreateWindowSurface) &&
+                   m_vtable->CreateWindowSurface != nullptr) {
+            const auto* ws = command->egl_create_window_surface();
+            const auto displayId = static_cast<MobileGLDisplayId>(ws == nullptr ? 0 : ws->display());
+            if (m_liveDisplays.find(displayId) == m_liveDisplays.end()) {
+                status = 1;
+            } else {
+                MobileGLSurfaceCreateInfo info{};
+                info.structSize = sizeof(MobileGLSurfaceCreateInfo);
+#if defined(__ANDROID__)
+                info.backendType = 3;
+#else
+                info.backendType = 1;
+#endif
+                info.nativeWindow = reinterpret_cast<void*>(
+                    static_cast<std::uintptr_t>(ws == nullptr ? 0 : ws->native_window()));
+                info.width = 0;
+                info.height = 0;
+                status = m_vtable->CreateWindowSurface(m_backend, displayId,
+                                                        ws == nullptr ? 0 : ws->surface(), &info)
+                             ? 0
+                             : 1;
+            }
+        } else if (opcode ==
                    static_cast<uint32_t>(MobileGL::Protocol::MobileGLOpcode::eglCreatePbufferSurface) &&
                    m_vtable->CreatePbufferSurface != nullptr) {
             const auto* ps = command->egl_create_pbuffer_surface();
@@ -828,6 +906,11 @@ namespace MobileGL::FullServer {
                             ? 0
                             : 1;
             }
+        } else if (opcode ==
+                   static_cast<uint32_t>(MobileGL::Protocol::MobileGLControlOpcode::ServerShutdown)) {
+            // Wake-up sentinel submitted by an auto-hosting client: it only
+            // unblocks a blocking WaitResponses; the host loop owns the exit.
+            status = 0;
         }
         }
 
@@ -840,11 +923,18 @@ namespace MobileGL::FullServer {
         if (!responseStringValue.empty()) {
             responseString = responseBuilder.CreateString(responseStringValue);
         }
+        flatbuffers::Offset<flatbuffers::Vector<Uint8>> responseBytes = 0;
+        if (!responseRetBytes.empty()) {
+            responseBytes = responseBuilder.CreateVector(
+                responseRetBytes.data(),
+                static_cast<flatbuffers::uoffset_t>(responseRetBytes.size()));
+        }
         const auto response = MobileGL::Protocol::Wire::CreateResponse(responseBuilder, status,
                                                                        command->token(), sessionId,
                                                                        dataByte, syncHandle,
                                                                        responseString,
-                                                                       responseShmCount, queryNs);
+                                                                       responseShmCount, queryNs,
+                                                                       retI64, responseBytes);
         responseBuilder.Finish(response);
 
         MobileGLCommandBatch out{};
@@ -881,6 +971,10 @@ namespace MobileGL::FullServer {
 
     void ServerCore::SetWireDispatch(WireDispatchFn fn) {
         m_wireDispatch = fn;
+    }
+
+    void ServerCore::SetWireRet(WireRetFn fn) {
+        m_wireRet = fn;
     }
 
     void ServerCore::NotifySessionChanged(MobileGLSessionId sessionId) {

@@ -494,8 +494,16 @@ set(MOBILEGL_INCLUDE_DIR
 # dlopened later and never linked.
 # -----------------------------------------------------------------------------
 if (MOBILEGL_BUILD_CS_REFACTOR)
+    # FullServerCore keeps the complete frontend *and* the MG_Backend probes:
+    # frontend code (GL_Texture, GL_Framebuffer, Init) calls
+    # MobileGL::MG_Backend::* (format/stencil capability probing) at runtime,
+    # and MG_Backend/Init.cpp's factories reference the concrete backend
+    # classes. Excluding MG_Backend left undefined symbols behind
+    # (-Wl,--no-undefined on Android); including it makes the probes work in
+    # the server process. BackendObject_*.so are still dlopened by the
+    # BackendPluginLoader for the BFA vtable; the server-side copy is only
+    # used for capability probing.
     set(MOBILEGL_CORE_SOURCES ${SOURCE_FILES})
-    list(FILTER MOBILEGL_CORE_SOURCES EXCLUDE REGEX "MG_Backend/")
 
     add_library(MobileGL_MG_FullServerCore STATIC
         ${MOBILEGL_CORE_SOURCES}
@@ -699,6 +707,12 @@ if (MOBILEGL_BUILD_CS_REFACTOR)
     add_subdirectory(MobileGL/MG_FullServer)
     add_subdirectory(MobileGL/MG_UtilRuntime)
     add_subdirectory(MobileGL/MG_Backend)
+    # libEGL.so forwarding stub: LWJGL resolves its EGL/provider via
+    # System.loadLibrary("libEGL.so"); shipping ours keeps Minecraft on the
+    # C/S client instead of the platform driver (Android only).
+    if (ANDROID)
+        add_subdirectory(MobileGL/MG_Client/EGLStub)
+    endif()
 endif()
 
 if (NOT ANDROID AND NOT MOBILEGL_IOS)

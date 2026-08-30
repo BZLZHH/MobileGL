@@ -26,6 +26,10 @@ namespace MobileGL::Protocol {
         EndOcclusionQuery = 1'000'023,
         BeginXfbPrimitivesQuery = 1'000'024,
         EndXfbPrimitivesQuery = 1'000'025,
+        // Wake-up sentinel for hosted server loops: the host owning the loop
+        // decides when to exit; this opcode only unblocks WaitResponses so the
+        // loop can observe its stop flag.
+        ServerShutdown = 1'000'050,
     };
 } // namespace MobileGL::Protocol
 

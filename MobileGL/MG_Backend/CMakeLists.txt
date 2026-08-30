@@ -28,6 +28,10 @@ set_target_properties(BackendObject_DirectGLES PROPERTIES
     SUFFIX ".so"
 )
 
+if (ANDROID)
+    target_link_libraries(BackendObject_DirectGLES PRIVATE log android)
+endif()
+
 add_library(BackendObject_DirectVulkan MODULE
     DirectVulkan/PluginManifest.cpp
 )

@@ -14735,6 +14735,224 @@ table GlReplacementCodeuiTexCoord2fColor4fNormal3fVertex3fvSUN {
     n: [float];
     v: [float];
 }
+table EglCreateWindowSurface {
+    dpy: ulong;
+    config: ulong;
+    window: ulong;
+    attrib_list: [int];
+}
+table EglChooseConfig {
+    dpy: ulong;
+    attrib_list: [int];
+    configs: [uint];
+    config_size: int;
+    num_config: [int];
+}
+table EglCreateContext {
+    dpy: ulong;
+    config: ulong;
+    shareCtx: ulong;
+    attrib_list: [int];
+}
+table EglInitialize {
+    dpy: ulong;
+    major: [int];
+    minor: [int];
+}
+table EglGetDisplay {
+    display: ulong;
+}
+table EglGetError {
+
+}
+table EglMakeCurrent {
+    dpy: ulong;
+    draw: ulong;
+    read: ulong;
+    ctx: ulong;
+}
+table EglDestroyContext {
+    dpy: ulong;
+    ctx: ulong;
+}
+table EglDestroySurface {
+    dpy: ulong;
+    surface: ulong;
+}
+table EglTerminate {
+    dpy: ulong;
+}
+table EglReleaseThread {
+    // TODO: unsupported  void
+}
+// TODO(GEN): incomplete EGL signature for eglReleaseThread
+table EglGetCurrentContext {
+    // TODO: unsupported  void
+}
+// TODO(GEN): incomplete EGL signature for eglGetCurrentContext
+table EglGetConfigAttrib {
+    dpy: ulong;
+    config: ulong;
+    attribute: int;
+    value: [int];
+}
+table EglBindAPI {
+    api: uint;
+}
+table EglGetCurrentSurface {
+    readdraw: int;
+}
+table EglQuerySurface {
+    display: ulong;
+    surface: ulong;
+    attribute: int;
+    value: [int];
+}
+table EglQueryString {
+    display: ulong;
+    name: int;
+}
+table EglSwapInterval {
+    dpy: ulong;
+    interval: int;
+}
+table EglSwapBuffers {
+    dpy: ulong;
+    draw: ulong;
+}
+table EglCreatePbufferSurface {
+    dpy: ulong;
+    config: ulong;
+    attrib_list: [int];
+}
+table EglGetProcAddress {
+    // TODO: unsupported const char* name
+}
+// TODO(GEN): incomplete EGL signature for eglGetProcAddress
+table EglBindTexImage {
+    dpy: ulong;
+    surface: ulong;
+    buffer: int;
+}
+table EglReleaseTexImage {
+    dpy: ulong;
+    surface: ulong;
+    buffer: int;
+}
+table EglCopyBuffers {
+    dpy: ulong;
+    surface: ulong;
+    target: ulong;
+}
+table EglCreatePbufferFromClientBuffer {
+    dpy: ulong;
+    buftype: uint;
+    buffer: ulong;
+    config: ulong;
+    attrib_list: [int];
+}
+table EglCreatePixmapSurface {
+    dpy: ulong;
+    config: ulong;
+    pixmap: ulong;
+    attrib_list: [int];
+}
+table EglGetConfigs {
+    dpy: ulong;
+    configs: [uint];
+    config_size: int;
+    num_config: [int];
+}
+table EglGetCurrentDisplay {
+    // TODO: unsupported  void
+}
+// TODO(GEN): incomplete EGL signature for eglGetCurrentDisplay
+table EglQueryAPI {
+    // TODO: unsupported  void
+}
+// TODO(GEN): incomplete EGL signature for eglQueryAPI
+table EglQueryContext {
+    dpy: ulong;
+    ctx: ulong;
+    attribute: int;
+    value: [int];
+}
+table EglSurfaceAttrib {
+    dpy: ulong;
+    surface: ulong;
+    attribute: int;
+    value: int;
+}
+table EglWaitClient {
+    // TODO: unsupported  void
+}
+// TODO(GEN): incomplete EGL signature for eglWaitClient
+table EglWaitGL {
+    // TODO: unsupported  void
+}
+// TODO(GEN): incomplete EGL signature for eglWaitGL
+table EglWaitNative {
+    engine: int;
+}
+table EglCreateSync {
+    dpy: ulong;
+    type: uint;
+    attrib_list: [ulong];
+}
+table EglDestroySync {
+    dpy: ulong;
+    sync: ulong;
+}
+table EglClientWaitSync {
+    dpy: ulong;
+    sync: ulong;
+    flags: int;
+    timeout: long;
+}
+table EglGetSyncAttrib {
+    dpy: ulong;
+    sync: ulong;
+    attribute: int;
+    value: [ulong];
+}
+table EglCreateImage {
+    dpy: ulong;
+    ctx: ulong;
+    target: uint;
+    buffer: ulong;
+    attrib_list: [ulong];
+}
+table EglDestroyImage {
+    dpy: ulong;
+    image: ulong;
+}
+table EglGetPlatformDisplay {
+    platform: uint;
+    native_display: ulong;
+    attrib_list: [ulong];
+}
+table EglGetPlatformDisplayEXT {
+    platform: uint;
+    native_display: ulong;
+    attrib_list: [int];
+}
+table EglCreatePlatformWindowSurface {
+    dpy: ulong;
+    config: ulong;
+    native_window: ulong;
+    attrib_list: [ulong];
+}
+table EglCreatePlatformPixmapSurface {
+    dpy: ulong;
+    config: ulong;
+    native_pixmap: ulong;
+    attrib_list: [ulong];
+}
+table EglWaitSync {
+    dpy: ulong;
+    sync: ulong;
+    flags: int;
+}
 
 union GeneratedPayload {
     GlGetStringi,
@@ -17487,4 +17705,49 @@ union GeneratedPayload {
     GlReplacementCodeuiTexCoord2fNormal3fVertex3fvSUN,
     GlReplacementCodeuiTexCoord2fColor4fNormal3fVertex3fSUN,
     GlReplacementCodeuiTexCoord2fColor4fNormal3fVertex3fvSUN,
+    EglCreateWindowSurface,
+    EglChooseConfig,
+    EglCreateContext,
+    EglInitialize,
+    EglGetDisplay,
+    EglGetError,
+    EglMakeCurrent,
+    EglDestroyContext,
+    EglDestroySurface,
+    EglTerminate,
+    EglReleaseThread,
+    EglGetCurrentContext,
+    EglGetConfigAttrib,
+    EglBindAPI,
+    EglGetCurrentSurface,
+    EglQuerySurface,
+    EglQueryString,
+    EglSwapInterval,
+    EglSwapBuffers,
+    EglCreatePbufferSurface,
+    EglGetProcAddress,
+    EglBindTexImage,
+    EglReleaseTexImage,
+    EglCopyBuffers,
+    EglCreatePbufferFromClientBuffer,
+    EglCreatePixmapSurface,
+    EglGetConfigs,
+    EglGetCurrentDisplay,
+    EglQueryAPI,
+    EglQueryContext,
+    EglSurfaceAttrib,
+    EglWaitClient,
+    EglWaitGL,
+    EglWaitNative,
+    EglCreateSync,
+    EglDestroySync,
+    EglClientWaitSync,
+    EglGetSyncAttrib,
+    EglCreateImage,
+    EglDestroyImage,
+    EglGetPlatformDisplay,
+    EglGetPlatformDisplayEXT,
+    EglCreatePlatformWindowSurface,
+    EglCreatePlatformPixmapSurface,
+    EglWaitSync,
 }

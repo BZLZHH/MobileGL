@@ -24,6 +24,20 @@ namespace MobileGL::Client {
     // state the client keeps; there is no GL state on this side.
     Bool Initialize(const ClientConfig& config);
 
+    // Starts the client from the MOBILEGL_CS_* environment variables.
+    //
+    //   MOBILEGL_CS_MODE=inprocess (default)
+    //       Locates FullServer/UtilRuntime/BackendObject next to this library
+    //       and auto-hosts them in-process through an InProcessTransport pair.
+    //   MOBILEGL_CS_MODE=connect
+    //       Dial MOBILEGL_CS_ENDPOINT (default /tmp/mobilegl.sock) and attach
+    //       to an already-running FullServer.
+    //
+    // FCL zero-change usage: FCL only dlopens the renderer plugin and forwards
+    // environment variables, so this entry point is the only bootstrapping
+    // the client needs on Android.
+    Bool InitializeFromEnvironment();
+
     // Test/embedded path: attach an already-created transport endpoint.
     Bool InitializeWithTransport(MobileGLTransport* transport, const MobileGLTransportOps* ops);
 
@@ -156,6 +170,10 @@ namespace MobileGL::Client {
     // Sends a typed glGetString query and copies the returned string into outString.
     Bool SendGetString(Uint64 sessionId, uint32_t pname, Uint64 token, String* outString);
 
+    // Sends a typed glGetStringi query (GL_EXTENSIONS enumeration).
+    Bool SendGetStringi(Uint64 sessionId, uint32_t pname, uint32_t index, Uint64 token,
+                        String* outString);
+
     // Sends a typed TextureRespecify upload; pixel data comes from shared memory.
     Bool SendTextureRespecify(Uint64 sessionId, uint64_t texture, uint32_t level,
                               uint32_t format, uint32_t type, uint32_t width,
@@ -189,6 +207,8 @@ namespace MobileGL::Client {
     // EGL surface lifecycle commands.
     Bool SendEglCreatePbufferSurface(Uint64 displayId, uint64_t surface, int32_t width,
                                      int32_t height, Uint64 token);
+    Bool SendEglCreateWindowSurface(Uint64 displayId, uint64_t surface, uint64_t nativeWindow,
+                                    Uint64 token);
     Bool SendEglDestroySurface(Uint64 displayId, uint64_t surface, Uint64 token);
     Bool SendEglMakeCurrent(Uint64 sessionId, uint64_t draw, uint64_t read, Uint64 token);
     Bool SendEglSetSwapInterval(Uint64 sessionId, int32_t interval, Uint64 token);
@@ -206,10 +226,21 @@ namespace MobileGL::Client {
     // Submits one command whose arguments are already serialized as a
     // WireFull Gen* root table (payloadBytes). This is the generic full
     // source-list path; the wire schema routes payload_bytes to the generated
-    // server dispatch.
+    // server dispatch. outCapacity caps the server-side out-vector buffer (in
+    // elements) for no-size queries (glGetIntegerv family); 0 means "use the
+    // payload's own count field".
     Bool SendWirePayload(Uint64 sessionId, Uint32 opcode, Uint64 token,
                          const uint8_t* payloadBytes, Uint32 payloadSize,
-                         MobileGLShmHandle* shm = nullptr);
+                         MobileGLShmHandle* shm = nullptr,
+                         Uint32 outCapacity = 0);
+
+    // Active-variable introspection (glGetActiveAttrib/glGetActiveUniform).
+    // The server fills a packed blob into Response.ret_bytes:
+    // [u32 length][u32 size][u32 type][name NUL-terminated].
+    Bool SendGetActiveAttrib(Uint64 sessionId, uint32_t program, uint32_t index,
+                             uint32_t bufSize, Uint64 token);
+    Bool SendGetActiveUniform(Uint64 sessionId, uint32_t program, uint32_t index,
+                              uint32_t bufSize, Uint64 token);
 
     // Submits a session lifecycle control command (SessionCreate/Destroy).
     Bool SubmitSessionControl(Uint64 sessionId, Bool create, Uint64 token);
@@ -242,8 +273,28 @@ namespace MobileGL::Client {
     // Query nanoseconds echoed back by the server's response query_ns field.
     Uint64 GetLastResponseQueryNs();
 
+    // Generic scalar return echoed back by the server's response ret_i64 field
+    // (set by the generated wire dispatch for non-void API entries).
+    int64_t GetLastResponseRetI64();
+
+    // Out-vector bytes echoed back by the server's response ret_bytes field
+    // (set by the generated wire dispatch for glGen* families).
+    const Vector<Uint8>& GetLastResponseBytes();
+
     // String echoed back by the server's response string_value field.
     const String& GetLastResponseString();
+
+    // Client-side current-session slot maintained by the EGL trampoline
+    // (eglMakeCurrent). Generated GL trampolines read it to fill the
+    // Command.session_id field.
+    void SetCurrentSession(Uint64 sessionId);
+    Uint64 GetCurrentSessionId();
+
+    // Allocates one transport shared-memory region. On the in-process
+    // transport the region is an in-heap slot; on LocalSocketShm it is a
+    // memfd. Used by generated trampolines for shm-upload entries.
+    Bool AllocateShm(Uint64 size, MobileGLShmHandle* out);
+    void ReleaseShm(MobileGLShmHandle* handle);
 
     void Shutdown();
     const String& GetLastError();

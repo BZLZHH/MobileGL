@@ -76,13 +76,20 @@ val mobileGlApkSuffix = (findProperty("mobilegl.apkSuffix") ?: System.getenv("MO
 
 val pluginRendererConfig = buildJsonValue {
     renderer(
-        displayName = "MobileGL",
+        displayName = "MobileGL C/S",
         rendererId = "opengles3",
-        rendererGLPath = nativePath("libMobileGL.so"),
-        rendererEGLPath = nativePath("libMobileGL.so"),
-        dlopenLibPaths = emptyList(),
+        rendererGLPath = nativePath("libMobileGL_Client.so"),
+        rendererEGLPath = nativePath("libMobileGL_Client.so"),
+        dlopenLibPaths = listOf(
+            nativePath("libMobileGL_FullServer.so"),
+            nativePath("libMobileGL_UtilRuntime.so"),
+            nativePath("BackendObject_DirectGLES.so"),
+        ),
         env = buildEnvs {
             normal("LIBGL_ES", "3")
+            normal("MOBILEGL_CS_MODE", "inprocess")
+            normal("MOBILEGL_CS_BACKEND", "DirectGLES")
+            normal("MOBILEGL_CS_DEBUG", "1")
             selectable(
                 key = "MOBILEGL_BACKEND_TYPE",
                 title = RendererConfig.MetaString("mobilegl_backend_type_title"),
@@ -117,21 +124,27 @@ android {
         resValue("string", "config", pluginRendererConfig)
 
         manifestPlaceholders.putAll(legacyManifest {
-            displayName = "MobileGL"
-            rendererName = "MobileGL"
-            rendererLib = "libMobileGL.so"
-            eglLib = "/libMobileGL.so"
+            displayName = "MobileGL C/S"
+            rendererName = "MobileGL C/S"
+            rendererLib = "libMobileGL_Client.so"
+            eglLib = "/libMobileGL_Client.so"
             minMCVer = ""
             maxMCVer = ""
             boatEnv {
                 put("LIBGL_ES", "3")
                 put("POJAV_RENDERER", "opengles3")
-                put("MOBILEGL_BACKEND_TYPE", "DirectGLES")
+                put("MOBILEGL_CS_MODE", "inprocess")
+                put("MOBILEGL_CS_BACKEND", "DirectGLES")
+                put("MOBILEGL_CS_DEBUG", "1")
+                put("DLOPEN", "libMobileGL_FullServer.so,libMobileGL_UtilRuntime.so,BackendObject_DirectGLES.so")
             }
             pojavEnv {
                 put("LIBGL_ES", "3")
                 put("POJAV_RENDERER", "opengles3")
-                put("MOBILEGL_BACKEND_TYPE", "DirectGLES")
+                put("MOBILEGL_CS_MODE", "inprocess")
+                put("MOBILEGL_CS_BACKEND", "DirectGLES")
+                put("MOBILEGL_CS_DEBUG", "1")
+                put("DLOPEN", "libMobileGL_FullServer.so,libMobileGL_UtilRuntime.so,BackendObject_DirectGLES.so")
             }
         })
         manifestPlaceholders["appLabel"] = "MobileGL"
@@ -199,6 +212,13 @@ android {
         jniLibs {
             useLegacyPackaging = true
             excludes += "**/libSPIRV-Tools-shared.so"
+            // The C/S plugin must NOT ship the legacy monolith: PojavLauncher's
+            // libGLESv2 stub would dlopen libMobileGL.so and LWJGL would resolve
+            // every GL symbol to the old monolithic implementation (a "fallback"
+            // renderer) instead of libMobileGL_Client.so. The monolith is still
+            // built by :MobileGL for the trace profile; exclude it from the
+            // plugin APK only.
+            excludes += "**/libMobileGL.so"
         }
     }
 }

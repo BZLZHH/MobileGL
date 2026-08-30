@@ -44,6 +44,17 @@ int mobilegl_fullserver_run_socket(MobileGLFullServerHandle handle,
                                    const char* endpoint,
                                    uint32_t maxCommands);
 
+// Same-process hosting entry point used by MobileGL_Client when
+// MOBILEGL_CS_MODE=inprocess (the FCL zero-change path): creates an
+// InProcessTransport pair, starts a server thread and returns the client half
+// to the caller. The FullServer owns and joins the thread on destroy; the
+// caller owns the returned client transport.
+MobileGLFullServerHandle mobilegl_fullserver_create_inprocess(
+    const char* utilRuntimePath,
+    const char* backendPath,
+    MobileGLTransport** clientOut,
+    const MobileGLTransportOps** clientOpsOut);
+
 // Shuts down and frees the handle.
 void mobilegl_fullserver_destroy(MobileGLFullServerHandle handle);
 

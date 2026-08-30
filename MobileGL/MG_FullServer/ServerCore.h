@@ -39,7 +39,14 @@ namespace MobileGL::FullServer {
                                             const void* payloadBytes,
                                             uint64_t payloadSize,
                                             const void* const* receivedShm,
-                                            uint32_t receivedShmCount);
+                                            uint32_t receivedShmCount,
+                                            uint32_t outCapacity);
+        // Optional scalar/out-vector return provider, forwarded from the
+        // generated wire dispatch by the FullServer host. Kept as a callback
+        // so ServerCore tests can compile without linking
+        // generated_wire_dispatch.cpp.
+        using WireRetFn = void (*)(Bool* outValid, int64_t* outRetI64,
+                                   const Uint8** outBytes, Uint32* outBytesSize);
 
         ServerCore(const MobileGLTransportOps* ops, MobileGLTransport* transport,
                    MobileGLBackend* backend, const MobileGLBackendVTable* vtable);
@@ -52,6 +59,7 @@ namespace MobileGL::FullServer {
         // the FullServer can keep the frontend shim's current session in sync.
         void SetSessionListener(SessionListener listener, void* user);
         void SetWireDispatch(WireDispatchFn fn);
+        void SetWireRet(WireRetFn fn);
 
     private:
         void NotifySessionChanged(MobileGLSessionId sessionId);
@@ -64,6 +72,7 @@ namespace MobileGL::FullServer {
         SessionListener m_sessionListener = nullptr;
         void* m_sessionUser = nullptr;
         WireDispatchFn m_wireDispatch = nullptr;
+        WireRetFn m_wireRet = nullptr;
         // Sessions created through SessionCreate control commands; commands for
         // unknown/destroyed sessions are rejected until re-created.
         UnorderedMap<MobileGLSessionId, Bool> m_liveSessions;
